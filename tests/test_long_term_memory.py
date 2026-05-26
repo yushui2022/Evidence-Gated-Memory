@@ -229,3 +229,130 @@ def test_memory_scenario_record_writes_audit(memory: EvidenceGatedMemory) -> Non
     assert len(details) == 1
     assert details[0]["scenario_id"] == scenario.id
     assert details[0]["atom_ids"] == [atom.id]
+
+
+def test_record_memory_persona_with_scenarios(memory: EvidenceGatedMemory) -> None:
+    message = memory.record_conversation_message(
+        "user",
+        "The user studies evidence-gated graph memory for enterprise agents.",
+    )
+    atom = memory.record_memory_atom(
+        "persona",
+        "User cares about hard-anchor enterprise agent memory.",
+        source_messages=[message],
+    )
+    scenario = memory.record_memory_scenario(
+        "Enterprise memory research",
+        "The user is designing EGM around hard anchors, refs, and gates.",
+        atoms=[atom],
+    )
+
+    persona = memory.record_memory_persona(
+        "EGM project maintainer",
+        "User prefers evidence-first architecture and careful handoff notes.",
+        scenarios=[scenario],
+        metadata={"language": "zh-CN"},
+    )
+
+    assert persona.id.startswith("persona_")
+    assert persona.scenario_ids == [scenario.id]
+    assert persona.metadata == {"language": "zh-CN"}
+    assert memory.get_memory_persona(persona.id).scenario_ids == [scenario.id]
+    assert memory.get_memory_scenario(persona.scenario_ids[0]).atom_ids == [atom.id]
+    assert memory.get_memory_atom(atom.id).source_message_ids == [message.id]
+    assert [profile.id for profile in memory.list_memory_personas()] == [persona.id]
+
+
+def test_record_memory_persona_requires_source_scenarios(memory: EvidenceGatedMemory) -> None:
+    with pytest.raises(ValueError, match="requires at least one source scenario"):
+        memory.record_memory_persona(
+            "Ungrounded persona",
+            "This should be rejected because it points to no L2 scenarios.",
+            scenarios=[],
+        )
+
+    assert memory.list_memory_personas() == []
+
+
+def test_record_memory_persona_rejects_missing_scenario(memory: EvidenceGatedMemory) -> None:
+    atom = memory.record_memory_atom(
+        "episodic",
+        "A real atom for a real scenario.",
+    )
+    scenario = memory.record_memory_scenario(
+        "Real scenario",
+        "A valid source scenario.",
+        atoms=[atom],
+    )
+
+    with pytest.raises(KeyError, match="memory scenario"):
+        memory.record_memory_persona(
+            "Partially grounded persona",
+            "This should be rejected because one scenario id is missing.",
+            scenarios=[scenario, "scene_does_not_exist"],
+        )
+
+    assert memory.list_memory_personas() == []
+
+
+def test_search_memory_personas_finds_relevant_summary(memory: EvidenceGatedMemory) -> None:
+    target_atom = memory.record_memory_atom(
+        "persona",
+        "User values auditability and evidence gates.",
+    )
+    target_scenario = memory.record_memory_scenario(
+        "Auditability scenario",
+        "The user repeatedly asks for audit logs and guarded state changes.",
+        atoms=[target_atom],
+    )
+    other_atom = memory.record_memory_atom(
+        "persona",
+        "User likes concise architecture handoffs.",
+    )
+    other_scenario = memory.record_memory_scenario(
+        "Handoff scenario",
+        "The user wants README status sections kept current.",
+        atoms=[other_atom],
+    )
+    target = memory.record_memory_persona(
+        "Evidence-first maintainer",
+        "A profile centered on auditability, evidence gates, and rejection clarity.",
+        scenarios=[target_scenario],
+    )
+    memory.record_memory_persona(
+        "Documentation maintainer",
+        "A profile centered on handoff notes and project status.",
+        scenarios=[other_scenario],
+    )
+
+    results = memory.search_memory_personas("auditability evidence", limit=5)
+
+    assert [profile.id for profile in results] == [target.id]
+
+
+def test_memory_persona_record_writes_audit(memory: EvidenceGatedMemory) -> None:
+    atom = memory.record_memory_atom(
+        "persona",
+        "Persona promotion decisions should be auditable.",
+    )
+    scenario = memory.record_memory_scenario(
+        "Persona audit scenario",
+        "Audit manually promoted L3 personas.",
+        atoms=[atom],
+    )
+
+    persona = memory.record_memory_persona(
+        "Audit persona",
+        "Audit manually promoted L3 personas.",
+        scenarios=[scenario],
+    )
+
+    details = [
+        json.loads(row["detail"])
+        for row in memory.store.list_audit(limit=300)
+        if row["event_type"] == "memory_persona_recorded"
+    ]
+
+    assert len(details) == 1
+    assert details[0]["persona_id"] == persona.id
+    assert details[0]["scenario_ids"] == [scenario.id]

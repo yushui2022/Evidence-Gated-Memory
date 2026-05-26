@@ -25,6 +25,7 @@ from evidence_gated_memory.core.models import (
     GateResult,
     MemoryAtom,
     MemoryAtomKind,
+    MemoryPersona,
     MemoryScenario,
     OffloadRecord,
     Task,
@@ -72,6 +73,16 @@ CREATE TABLE IF NOT EXISTS memory_scenarios (
     title TEXT NOT NULL,
     summary TEXT NOT NULL,
     atom_ids TEXT NOT NULL,
+    metadata TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS memory_personas (
+    id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    name TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    scenario_ids TEXT NOT NULL,
     metadata TEXT NOT NULL
 );
 
@@ -152,6 +163,13 @@ CREATE VIRTUAL TABLE IF NOT EXISTS memory_atoms_fts USING fts5(
 CREATE VIRTUAL TABLE IF NOT EXISTS memory_scenarios_fts USING fts5(
     id UNINDEXED,
     title,
+    summary,
+    tokenize = 'unicode61'
+);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS memory_personas_fts USING fts5(
+    id UNINDEXED,
+    name,
     summary,
     tokenize = 'unicode61'
 );
@@ -402,6 +420,16 @@ class SqliteStore:
         ).fetchone()
         return _row_to_memory_scenario(row) if row else None
 
+    def get_memory_scenarios_many(self, ids: Iterable[str]) -> list[MemoryScenario]:
+        ids = list(ids)
+        if not ids:
+            return []
+        placeholders = ",".join("?" * len(ids))
+        rows = self.conn.execute(
+            f"SELECT * FROM memory_scenarios WHERE id IN ({placeholders})", ids
+        ).fetchall()
+        return [_row_to_memory_scenario(r) for r in rows]
+
     def list_memory_scenarios(self) -> list[MemoryScenario]:
         rows = self.conn.execute(
             "SELECT * FROM memory_scenarios ORDER BY updated_at DESC"
@@ -431,6 +459,60 @@ class SqliteStore:
             (like, like, limit),
         ).fetchall()
         return [_row_to_memory_scenario(r) for r in rows]
+
+    def insert_memory_persona(self, persona: MemoryPersona) -> None:
+        self.conn.execute(
+            """INSERT INTO memory_personas(
+                id, created_at, updated_at, name, summary, scenario_ids, metadata
+            ) VALUES (?,?,?,?,?,?,?)""",
+            (
+                persona.id, _iso(persona.created_at), _iso(persona.updated_at),
+                persona.name, persona.summary, _dumps(persona.scenario_ids),
+                _dumps(persona.metadata),
+            ),
+        )
+        self.conn.execute(
+            "INSERT INTO memory_personas_fts(id, name, summary) VALUES (?,?,?)",
+            (persona.id, persona.name, persona.summary),
+        )
+        self.conn.commit()
+
+    def get_memory_persona(self, persona_id: str) -> Optional[MemoryPersona]:
+        row = self.conn.execute(
+            "SELECT * FROM memory_personas WHERE id=?",
+            (persona_id,),
+        ).fetchone()
+        return _row_to_memory_persona(row) if row else None
+
+    def list_memory_personas(self) -> list[MemoryPersona]:
+        rows = self.conn.execute(
+            "SELECT * FROM memory_personas ORDER BY updated_at DESC"
+        ).fetchall()
+        return [_row_to_memory_persona(r) for r in rows]
+
+    def search_memory_personas(self, query: str, limit: int = 10) -> list[MemoryPersona]:
+        safe = _sanitize_fts_query(query)
+        if safe:
+            try:
+                rows = self.conn.execute(
+                    "SELECT memory_personas.* FROM memory_personas "
+                    "JOIN memory_personas_fts ON memory_personas.id = memory_personas_fts.id "
+                    "WHERE memory_personas_fts MATCH ? "
+                    "ORDER BY rank LIMIT ?",
+                    (safe, limit),
+                ).fetchall()
+                if rows:
+                    return [_row_to_memory_persona(r) for r in rows]
+            except sqlite3.OperationalError:
+                pass
+
+        like = f"%{query}%"
+        rows = self.conn.execute(
+            "SELECT * FROM memory_personas WHERE name LIKE ? OR summary LIKE ? "
+            "ORDER BY updated_at DESC LIMIT ?",
+            (like, like, limit),
+        ).fetchall()
+        return [_row_to_memory_persona(r) for r in rows]
 
     # ---------- Evidence ----------
 
@@ -829,6 +911,18 @@ def _row_to_memory_scenario(row: sqlite3.Row) -> MemoryScenario:
         title=row["title"],
         summary=row["summary"],
         atom_ids=json.loads(row["atom_ids"]),
+        metadata=json.loads(row["metadata"]),
+    )
+
+
+def _row_to_memory_persona(row: sqlite3.Row) -> MemoryPersona:
+    return MemoryPersona(
+        id=row["id"],
+        created_at=_from_iso(row["created_at"]),
+        updated_at=_from_iso(row["updated_at"]),
+        name=row["name"],
+        summary=row["summary"],
+        scenario_ids=json.loads(row["scenario_ids"]),
         metadata=json.loads(row["metadata"]),
     )
 

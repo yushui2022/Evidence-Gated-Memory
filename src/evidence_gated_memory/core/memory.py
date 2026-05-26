@@ -32,6 +32,7 @@ from evidence_gated_memory.core.models import (
     GateResult,
     MemoryAtom,
     MemoryAtomKind,
+    MemoryPersona,
     MemoryScenario,
     OffloadRecord,
     Task,
@@ -216,6 +217,57 @@ class EvidenceGatedMemory:
 
     def search_memory_scenarios(self, query: str, limit: int = 10) -> list[MemoryScenario]:
         return self.store.search_memory_scenarios(query=query, limit=limit)
+
+    def record_memory_persona(
+        self,
+        name: str,
+        summary: str,
+        *,
+        scenarios: list[Union[str, MemoryScenario]],
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> MemoryPersona:
+        """Record a manually curated L3 persona grounded in L2 scenarios."""
+        scenario_ids = [
+            scenario.id if isinstance(scenario, MemoryScenario) else scenario
+            for scenario in scenarios
+        ]
+        if not scenario_ids:
+            raise ValueError("memory persona requires at least one source scenario")
+
+        existing = self.store.get_memory_scenarios_many(scenario_ids)
+        existing_ids = {scenario.id for scenario in existing}
+        missing = [
+            scenario_id for scenario_id in scenario_ids
+            if scenario_id not in existing_ids
+        ]
+        if missing:
+            raise KeyError(f"memory scenario(s) not found: {missing}")
+
+        persona = MemoryPersona(
+            name=name,
+            summary=summary,
+            scenario_ids=scenario_ids,
+            metadata=metadata or {},
+        )
+        self.store.insert_memory_persona(persona)
+        self.store.append_audit(
+            event_type="memory_persona_recorded",
+            detail={
+                "persona_id": persona.id,
+                "name": name,
+                "scenario_ids": scenario_ids,
+            },
+        )
+        return persona
+
+    def get_memory_persona(self, persona_id: str) -> Optional[MemoryPersona]:
+        return self.store.get_memory_persona(persona_id)
+
+    def list_memory_personas(self) -> list[MemoryPersona]:
+        return self.store.list_memory_personas()
+
+    def search_memory_personas(self, query: str, limit: int = 10) -> list[MemoryPersona]:
+        return self.store.search_memory_personas(query=query, limit=limit)
 
     def record_evidence(
         self,

@@ -169,6 +169,18 @@ class MemoryScenario(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class MemoryPersona(BaseModel):
+    """L3 long-term memory persona grounded in L2 scenarios."""
+
+    id: str = Field(default_factory=lambda: _new_id("persona"))
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+    name: str
+    summary: str
+    scenario_ids: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class OffloadRecord(BaseModel):
     """Mid-layer index for a heavy tool result stored as raw evidence.
 
