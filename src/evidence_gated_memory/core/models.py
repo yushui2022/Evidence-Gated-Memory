@@ -50,6 +50,32 @@ class TaskNodeStatus(str, enum.Enum):
     SKIPPED = "skipped"
 
 
+class TaskStatus(str, enum.Enum):
+    """Top-level workflow status. Aggregated from child node states."""
+
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    BLOCKED = "blocked"
+    DONE = "done"
+    CANCELLED = "cancelled"
+
+
+class TaskEdgeKind(str, enum.Enum):
+    """How two task nodes relate.
+
+    `parent` is the implicit tree edge already carried on TaskNode.parent_id;
+    it is mirrored here only when the caller explicitly creates an edge,
+    so the edge table doesn't shadow the column. The other kinds are
+    semantic relationships that don't fit a tree.
+    """
+
+    PARENT = "parent"           # structural containment
+    DEPENDS_ON = "depends_on"   # A cannot start until B is DONE
+    TRIGGERS = "triggers"       # finishing A schedules B
+    PRODUCES = "produces"       # A's output is B's input
+    BLOCKS = "blocks"           # A explicitly blocks B (e.g. compliance hold)
+
+
 class Event(BaseModel):
     """L0 — raw append-only log entry. Never gated."""
 
@@ -84,6 +110,11 @@ class Evidence(BaseModel):
     expired_after_seconds: Optional[int] = None
 
     revoked_at: Optional[datetime] = None
+
+    # Back-link to the task node this evidence is attached to, if any.
+    # Set lazily by `attach_evidence_to_node`. Lets retrieval and
+    # build_context light up `task_focus` (#25) without a join.
+    node_id: Optional[str] = None
 
 
 class Claim(BaseModel):
@@ -123,6 +154,10 @@ class Fact(BaseModel):
 
     metadata: dict[str, Any] = Field(default_factory=dict)
 
+    # Back-link to the task node this fact is attached to, if any.
+    # Set lazily by `attach_fact_to_node`. Symmetric with Evidence.node_id.
+    node_id: Optional[str] = None
+
 
 class TaskNode(BaseModel):
     """A node in the hard-anchor task graph.
@@ -149,6 +184,44 @@ class TaskNode(BaseModel):
 
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class Task(BaseModel):
+    """The workflow-level object — a `task_id` made first-class.
+
+    Until #32 the workflow only existed as a free-form string carried on each
+    TaskNode. That works for grouping but hides the lifecycle: who opened the
+    task, when, against which anchor, and where it stands overall. `Task`
+    makes that explicit so build_context, audit, and retrieval can reason
+    about whole workflows, not just nodes.
+
+    Auto-created on first `create_task_node(task_id=...)` for back-compat.
+    """
+
+    id: str                                            # the same string used as TaskNode.task_id
+    title: str = ""
+    status: TaskStatus = TaskStatus.OPEN
+    anchors: dict[str, str] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class TaskEdge(BaseModel):
+    """Typed edge between two TaskNodes.
+
+    Parent/child containment is already on `TaskNode.parent_id` — TaskEdge is
+    for relationships that don't fit a tree: `depends_on`, `triggers`,
+    `produces`, `blocks`. Edges are directional: `src -> dst`.
+    """
+
+    id: str = Field(default_factory=lambda: _new_id("edge"))
+    task_id: str                                       # the workflow both nodes belong to
+    src_node_id: str
+    dst_node_id: str
+    kind: TaskEdgeKind = TaskEdgeKind.DEPENDS_ON
+    created_at: datetime = Field(default_factory=_utcnow)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

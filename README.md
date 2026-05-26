@@ -351,7 +351,7 @@ MIT
 
 ---
 
-## Project status & handoff (updated 2026-05-26)
+## Project status & handoff (updated 2026-05-26, late-night session)
 
 This section is the single source of truth for "where the project is right now."
 It is meant to be read cold — by a future-me, a collaborator, or a new Claude/Codex session — and be enough to resume work without losing context.
@@ -388,15 +388,15 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 |---|---|---|---|
 | 28 | ✅ | TaskGraph structured object (TaskNode model + SQLite table + CRUD) | — |
 | 30 | ✅ | Attach-reference validation + TaskNode audit log | #28 |
-| 20 | ⬜ | **NEXT** — `render_mermaid()` projection over task_nodes | #28 ✅ |
-| 21 | 🔒 | Soft state machine: `TaskState` + current-state table | #20 |
-| 22 | 🔒 | Promote node state transitions into the gate system | #20, #21 |
+| 20 | ✅ | `render_mermaid()` projection over task_nodes | #28 |
+| 32 | ✅ | Top-level `Task` model + `TaskEdge` + typed-edge Mermaid rendering | #28 |
+| 23 | ✅ | `node_id` back-link from evidence & facts to their task node | #20 |
+| 24 | ⬜ | **NEXT** — `build_context()` emits a `<task_map>` block with gated facts inline | #23 ✅ |
+| 25 | ⬜ | Retrieval picks up a `task_focus` signal (uses the new `node_id` back-link) | #23 ✅ |
+| 21 | ⬜ | Soft state machine: `TaskState` + current-state table | #20 ✅ |
+| 22 | 🔒 | Promote node state transitions into the gate system | #21 |
 | 31 | 🔒 | `transition_node()` — the **gated** business API (current `update_task_node_status` is low-level CRUD only) | #22 |
-| 23 | 🔒 | Add `node_id` link from evidence & facts back to task nodes | #20 |
-| 24 | 🔒 | `build_context()` emits a `<task_map>` block with gated facts inline | #20, #23 |
-| 25 | 🔒 | Retrieval picks up a `task_focus` signal | #23 |
-| 32 | ⬜ | Top-level `Task` model + `TaskEdge` (round out the "graph" in TaskGraph) | #28 ✅ — can run in parallel with #20 |
-| 26 | 🔒 | Architecture doc: three pillars + lineage from TencentDB Agent Memory | #20–#25 |
+| 26 | 🔒 | Architecture doc: three pillars + lineage from TencentDB Agent Memory | #21–#25 |
 
 #### M2 — long-term semantic pyramid (not started)
 
@@ -416,14 +416,15 @@ The principle we converged on is **"build trust at the base before growing up"**
 
 ```
 ✅ #28  TaskNode structured object
-✅ #30  attach validation + audit          ← we are here
-⬜ #20  render_mermaid                     ← NEXT
-⬜ #22  state transitions inside the gate system   (needs #21 first)
-⬜ #31  transition_node — the gated state API
-⬜ #32  Task + TaskEdge top-level model
-⬜ #23  evidence/fact ↔ node_id link
-⬜ #24  build_context emits task_map block
-⬜ #25  retrieval task_focus signal
+✅ #30  attach validation + audit
+✅ #20  render_mermaid
+✅ #32  Task + TaskEdge top-level model
+✅ #23  evidence/fact ↔ node_id back-link  ← just landed
+⬜ #24  build_context emits task_map block ← NEXT (unblocked)
+⬜ #25  retrieval task_focus signal        ← NEXT (unblocked)
+⬜ #21  soft state machine (TaskState)     ← can start in parallel
+⬜ #22  state transitions inside the gate system   (needs #21)
+⬜ #31  transition_node — the gated state API     (needs #22)
 ⬜ #26  architecture doc
 ```
 
@@ -433,27 +434,30 @@ After M1 closes, pick up M2 (#29) and M3 (#27). The v0.1 hardening items (#13–
 
 1. **Verify the baseline still works.**
    ```bash
-   python -m pytest          # expect 49 passed
+   python -m pytest          # expect 73 passed
    ```
-2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py` (TaskGraph API region, around the `# ---------- Task Graph ----------` comment) and `tests/test_task_graph.py`.
-3. **Start #20.** The shape is:
-   - new module `src/evidence_gated_memory/core/mermaid.py` with a pure function `render_mermaid(nodes: list[TaskNode]) -> str`
-   - status → CSS class: pending/in_progress/blocked/done/skipped → `:::pending`, etc.
-   - parent_id → edge `parent --> child`
-   - call site: a new `EvidenceGatedMemory.render_task_graph(task_id: str | None = None) -> str`
-   - tests: empty graph, single node per status, parent/child edges, multi-task isolation
-4. **Do not touch** `update_task_node_status`'s behavior — it is intentionally low-level CRUD. The gated API is `transition_node()` and lives in #31.
+2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
+3. **Three tasks are now unblocked — pick any or all:**
+   - **#24 (build_context emits `<task_map>`)**: read `context.py`, add a Mermaid + gated-facts block to the prompt output. Render evidence freshness inline. Wire up `render_task_graph()`.
+   - **#25 (retrieval task_focus)**: use the new `Evidence.node_id` / `Fact.node_id` back-link so context can filter or boost items related to the active task node.
+   - **#21 (soft state machine)**: define `TaskState` enum on the `Task` model and a `tasks.current_state` column. TaskState aggregates from child node statuses: if any node is BLOCKED → Task is BLOCKED; all DONE → Task is DONE; etc.
+4. **Do not touch** `update_task_node_status`'s behavior. The gated API is `transition_node()` (#31).
 
 ### Uncommitted local state (as of writing)
 
 `git status` shows local edits not yet pushed. Before resuming, decide whether to commit M1 progress so far as a single "M1: TaskGraph foundation (#28 + #30)" commit, or keep iterating and squash later. Files involved:
 
-- `src/evidence_gated_memory/core/models.py` — TaskNode + TaskNodeStatus
-- `src/evidence_gated_memory/storage/sqlite.py` — task_nodes table + DAO
-- `src/evidence_gated_memory/core/memory.py` — TaskGraph API (CRUD + attach + audit)
+- `src/evidence_gated_memory/core/models.py` — TaskNode, TaskNodeStatus, Task, TaskStatus, TaskEdge, TaskEdgeKind; node_id back-link on Evidence and Fact
+- `src/evidence_gated_memory/storage/sqlite.py` — task_nodes / tasks / task_edges tables + DAO; node_id columns + setters on evidence / facts
+- `src/evidence_gated_memory/core/memory.py` — TaskGraph API (CRUD + attach + audit + `render_task_graph`); Task + TaskEdge APIs; back-link writes on attach
+- `src/evidence_gated_memory/core/mermaid.py` — pure projection function with typed-edge rendering
 - `src/evidence_gated_memory/__init__.py` — re-exports
-- `tests/test_task_graph.py` — new, 13 tests, all green
-- `README.md` — this section + banner
+- `tests/test_task_graph.py` — 13 tests
+- `tests/test_mermaid.py` — 7 tests
+- `tests/test_task_top_level.py` — 13 tests
+- `tests/test_node_id_backlink.py` — 4 tests
+- Suite total: **73 passed**
+- `README.md` — handoff section + banner
 
 ### Key design decisions worth not re-litigating
 

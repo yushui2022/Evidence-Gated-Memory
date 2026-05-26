@@ -10,8 +10,12 @@ from evidence_gated_memory.core.models import (
     FactKind,
     Freshness,
     GateResult,
+    Task,
+    TaskEdge,
+    TaskEdgeKind,
     TaskNode,
     TaskNodeStatus,
+    TaskStatus,
 )
 
 __version__ = "0.2.0"
@@ -26,6 +30,10 @@ __all__ = [
     "FactKind",
     "Freshness",
     "GateResult",
+    "Task",
+    "TaskEdge",
+    "TaskEdgeKind",
     "TaskNode",
     "TaskNodeStatus",
+    "TaskStatus",
 ]

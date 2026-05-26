@@ -21,8 +21,12 @@ from evidence_gated_memory.core.models import (
     Fact,
     FactKind,
     GateResult,
+    Task,
+    TaskEdge,
+    TaskEdgeKind,
     TaskNode,
     TaskNodeStatus,
+    TaskStatus,
 )
 
 
@@ -48,7 +52,8 @@ CREATE TABLE IF NOT EXISTS evidence (
     metadata TEXT NOT NULL,
     stale_after_seconds INTEGER,
     expired_after_seconds INTEGER,
-    revoked_at TEXT
+    revoked_at TEXT,
+    node_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS claims (
@@ -73,7 +78,8 @@ CREATE TABLE IF NOT EXISTS facts (
     depends_on TEXT NOT NULL,
     invalidated_at TEXT,
     invalidation_reason TEXT,
-    metadata TEXT NOT NULL
+    metadata TEXT NOT NULL,
+    node_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS audit_log (
@@ -122,6 +128,31 @@ CREATE INDEX IF NOT EXISTS idx_facts_claim_type ON facts(claim_type);
 CREATE INDEX IF NOT EXISTS idx_facts_invalidated ON facts(invalidated_at);
 CREATE INDEX IF NOT EXISTS idx_task_nodes_task_id ON task_nodes(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_nodes_status ON task_nodes(status);
+
+CREATE TABLE IF NOT EXISTS tasks (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    status TEXT NOT NULL,
+    anchors TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    metadata TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS task_edges (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL,
+    src_node_id TEXT NOT NULL,
+    dst_node_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    metadata TEXT NOT NULL,
+    UNIQUE(task_id, src_node_id, dst_node_id, kind)
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_edges_task_id ON task_edges(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_edges_src ON task_edges(src_node_id);
+CREATE INDEX IF NOT EXISTS idx_task_edges_dst ON task_edges(dst_node_id);
 """
 
 
@@ -209,6 +240,13 @@ class SqliteStore:
         ).fetchall()
         return [_row_to_evidence(r) for r in rows]
 
+    def update_evidence_node_id(self, evidence_id: str, node_id: str) -> None:
+        self.conn.execute(
+            "UPDATE evidence SET node_id=? WHERE id=?",
+            (node_id, evidence_id),
+        )
+        self.conn.commit()
+
     # ---------- Claims ----------
 
     def insert_claim(self, claim: Claim) -> None:
@@ -269,6 +307,13 @@ class SqliteStore:
             (like,),
         ).fetchall()
         return [_row_to_fact(r) for r in rows]
+
+    def update_fact_node_id(self, fact_id: str, node_id: str) -> None:
+        self.conn.execute(
+            "UPDATE facts SET node_id=? WHERE id=?",
+            (node_id, fact_id),
+        )
+        self.conn.commit()
 
     def invalidate_fact(self, fact_id: str, reason: str, at: datetime) -> None:
         self.conn.execute(
@@ -362,6 +407,83 @@ class SqliteStore:
         )
         self.conn.commit()
 
+    # ---------- Tasks ----------
+
+    def upsert_task(self, task: Task) -> None:
+        """Insert-or-update by id. Callers use this for both creation and
+        status/title updates — the workflow row is small enough that we
+        always write the full snapshot."""
+        self.conn.execute(
+            """INSERT INTO tasks(id, title, status, anchors, created_at, updated_at, metadata)
+               VALUES (?,?,?,?,?,?,?)
+               ON CONFLICT(id) DO UPDATE SET
+                 title=excluded.title,
+                 status=excluded.status,
+                 anchors=excluded.anchors,
+                 updated_at=excluded.updated_at,
+                 metadata=excluded.metadata""",
+            (
+                task.id, task.title, task.status.value, _dumps(task.anchors),
+                _iso(task.created_at), _iso(task.updated_at), _dumps(task.metadata),
+            ),
+        )
+        self.conn.commit()
+
+    def get_task(self, task_id: str) -> Optional[Task]:
+        row = self.conn.execute("SELECT * FROM tasks WHERE id=?", (task_id,)).fetchone()
+        return _row_to_task(row) if row else None
+
+    def list_tasks(self, status: Optional[TaskStatus] = None) -> list[Task]:
+        if status is None:
+            rows = self.conn.execute(
+                "SELECT * FROM tasks ORDER BY created_at ASC"
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM tasks WHERE status=? ORDER BY created_at ASC",
+                (status.value,),
+            ).fetchall()
+        return [_row_to_task(r) for r in rows]
+
+    # ---------- Task Edges ----------
+
+    def insert_task_edge(self, edge: TaskEdge) -> None:
+        """Insert an edge. The UNIQUE constraint on
+        (task_id, src, dst, kind) makes this idempotent at the SQL level —
+        callers can re-emit the same edge without worrying about duplicates."""
+        self.conn.execute(
+            """INSERT OR IGNORE INTO task_edges(
+                id, task_id, src_node_id, dst_node_id, kind, created_at, metadata
+            ) VALUES (?,?,?,?,?,?,?)""",
+            (
+                edge.id, edge.task_id, edge.src_node_id, edge.dst_node_id,
+                edge.kind.value, _iso(edge.created_at), _dumps(edge.metadata),
+            ),
+        )
+        self.conn.commit()
+
+    def list_task_edges(
+        self,
+        task_id: Optional[str] = None,
+        src_node_id: Optional[str] = None,
+        dst_node_id: Optional[str] = None,
+    ) -> list[TaskEdge]:
+        clauses, args = [], []
+        if task_id is not None:
+            clauses.append("task_id = ?")
+            args.append(task_id)
+        if src_node_id is not None:
+            clauses.append("src_node_id = ?")
+            args.append(src_node_id)
+        if dst_node_id is not None:
+            clauses.append("dst_node_id = ?")
+            args.append(dst_node_id)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        rows = self.conn.execute(
+            f"SELECT * FROM task_edges {where} ORDER BY created_at ASC", args
+        ).fetchall()
+        return [_row_to_task_edge(r) for r in rows]
+
     # ---------- Audit ----------
 
     def append_audit(
@@ -423,6 +545,7 @@ def _row_to_evidence(row: sqlite3.Row) -> Evidence:
         stale_after_seconds=row["stale_after_seconds"],
         expired_after_seconds=row["expired_after_seconds"],
         revoked_at=_from_iso(row["revoked_at"]),
+        node_id=row["node_id"],
     )
 
 
@@ -439,6 +562,7 @@ def _row_to_fact(row: sqlite3.Row) -> Fact:
         invalidated_at=_from_iso(row["invalidated_at"]),
         invalidation_reason=row["invalidation_reason"],
         metadata=json.loads(row["metadata"]),
+        node_id=row["node_id"],
     )
 
 
@@ -457,5 +581,29 @@ def _row_to_task_node(row: sqlite3.Row) -> TaskNode:
         suggested_action=row["suggested_action"],
         created_at=_from_iso(row["created_at"]),
         updated_at=_from_iso(row["updated_at"]),
+        metadata=json.loads(row["metadata"]),
+    )
+
+
+def _row_to_task(row: sqlite3.Row) -> Task:
+    return Task(
+        id=row["id"],
+        title=row["title"],
+        status=TaskStatus(row["status"]),
+        anchors=json.loads(row["anchors"]),
+        created_at=_from_iso(row["created_at"]),
+        updated_at=_from_iso(row["updated_at"]),
+        metadata=json.loads(row["metadata"]),
+    )
+
+
+def _row_to_task_edge(row: sqlite3.Row) -> TaskEdge:
+    return TaskEdge(
+        id=row["id"],
+        task_id=row["task_id"],
+        src_node_id=row["src_node_id"],
+        dst_node_id=row["dst_node_id"],
+        kind=TaskEdgeKind(row["kind"]),
+        created_at=_from_iso(row["created_at"]),
         metadata=json.loads(row["metadata"]),
     )

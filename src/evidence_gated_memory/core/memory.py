@@ -19,6 +19,7 @@ from evidence_gated_memory.core.context import build_context
 from evidence_gated_memory.core.entities import EntityFallback, ExtractedEntity, extract_entities
 from evidence_gated_memory.core.freshness import freshness_of, is_usable
 from evidence_gated_memory.core.gates import check_gate
+from evidence_gated_memory.core.mermaid import render_mermaid
 from evidence_gated_memory.core.models import (
     AssertResult,
     Claim,
@@ -28,8 +29,12 @@ from evidence_gated_memory.core.models import (
     FactKind,
     Freshness,
     GateResult,
+    Task,
+    TaskEdge,
+    TaskEdgeKind,
     TaskNode,
     TaskNodeStatus,
+    TaskStatus,
 )
 from evidence_gated_memory.schemas.loader import DomainSchema, load_schema, load_schema_dict
 from evidence_gated_memory.storage.sqlite import SqliteStore
@@ -125,6 +130,88 @@ class EvidenceGatedMemory:
 
     # ---------- Task Graph ----------
 
+    def create_task(
+        self,
+        task_id: str,
+        title: str = "",
+        *,
+        anchors: Optional[dict[str, str]] = None,
+        status: TaskStatus = TaskStatus.OPEN,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> Task:
+        """Create-or-update the workflow-level Task row.
+
+        Most callers don't need to call this directly — `create_task_node`
+        auto-creates a Task on first sight of a new `task_id`. Use this when
+        you want to set the workflow title/anchors up-front, or to flip the
+        top-level status (open → done) explicitly.
+        """
+        existing = self.store.get_task(task_id)
+        if existing is None:
+            task = Task(
+                id=task_id,
+                title=title,
+                status=status,
+                anchors=anchors or {},
+                metadata=metadata or {},
+            )
+            self.store.upsert_task(task)
+            self.store.append_audit(
+                event_type="task_created",
+                detail={
+                    "task_id": task.id,
+                    "title": task.title,
+                    "status": task.status.value,
+                    "anchors": task.anchors,
+                },
+            )
+            return task
+
+        prev_status = existing.status
+        if title:
+            existing.title = title
+        if anchors is not None:
+            existing.anchors = anchors
+        if metadata is not None:
+            existing.metadata = metadata
+        existing.status = status
+        existing.updated_at = datetime.now(timezone.utc)
+        self.store.upsert_task(existing)
+        if prev_status != status:
+            self.store.append_audit(
+                event_type="task_status_changed",
+                detail={
+                    "task_id": existing.id,
+                    "from_status": prev_status.value,
+                    "to_status": status.value,
+                },
+            )
+        return existing
+
+    def get_task(self, task_id: str) -> Optional[Task]:
+        return self.store.get_task(task_id)
+
+    def list_tasks(self, status: Optional[TaskStatus] = None) -> list[Task]:
+        return self.store.list_tasks(status=status)
+
+    def _ensure_task(self, task_id: str, *, anchors: Optional[dict[str, str]] = None) -> Task:
+        """Back-compat: if a node is created against an unknown task_id,
+        materialise the workflow row on the fly so the graph stays consistent."""
+        existing = self.store.get_task(task_id)
+        if existing is not None:
+            return existing
+        task = Task(id=task_id, title=task_id, anchors=anchors or {})
+        self.store.upsert_task(task)
+        self.store.append_audit(
+            event_type="task_auto_created",
+            detail={
+                "task_id": task.id,
+                "reason": "first task_node for this task_id",
+                "anchors": task.anchors,
+            },
+        )
+        return task
+
     def create_task_node(
         self,
         task_id: str,
@@ -136,6 +223,8 @@ class EvidenceGatedMemory:
         status: TaskNodeStatus = TaskNodeStatus.PENDING,
         metadata: Optional[dict[str, Any]] = None,
     ) -> TaskNode:
+        # Materialise the workflow row first so every node has a parent Task.
+        self._ensure_task(task_id, anchors=anchors)
         node = TaskNode(
             task_id=task_id,
             node_type=node_type,
@@ -236,6 +325,7 @@ class EvidenceGatedMemory:
             node.evidence_refs.append(evidence_id)
             node.updated_at = datetime.now(timezone.utc)
             self.store.update_task_node(node)
+            self.store.update_evidence_node_id(evidence_id, node.id)
             self.store.append_audit(
                 event_type="task_node_evidence_attached",
                 detail={
@@ -268,6 +358,7 @@ class EvidenceGatedMemory:
             node.fact_refs.append(fact_id)
             node.updated_at = datetime.now(timezone.utc)
             self.store.update_task_node(node)
+            self.store.update_fact_node_id(fact_id, node.id)
             self.store.append_audit(
                 event_type="task_node_fact_attached",
                 detail={
@@ -277,6 +368,80 @@ class EvidenceGatedMemory:
                 },
             )
         return node
+
+    def add_task_edge(
+        self,
+        src_node_id: str,
+        dst_node_id: str,
+        *,
+        kind: TaskEdgeKind = TaskEdgeKind.DEPENDS_ON,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> TaskEdge:
+        """Create a typed edge between two existing nodes.
+
+        Both endpoints must exist (no phantom refs) and must belong to the
+        same workflow — cross-task edges would muddy the per-task projection
+        used by render_mermaid / build_context. Self-loops are rejected.
+        """
+        src = self.store.get_task_node(src_node_id)
+        if src is None:
+            raise KeyError(f"task node not found: {src_node_id}")
+        dst = self.store.get_task_node(dst_node_id)
+        if dst is None:
+            raise KeyError(f"task node not found: {dst_node_id}")
+        if src.task_id != dst.task_id:
+            raise ValueError(
+                f"cross-task edges are not allowed: {src.task_id} != {dst.task_id}"
+            )
+        if src_node_id == dst_node_id:
+            raise ValueError("self-loop edges are not allowed")
+
+        edge = TaskEdge(
+            task_id=src.task_id,
+            src_node_id=src_node_id,
+            dst_node_id=dst_node_id,
+            kind=kind,
+            metadata=metadata or {},
+        )
+        self.store.insert_task_edge(edge)
+        self.store.append_audit(
+            event_type="task_edge_added",
+            detail={
+                "edge_id": edge.id,
+                "task_id": edge.task_id,
+                "src": src_node_id,
+                "dst": dst_node_id,
+                "kind": kind.value,
+            },
+        )
+        return edge
+
+    def list_task_edges(
+        self,
+        task_id: Optional[str] = None,
+        src_node_id: Optional[str] = None,
+        dst_node_id: Optional[str] = None,
+    ) -> list[TaskEdge]:
+        return self.store.list_task_edges(
+            task_id=task_id, src_node_id=src_node_id, dst_node_id=dst_node_id,
+        )
+
+    def render_task_graph(
+        self,
+        task_id: Optional[str] = None,
+        status: Optional[TaskNodeStatus] = None,
+    ) -> str:
+        """Render the current TaskGraph as a Mermaid `flowchart TD` block.
+
+        Filters compose: pass `task_id` to scope to one workflow, `status` to
+        focus on (say) only BLOCKED nodes. The output is a string ready to
+        drop into a prompt's `<task_map>` slot.
+        """
+        nodes = self.store.list_task_nodes(task_id=task_id, status=status)
+        # Only fetch edges when we're scoped to a single task — global edge
+        # rendering across tasks is meaningless (cross-task edges aren't allowed).
+        edges = self.store.list_task_edges(task_id=task_id) if task_id else []
+        return render_mermaid(nodes, edges=edges)
 
     # ---------- L1: claim → fact ----------
 
