@@ -3,6 +3,7 @@
 One workspace = one directory containing:
   - egm.db        SQLite file (events, evidence, claims, facts, audit)
   - refs/         markdown files holding raw evidence content
+  - offload/      JSONL index for heavy tool results
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ from evidence_gated_memory.core.models import (
     Fact,
     FactKind,
     GateResult,
+    OffloadRecord,
     Task,
     TaskEdge,
     TaskEdgeKind,
@@ -178,6 +180,9 @@ class SqliteStore:
         self.workspace.mkdir(parents=True, exist_ok=True)
         self.refs_dir = self.workspace / "refs"
         self.refs_dir.mkdir(exist_ok=True)
+        self.offload_dir = self.workspace / "offload"
+        self.offload_dir.mkdir(exist_ok=True)
+        self.offload_path = self.offload_dir / "offload.jsonl"
         self.db_path = self.workspace / "egm.db"
         self.conn = sqlite3.connect(self.db_path)
         self.conn.row_factory = sqlite3.Row
@@ -219,6 +224,32 @@ class SqliteStore:
     def read_ref_content(self, evidence_id: str) -> str:
         path = self.refs_dir / f"{evidence_id}.md"
         return path.read_text(encoding="utf-8") if path.exists() else ""
+
+    # ---------- Offload JSONL ----------
+
+    def append_offload_record(self, record: OffloadRecord) -> None:
+        with self.offload_path.open("a", encoding="utf-8") as f:
+            f.write(_dumps(record.model_dump()) + "\n")
+
+    def list_offload_records(
+        self,
+        task_id: Optional[str] = None,
+        node_id: Optional[str] = None,
+    ) -> list[OffloadRecord]:
+        if not self.offload_path.exists():
+            return []
+
+        records: list[OffloadRecord] = []
+        for line in self.offload_path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            record = OffloadRecord(**json.loads(line))
+            if task_id is not None and record.task_id != task_id:
+                continue
+            if node_id is not None and record.node_id != node_id:
+                continue
+            records.append(record)
+        return sorted(records, key=lambda r: r.timestamp)
 
     def insert_evidence(self, ev: Evidence) -> None:
         self.conn.execute(

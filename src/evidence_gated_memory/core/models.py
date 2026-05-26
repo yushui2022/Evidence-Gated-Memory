@@ -126,6 +126,25 @@ class Evidence(BaseModel):
     node_id: Optional[str] = None
 
 
+class OffloadRecord(BaseModel):
+    """Mid-layer index for a heavy tool result stored as raw evidence.
+
+    Offload records are per tool result. They point back to a business
+    TaskNode, but they do not become TaskNodes themselves.
+    """
+
+    id: str = Field(default_factory=lambda: _new_id("off"))
+    timestamp: datetime = Field(default_factory=_utcnow)
+
+    task_id: str
+    node_id: str
+    tool_call_id: str
+    result_ref: str                                  # Evidence id / refs/<id>.md
+    summary: str
+    score: int = Field(default=5, ge=1, le=10)       # summary can replace raw result
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class Claim(BaseModel):
     """A proposed assertion. Becomes a Fact only after passing the gate."""
 

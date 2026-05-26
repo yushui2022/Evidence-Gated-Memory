@@ -29,6 +29,7 @@ from evidence_gated_memory.core.models import (
     FactKind,
     Freshness,
     GateResult,
+    OffloadRecord,
     Task,
     TaskEdge,
     TaskEdgeKind,
@@ -130,6 +131,69 @@ class EvidenceGatedMemory:
         metadata: Optional[dict[str, Any]] = None,
     ) -> list[ExtractedEntity]:
         return extract_entities(content, metadata or {}, self.schema, self.entity_fallback)
+
+    # ---------- Offload JSONL: tool result summary index ----------
+
+    def record_offload(
+        self,
+        *,
+        task_id: str,
+        node_id: str,
+        tool_call_id: str,
+        result_ref: Union[str, Evidence],
+        summary: str,
+        score: int = 5,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> OffloadRecord:
+        """Index a heavy tool result without turning it into a TaskNode.
+
+        `result_ref` must point to an existing Evidence ref. The target node
+        must exist and belong to `task_id`. On success, the evidence is attached
+        to the node so the TaskGraph remains drill-downable.
+        """
+        node = self.store.get_task_node(node_id)
+        if node is None:
+            raise KeyError(f"task node not found: {node_id}")
+        if node.task_id != task_id:
+            raise ValueError(
+                f"offload task_id does not match node task_id: {task_id} != {node.task_id}"
+            )
+
+        evidence_id = result_ref.id if isinstance(result_ref, Evidence) else result_ref
+        if self.store.get_evidence(evidence_id) is None:
+            raise KeyError(f"evidence not found: {evidence_id}")
+
+        record = OffloadRecord(
+            task_id=task_id,
+            node_id=node_id,
+            tool_call_id=tool_call_id,
+            result_ref=evidence_id,
+            summary=summary,
+            score=score,
+            metadata=metadata or {},
+        )
+        self.store.append_offload_record(record)
+        self.attach_evidence_to_node(node_id, evidence_id)
+        self.store.append_audit(
+            event_type="offload_recorded",
+            detail={
+                "offload_id": record.id,
+                "task_id": task_id,
+                "node_id": node_id,
+                "tool_call_id": tool_call_id,
+                "result_ref": evidence_id,
+                "score": score,
+            },
+        )
+        return record
+
+    def list_offloads(
+        self,
+        *,
+        task_id: Optional[str] = None,
+        node_id: Optional[str] = None,
+    ) -> list[OffloadRecord]:
+        return self.store.list_offload_records(task_id=task_id, node_id=node_id)
 
     # ---------- Task Graph ----------
 

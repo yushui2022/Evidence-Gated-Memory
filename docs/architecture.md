@@ -58,6 +58,7 @@ the v0.1 evidence-gating core:
 - Mermaid task graph projection
 - node backlinks from evidence and facts
 - task-focused context building
+- offload JSONL records for heavy tool-result summaries
 - derived `Task.current_state`
 - schema-driven task-state gates
 - gated `transition_node()`
@@ -66,10 +67,10 @@ the v0.1 evidence-gating core:
 The following are intentionally not implemented yet:
 
 - M2: long-term semantic pyramid (`L0 Conversation -> L1 Atom -> L2 Scenario -> L3 Persona`)
-- M3: offload JSONL index (`tool_call_id / node_id / result_ref / summary / score`)
 - hosted server, UI, vector backend, graph database backend, or framework adapters
 
-Those are future layers. M1 first makes the short-term task graph trustworthy.
+Those are future layers. The implemented short-term path now covers refs,
+offload JSONL, TaskGraph, Mermaid projection, facts, and gated transitions.
 
 ## System Shape
 
@@ -79,8 +80,10 @@ flowchart TD
     A --> R["refs/*.md raw evidence"]
 
     R --> EI["Evidence Index"]
+    EI --> O["Offload JSONL<br/>tool_call_id / node_id / result_ref / summary / score"]
     EI --> EN["Entity Anchor Index"]
     EN --> TG["TaskGraph<br/>Task / TaskNode / TaskEdge"]
+    O --> TG
 
     EI --> C["Claim"]
     C --> G["Fact Gate"]
@@ -99,7 +102,8 @@ flowchart TD
     TN --> TS["Task.current_state"]
 
     TG --> M["Mermaid Projection"]
-    F --> CX["Context Builder"]
+    O --> CX["Context Builder"]
+    F --> CX
     M --> CX
     R -. "drill down by ref id" .-> CX
     CX --> P["Agent Prompt"]
@@ -144,6 +148,23 @@ TaskEdge:
   dst_node_id
   kind
 ```
+
+Heavy tool results can be indexed through OffloadRecord:
+
+```text
+OffloadRecord:
+  id
+  timestamp
+  task_id
+  node_id
+  tool_call_id
+  result_ref
+  summary
+  score
+```
+
+The offload record is not a graph node. It is an index record for a tool result
+that points back to a business TaskNode and down to a raw evidence ref.
 
 Mermaid is only a projection.
 

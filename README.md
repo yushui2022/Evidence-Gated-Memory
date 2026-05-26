@@ -364,7 +364,7 @@ EGM has completed **Milestone M1: restoring the graph-memory pillar** on top of 
 
 - **v0.1 (shipped):** evidence + claims + facts + freshness + cascading invalidation + audit + CLI. Tests green (49/49).
 - **M1 complete:** the flat fact store now has a hard-anchor **task graph** with structured TaskNodes, evidence-gated state transitions, and a Mermaid projection that the agent can read as a task map.
-- **Not started:** M2 (long-term semantic pyramid L0→L1→L2→L3), M3 (offload JSONL mid-layer index).
+- **Not started:** M2 (long-term semantic pyramid L0→L1→L2→L3).
 
 ### Status of every tracked task
 
@@ -404,13 +404,13 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 
 | # | Status | Task |
 |---|---|---|
-| 29 | ⬜ | L0 conversation → L1 atom → L2 scenario → L3 persona distillation pipeline |
+| 29 | ⬜ | **NEXT** — L0 conversation → L1 atom → L2 scenario → L3 persona distillation pipeline |
 
-#### M3 — offload mid-layer index (not started)
+#### M3 — offload mid-layer index
 
 | # | Status | Task |
 |---|---|---|
-| 27 | ⬜ | **NEXT** — offload JSONL index: `tool_call_id / node_id / result_ref / summary / score` |
+| 27 | ✅ | offload JSONL index: `tool_call_id / node_id / result_ref / summary / score` |
 
 ### Agreed execution order for the next sessions
 
@@ -428,33 +428,33 @@ The principle we converged on is **"build trust at the base before growing up"**
 ✅ #22  state transitions inside the gate system
 ✅ #31  transition_node — the gated state API
 ✅ #26  architecture doc
-⬜ #27  offload JSONL index                       ← NEXT
-⬜ #29  long-term semantic pyramid
+✅ #27  offload JSONL index
+⬜ #29  long-term semantic pyramid                ← NEXT
 ```
 
-M1 is now closed. Next, pick up M3 (#27) to complete the refs/offload/Mermaid short-term memory lineage, then M2 (#29) for the long-term semantic pyramid. The v0.1 hardening items (#13–#19) can be batched in between whenever a contributor wants a small, isolated PR.
+M1 and M3 are now closed. Next, pick up M2 (#29) for the long-term semantic pyramid. The v0.1 hardening items (#13–#19) can be batched in between whenever a contributor wants a small, isolated PR.
 
 ### How to resume tomorrow
 
 1. **Verify the baseline still works.**
    ```bash
-   python -m pytest          # expect 98 passed
+   python -m pytest          # expect 104 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Start #27 (offload JSONL index).** Add the mid-layer record that links heavy tool results to `node_id`, `result_ref`, `summary`, `score`, and timestamp.
-4. Keep TaskNodes as business nodes. Offload records can be per tool result, but they should point back to a business TaskNode instead of becoming graph nodes themselves.
+3. **Start #29 (long-term semantic pyramid).** Add the L0 conversation layer first, then extract L1 atoms before attempting L2 scenarios or L3 persona.
+4. Keep this separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
 
 ### Uncommitted local state (as of writing)
 
 `git status` shows local edits not yet pushed. Before resuming, decide whether to commit M1 progress so far as a single "M1: TaskGraph foundation (#28 + #30)" commit, or keep iterating and squash later. Files involved:
 
-- `src/evidence_gated_memory/core/models.py` — TaskNode, TaskNodeStatus, Task, TaskStatus, TaskState, TransitionGateResult, TransitionResult, TaskEdge, TaskEdgeKind; node_id back-link on Evidence and Fact
+- `src/evidence_gated_memory/core/models.py` — TaskNode, TaskNodeStatus, Task, TaskStatus, TaskState, TransitionGateResult, TransitionResult, TaskEdge, TaskEdgeKind, OffloadRecord; node_id back-link on Evidence and Fact
 - `src/evidence_gated_memory/core/gates.py` — claim gates plus read-only state-transition gate checks
 - `src/evidence_gated_memory/schemas/loader.py` — schema support for `state_gates`
 - `src/evidence_gated_memory/schemas/builtin/refund.yaml` — refund workflow `state_gates`
 - `src/evidence_gated_memory/schemas/builtin/coding.yaml` — coding workflow `state_gates`
-- `src/evidence_gated_memory/storage/sqlite.py` — task_nodes / tasks / task_edges tables + DAO; `tasks.current_state` migration; node_id columns + setters on evidence / facts
-- `src/evidence_gated_memory/core/memory.py` — TaskGraph API (CRUD + attach + audit + `render_task_graph`); Task + TaskEdge APIs; back-link writes on attach; derived `refresh_task_state`; gated `transition_node`
+- `src/evidence_gated_memory/storage/sqlite.py` — task_nodes / tasks / task_edges tables + DAO; offload JSONL store; `tasks.current_state` migration; node_id columns + setters on evidence / facts
+- `src/evidence_gated_memory/core/memory.py` — TaskGraph API (CRUD + attach + audit + `render_task_graph`); Task + TaskEdge APIs; back-link writes on attach; derived `refresh_task_state`; gated `transition_node`; `record_offload` / `list_offloads`
 - `src/evidence_gated_memory/core/mermaid.py` — pure projection function with typed-edge rendering
 - `src/evidence_gated_memory/core/context.py` — `<task_map>` and `<current_state>` blocks plus node-linked fact/evidence lines
 - `src/evidence_gated_memory/cli.py` — `egm context --task-id ...`
@@ -468,7 +468,8 @@ M1 is now closed. Next, pick up M3 (#27) to complete the refs/offload/Mermaid sh
 - `tests/test_task_state.py` — 8 tests
 - `tests/test_state_gates.py` — 7 tests
 - `tests/test_transition_node.py` — 6 tests
-- Suite total: **98 passed**
+- `tests/test_offload.py` — 6 tests
+- Suite total: **104 passed**
 - `README.md` — handoff section + banner
 
 ### Key design decisions worth not re-litigating
