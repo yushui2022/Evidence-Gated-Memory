@@ -8,6 +8,7 @@ One workspace = one directory containing:
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -256,11 +257,28 @@ class SqliteStore:
         self.conn.commit()
 
     def search_facts_fts(self, query: str, limit: int = 10) -> list[Fact]:
+        """Search facts. FTS5 is finicky about punctuation (ORD-123, colons,
+        operator words). Try FTS first; on any syntax error or empty result,
+        fall back to a safe LIKE scan so business-ID queries never crash."""
+        safe = _sanitize_fts_query(query)
+        if safe:
+            try:
+                rows = self.conn.execute(
+                    "SELECT facts.* FROM facts JOIN facts_fts ON facts.id = facts_fts.id "
+                    "WHERE facts_fts MATCH ? AND facts.invalidated_at IS NULL "
+                    "ORDER BY rank LIMIT ?",
+                    (safe, limit),
+                ).fetchall()
+                if rows:
+                    return [_row_to_fact(r) for r in rows]
+            except sqlite3.OperationalError:
+                pass
+
+        like = f"%{query}%"
         rows = self.conn.execute(
-            "SELECT facts.* FROM facts JOIN facts_fts ON facts.id = facts_fts.id "
-            "WHERE facts_fts MATCH ? AND facts.invalidated_at IS NULL "
-            "ORDER BY rank LIMIT ?",
-            (query, limit),
+            "SELECT * FROM facts WHERE invalidated_at IS NULL AND text LIKE ? "
+            "ORDER BY created_at DESC LIMIT ?",
+            (like, limit),
         ).fetchall()
         return [_row_to_fact(r) for r in rows]
 
@@ -291,6 +309,23 @@ class SqliteStore:
             "SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (limit,)
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+_FTS_OPERATORS = {"AND", "OR", "NOT", "NEAR"}
+_FTS_TOKEN_RE = re.compile(r"\w+")
+
+
+def _sanitize_fts_query(query: str) -> str:
+    """Turn arbitrary user input into a safe FTS5 MATCH expression.
+
+    Strategy: extract alphanumeric tokens (incl. CJK), drop operator keywords,
+    quote each token. Empty result -> caller falls back to LIKE."""
+    if not query:
+        return ""
+    tokens = [t for t in _FTS_TOKEN_RE.findall(query) if t.upper() not in _FTS_OPERATORS]
+    if not tokens:
+        return ""
+    return " ".join(f'"{t}"' for t in tokens)
 
 
 def _row_to_evidence(row: sqlite3.Row) -> Evidence:

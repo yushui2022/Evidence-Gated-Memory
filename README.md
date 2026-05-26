@@ -33,30 +33,39 @@ A Python library (`pip install evidence-gated-memory`) that adds an evidence-gat
 
 ```python
 from evidence_gated_memory import EvidenceGatedMemory
+from evidence_gated_memory.schemas.builtin import REFUND
 
 memory = EvidenceGatedMemory(
     workspace=".egm",
-    domain_schema="schemas/refund.yaml",
+    domain_schema=REFUND,
 )
 
-await memory.record_event(role="user", content="Process refund for ORD-123")
+memory.record_event(role="user", content="Process refund for ORD-123")
 
-order_ref = await memory.record_evidence(
+order_ref = memory.record_evidence(
     evidence_type="order_record",
     source="order_api",
+    source_system="order_api",
     content=order_api_result,
     metadata={"order_id": "ORD-123"},
 )
 
-result = await memory.assert_fact(
+policy_ref = memory.record_evidence(
+    evidence_type="refund_policy",
+    source="policy_db",
+    source_system="policy_db",
+    content=current_policy_text,
+)
+
+result = memory.assert_fact(
     "Order ORD-123 is eligible for refund",
     claim_type="refund_eligibility",
-    evidence=[order_ref],
+    evidence=[order_ref, policy_ref],
 )
 
 if not result.accepted:
-    print(result.rejection_reason)   # "missing required evidence: payment_record"
-    print(result.suggested_action)   # "call payment_api for ORD-123"
+    print(result.rejection_reason)   # e.g. "missing required evidence types: ['refund_policy']"
+    print(result.suggested_action)   # e.g. "fetch the current refund_policy from policy_db"
 ```
 
 ## Differentiators
@@ -71,7 +80,7 @@ if not result.accepted:
 
 ## Status
 
-v0.1 — alpha. Single-process SQLite backend. Coding + refund example schemas.
+v0.1.1 — alpha hardening. Single-process SQLite backend. Built-in coding + refund schemas are packaged with the wheel. Schema-declared claim/evidence types fail closed, source_system allowlists are enforced, derived facts inherit support from live parent facts, and business-ID context queries such as `ORD-123` are safe.
 
 ## License
 

@@ -5,7 +5,7 @@ Two API surfaces:
   * Easy:    `assert_fact(text, claim_type, evidence=[...])`
              one call: propose → gate → commit (or reject with actionable feedback)
 
-  * Detailed: propose_claim → check_gate → commit_fact
+  * Detailed: propose_claim → check_gate → commit_fact(claim, gate_result)
              for advanced users who want to insert custom logic between steps
 """
 
@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Optional, Union
 
 from evidence_gated_memory.core.context import build_context
-from evidence_gated_memory.core.freshness import freshness_of
+from evidence_gated_memory.core.freshness import freshness_of, is_usable
 from evidence_gated_memory.core.gates import check_gate
 from evidence_gated_memory.core.models import (
     AssertResult,
@@ -127,9 +127,17 @@ class EvidenceGatedMemory:
         return claim
 
     def check_gate(self, claim: Claim) -> GateResult:
-        evs = self.store.get_evidence_many(claim.evidence_refs)
-        parents = [f for f in (self.store.get_fact(fid) for fid in claim.depends_on) if f is not None]
-        result = check_gate(claim, evs, parents, self.schema)
+        support_refs = self._support_evidence_refs_for_claim(claim)
+        evs, missing_evidence_refs = self._resolve_evidence_refs(support_refs)
+        parents, missing_depends_on = self._resolve_fact_refs(claim.depends_on)
+        result = check_gate(
+            claim,
+            evs,
+            parents,
+            self.schema,
+            missing_evidence_refs=missing_evidence_refs,
+            missing_depends_on=missing_depends_on,
+        )
 
         self.store.append_audit(
             event_type="gate_check",
@@ -142,13 +150,20 @@ class EvidenceGatedMemory:
         )
         return result
 
-    def commit_fact(self, claim: Claim) -> Fact:
+    def commit_fact(self, claim: Claim, gate_result: Optional[GateResult] = None) -> Fact:
+        if gate_result is None:
+            raise ValueError("commit_fact requires an accepted GateResult; use assert_fact for the safe one-shot path")
+        if gate_result.claim_id != claim.id:
+            raise ValueError("GateResult does not belong to this claim")
+        if not gate_result.accepted:
+            raise ValueError(f"cannot commit a rejected claim: {gate_result.rejection_reason}")
+
         fact = Fact(
             claim_id=claim.id,
             text=claim.text,
             claim_type=claim.claim_type,
             kind=claim.kind,
-            evidence_refs=list(claim.evidence_refs),
+            evidence_refs=self._support_evidence_refs_for_claim(claim),
             depends_on=list(claim.depends_on),
             metadata=dict(claim.metadata),
         )
@@ -184,7 +199,7 @@ class EvidenceGatedMemory:
         gate = self.check_gate(claim)
         if not gate.accepted:
             return AssertResult(accepted=False, claim=claim, gate=gate, fact=None)
-        fact = self.commit_fact(claim)
+        fact = self.commit_fact(claim, gate_result=gate)
         return AssertResult(accepted=True, claim=claim, gate=gate, fact=fact)
 
     # ---------- Cascading invalidation ----------
@@ -208,36 +223,55 @@ class EvidenceGatedMemory:
         return self._cascade_invalidate_from_evidence(evidence_id, reason, now)
 
     def sweep_expired(self) -> list[str]:
-        """Re-check all active facts; invalidate those whose evidence has fully expired.
+        """Re-check all active facts; invalidate those whose required support expired.
 
         Useful to call periodically (or on demand before build_context).
         """
         now = datetime.now(timezone.utc)
         invalidated: list[str] = []
         for fact in self.store.list_active_facts():
-            if fact.kind == FactKind.OBSERVED and fact.evidence_refs:
-                evs = self.store.get_evidence_many(fact.evidence_refs)
-                if evs and all(freshness_of(e, self.schema, now=now) == Freshness.EXPIRED for e in evs):
-                    self._invalidate(fact.id, "all evidence expired", now)
-                    invalidated.append(fact.id)
-                    invalidated.extend(self._cascade_invalidate_from_fact(fact.id, "parent fact invalidated", now))
+            reason = self._expiry_invalidation_reason(fact, now)
+            if reason:
+                self._invalidate(fact.id, reason, now)
+                invalidated.append(fact.id)
+                invalidated.extend(self._cascade_invalidate_from_fact(fact.id, "parent fact invalidated", now))
         return invalidated
 
-    def _cascade_invalidate_from_evidence(self, evidence_id: str, reason: str, now: datetime) -> list[str]:
+    def _cascade_invalidate_from_evidence(
+        self,
+        evidence_id: str,
+        reason: str,
+        now: datetime,
+        seen: Optional[set[str]] = None,
+    ) -> list[str]:
+        seen = seen or set()
         affected: list[str] = []
         # invalidate observed facts that directly reference this evidence
         for fact in self.store.list_facts_using_evidence(evidence_id):
+            if fact.id in seen:
+                continue
+            seen.add(fact.id)
             self._invalidate(fact.id, f"evidence {evidence_id} {reason}", now)
             affected.append(fact.id)
-            affected.extend(self._cascade_invalidate_from_fact(fact.id, "parent fact invalidated", now))
+            affected.extend(self._cascade_invalidate_from_fact(fact.id, "parent fact invalidated", now, seen))
         return affected
 
-    def _cascade_invalidate_from_fact(self, fact_id: str, reason: str, now: datetime) -> list[str]:
+    def _cascade_invalidate_from_fact(
+        self,
+        fact_id: str,
+        reason: str,
+        now: datetime,
+        seen: Optional[set[str]] = None,
+    ) -> list[str]:
+        seen = seen or set()
         affected: list[str] = []
         for child in self.store.list_facts_depending_on(fact_id):
+            if child.id in seen:
+                continue
+            seen.add(child.id)
             self._invalidate(child.id, f"{reason} ({fact_id})", now)
             affected.append(child.id)
-            affected.extend(self._cascade_invalidate_from_fact(child.id, reason, now))
+            affected.extend(self._cascade_invalidate_from_fact(child.id, reason, now, seen))
         return affected
 
     def _invalidate(self, fact_id: str, reason: str, now: datetime) -> None:
@@ -259,7 +293,87 @@ class EvidenceGatedMemory:
     def audit_log(self, limit: int = 100) -> list[dict[str, Any]]:
         return self.store.list_audit(limit=limit)
 
+    # ---------- internal resolution helpers ----------
+
+    def _resolve_evidence_refs(self, refs: list[str]) -> tuple[list[Evidence], list[str]]:
+        refs = _dedupe(refs)
+        evs = self.store.get_evidence_many(refs)
+        by_id = {e.id: e for e in evs}
+        return [by_id[r] for r in refs if r in by_id], [r for r in refs if r not in by_id]
+
+    def _resolve_fact_refs(self, refs: list[str]) -> tuple[list[Fact], list[str]]:
+        refs = _dedupe(refs)
+        facts = [self.store.get_fact(fid) for fid in refs]
+        by_id = {f.id: f for f in facts if f is not None}
+        return [by_id[r] for r in refs if r in by_id], [r for r in refs if r not in by_id]
+
+    def _support_evidence_refs_for_claim(self, claim: Claim) -> list[str]:
+        refs = list(claim.evidence_refs)
+        if claim.kind == FactKind.DERIVED:
+            parents, _ = self._resolve_fact_refs(claim.depends_on)
+            for parent in parents:
+                refs.extend(self._support_evidence_refs_for_fact(parent))
+        return _dedupe(refs)
+
+    def _support_evidence_refs_for_fact(self, fact: Fact, seen: Optional[set[str]] = None) -> list[str]:
+        seen = seen or set()
+        if fact.id in seen:
+            return []
+        seen.add(fact.id)
+
+        refs = list(fact.evidence_refs)
+        for parent_id in fact.depends_on:
+            parent = self.store.get_fact(parent_id)
+            if parent is not None:
+                refs.extend(self._support_evidence_refs_for_fact(parent, seen))
+        return _dedupe(refs)
+
+    def _expiry_invalidation_reason(self, fact: Fact, now: datetime) -> Optional[str]:
+        if fact.kind == FactKind.DERIVED:
+            parents, missing = self._resolve_fact_refs(fact.depends_on)
+            if missing:
+                return f"parent fact missing: {missing}"
+            dead = [p.id for p in parents if p.invalidated_at is not None]
+            if dead:
+                return f"parent fact invalidated: {dead}"
+
+        claim_type = self.schema.claim_type(fact.claim_type)
+        if claim_type is None:
+            return f"claim_type '{fact.claim_type}' no longer declared in schema"
+
+        refs = self._support_evidence_refs_for_fact(fact)
+        evs, missing_refs = self._resolve_evidence_refs(refs)
+        if missing_refs:
+            return f"supporting evidence ref missing: {missing_refs}"
+
+        requirements: list[tuple[str, str]] = []
+        claim_freshness = "fresh" if claim_type.requires_fresh_evidence else "stale"
+        requirements.extend((evidence_type, claim_freshness) for evidence_type in claim_type.required_evidence)
+        for rule in self.schema.gates:
+            if rule.when_claim_type and rule.when_claim_type != fact.claim_type:
+                continue
+            requirements.extend((evidence_type, rule.require_freshness) for evidence_type in rule.require_evidence_types)
+
+        for evidence_type, required_freshness in requirements:
+            candidates = [e for e in evs if e.evidence_type == evidence_type]
+            if not candidates:
+                return f"required evidence type '{evidence_type}' missing"
+            if not any(is_usable(freshness_of(e, self.schema, now=now), required_freshness) for e in candidates):
+                return f"required evidence type '{evidence_type}' no longer has {required_freshness} support"
+        return None
+
 
 def _auto_summary(content: str, max_len: int = 120) -> str:
     flat = " ".join(content.split())
     return flat if len(flat) <= max_len else flat[: max_len - 1] + "…"
+
+
+def _dedupe(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        out.append(value)
+    return out

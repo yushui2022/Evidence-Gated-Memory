@@ -9,8 +9,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from evidence_gated_memory.core.freshness import freshness_of
-from evidence_gated_memory.core.models import Evidence, Fact, Freshness
+from evidence_gated_memory.core.freshness import freshness_of, is_usable
+from evidence_gated_memory.core.models import Evidence, Fact, FactKind, Freshness
 from evidence_gated_memory.schemas.loader import DomainSchema
 from evidence_gated_memory.storage.sqlite import SqliteStore
 
@@ -54,15 +54,17 @@ def build_context(
 
     blocked_any = False
     for fact in facts:
+        parent_block = _parent_block_reason(store, fact)
         evs = store.get_evidence_many(fact.evidence_refs)
         states = [(e, freshness_of(e, schema, now=now)) for e in evs]
+        support_block = _support_block_reason(fact, states, schema)
 
-        # If every attached evidence is expired, this fact should not influence decisions.
-        if states and all(f == Freshness.EXPIRED for _, f in states):
+        # If required support is no longer usable, this fact should not influence decisions.
+        if parent_block or support_block:
             blocked_any = True
             lines.append(f"[BLOCKED] {fact.text}")
             lines.append(f"  claim_type: {fact.claim_type}")
-            lines.append(f"  reason: all {len(states)} supporting evidence ref(s) are expired")
+            lines.append(f"  reason: {parent_block or support_block}")
             lines.append(f"  action: re-fetch evidence before relying on this fact")
             lines.append("")
             continue
@@ -96,3 +98,47 @@ def build_context(
         lines.append("⚠ One or more facts were BLOCKED due to expired evidence. Do not assert conclusions that depend on them without reverification.")
 
     return "\n".join(lines)
+
+
+def _parent_block_reason(store: SqliteStore, fact: Fact) -> Optional[str]:
+    if fact.kind != FactKind.DERIVED:
+        return None
+    missing: list[str] = []
+    invalidated: list[str] = []
+    for parent_id in fact.depends_on:
+        parent = store.get_fact(parent_id)
+        if parent is None:
+            missing.append(parent_id)
+        elif parent.invalidated_at is not None:
+            invalidated.append(parent_id)
+    if missing:
+        return f"parent fact(s) missing: {missing}"
+    if invalidated:
+        return f"parent fact(s) invalidated: {invalidated}"
+    return None
+
+
+def _support_block_reason(
+    fact: Fact,
+    states: list[tuple[Evidence, Freshness]],
+    schema: DomainSchema,
+) -> Optional[str]:
+    claim_type = schema.claim_type(fact.claim_type)
+    if claim_type is None:
+        return f"claim_type '{fact.claim_type}' is not declared in schema"
+
+    requirements: list[tuple[str, str]] = []
+    claim_freshness = "fresh" if claim_type.requires_fresh_evidence else "stale"
+    requirements.extend((evidence_type, claim_freshness) for evidence_type in claim_type.required_evidence)
+    for rule in schema.gates:
+        if rule.when_claim_type and rule.when_claim_type != fact.claim_type:
+            continue
+        requirements.extend((evidence_type, rule.require_freshness) for evidence_type in rule.require_evidence_types)
+
+    for evidence_type, required_freshness in requirements:
+        candidates = [state for ev, state in states if ev.evidence_type == evidence_type]
+        if not candidates:
+            return f"required evidence type '{evidence_type}' is missing"
+        if not any(is_usable(state, required_freshness) for state in candidates):
+            return f"required evidence type '{evidence_type}' has no {required_freshness} support"
+    return None

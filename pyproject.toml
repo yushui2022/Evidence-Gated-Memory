@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "evidence-gated-memory"
-version = "0.1.0"
+version = "0.1.1"
 description = "Provenance-first memory for high-stakes AI agents. Memory that knows what it doesn't know."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -35,6 +35,9 @@ Repository = "https://github.com/yushui2022/Evidence-Gated-Memory"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"evidence_gated_memory.schemas.builtin" = ["*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
