@@ -1,33 +1,172 @@
-# Evidence-Gated Memory
+# Evidence-Gated Memory (EGM)
 
-> **Memory that knows what it doesn't know.**
-> Provenance-first memory for high-stakes AI agents.
+> **Graph-structured, evidence-gated memory for hard-anchor enterprise agents.**
+>
+> EGM folds long task histories into Mermaid task graphs, preserves raw evidence in `refs/`, and gates both fact writes and task-state transitions with schema-defined evidence rules.
 
-Most agent memory systems focus on remembering more.
-Evidence-Gated Memory focuses on **deciding which memories are allowed to become facts**.
+Evidence-Gated Graph Memory turns a linear agent history into a layered, recoverable task memory.
 
-## Core Principle
+It combines three ideas:
+
+1. **Symbolic short-term memory** — heavy tool outputs are offloaded into `refs/*.md`, indexed by `node_id` / `result_ref`, and folded into a Mermaid task graph.
+2. **Layered long-term memory** — conversations are distilled from L0 raw messages into L1 atoms, L2 scenarios, and L3 persona.
+3. **Evidence-gated quality control** — business facts and task-state transitions must pass schema-defined gates for required evidence, trusted sources, freshness, and auditability.
+
+**The goal is not to remember more text. The goal is to keep a compact task map while preserving a path back to the original evidence.**
+
+---
+
+## Why EGM
+
+A long agent run produces a linear, ever-growing history. Three things go wrong with it:
+
+- **Plain summaries lose evidence.** Once a tool result is summarized, you can't drill back down to the API response that justified a conclusion.
+- **Plain memory lacks process structure.** Vector recall finds related text, but it can't tell you which task node is blocked, or why.
+- **Enterprise agents need discipline, not just recall.** In refund, finance, compliance, medical, and coding agents, the cost of a wrong "done" is far higher than the cost of being slow. A conclusion must be backed by fresh, trusted, traceable evidence — or it must not become a fact at all.
+
+EGM is built for **hard-anchor** workflows — those organized around stable business IDs like `order_id`, `ticket_id`, `refund_id`, `task_id` — not open-ended relationship-heavy dialogue. This is a deliberate trade: EGM gives up open persona-style long-term recall to gain provenance, freshness, and state discipline on enterprise processes.
+
+---
+
+## Architecture
+
+> **TencentDB Agent Memory solves "how context becomes foldable, drillable, recoverable."**
+> **EGM adds "evidence gating, evidence freshness, state-transition quality gates, and a hard-anchor enterprise task graph" on top of it.**
+
+EGM does not discard the graph structure of TencentDB Agent Memory. It layers an enterprise-grade quality discipline on top of its short-term Mermaid task graph / `refs` / L0–L3 long-term memory.
+
+```mermaid
+flowchart TD
+    subgraph INPUT["Agent 运行输入"]
+        A["Agent 对话<br/>用户请求 / Agent 回复"]
+        T["工具调用与业务系统返回<br/>API 响应 / 搜索结果 / 测试日志 / 文件内容"]
+    end
+
+    subgraph SHORT["短期图记忆：当前任务的可折叠上下文"]
+        R["refs/*.md 原始证据层<br/>完整工具结果 / API 返回 / 日志 / 文件片段"]
+        O["offload JSONL 摘要索引层<br/>tool_call_id / node_id / result_ref / summary / score"]
+        G["TaskGraph 任务图<br/>任务节点 / 边 / 状态 / 依赖 / hard anchor"]
+        M["Mermaid 任务画布<br/>current_task_context<br/>给 Agent 的高层任务地图"]
+    end
+
+    subgraph LONG["长期语义记忆：跨会话背景"]
+        L0["L0 Conversation<br/>原始 user / assistant 对话"]
+        L1["L1 Atom<br/>persona / episodic / instruction 原子记忆"]
+        L2["L2 Scenario<br/>场景块 / 项目档案 / 历史决策"]
+        L3["L3 Persona<br/>用户画像 / 长期偏好 / 稳定背景"]
+    end
+
+    subgraph EGM["EGM 证据门控层：让图结构和事实可信"]
+        S["Domain Schema<br/>业务规则：实体 / 证据类型 / TTL / 状态机 / gate 规则"]
+        E["Entity Anchor Index<br/>metadata → connector → regex → LLM fallback<br/>order_id / ticket_id / refund_id / task_id"]
+        F["Fact Layer<br/>L1a observed facts<br/>L1b derived facts"]
+        Q["Quality Gates<br/>证据要求 / source allowlist / freshness / 状态转移门控"]
+        X["Actionable Rejection<br/>缺什么证据 / 为什么拒绝 / 下一步该调什么工具"]
+        AU["Audit & Replay<br/>证据链 / 拒绝记录 / 状态变更 / 可恢复历史"]
+    end
+
+    subgraph PROMPT["Prompt 组装：少 token，但可下钻"]
+        C["Context Builder<br/>选择当前最相关的图、事实、记忆和证据指针"]
+        P["Agent Prompt<br/>L3 Persona + L2 Scene Navigation + L1 Relevant Memories<br/>+ Mermaid TaskGraph + Gated Facts + refs 指针"]
+    end
+
+    A --> L0
+    A --> G
+
+    T --> R
+    T --> O
+    R --> O
+    O --> G
+    G --> M
+
+    L0 --> L1
+    L1 --> L2
+    L2 --> L3
+
+    A --> E
+    T --> E
+    R --> E
+    O --> E
+    E --> G
+    E --> F
+
+    S --> E
+    S --> Q
+
+    R --> Q
+    F --> Q
+    G --> Q
+
+    Q -->|"通过：事实可写入"| F
+    Q -->|"通过：任务状态可流转"| G
+    Q -->|"拒绝：证据不足 / 过期 / 来源不可信"| X
+    X --> AU
+    Q --> AU
+    F --> AU
+    G --> AU
+
+    L3 --> C
+    L2 --> C
+    L1 --> C
+    M --> C
+    G --> C
+    F --> C
+    R -. "需要查证时按 node_id / result_ref 下钻" .-> C
+
+    C --> P
+    P --> A
+```
+
+### The three layers
+
+**1. Short-term graph memory — foldable context for the current task**
+
+Tool results are never dumped wholesale into the prompt. Instead:
 
 ```
-Raw events are append-only.
-Facts are evidence-gated.
-Prompt context is provenance-filtered.
+refs 原文  →  offload JSONL 摘要索引  →  Mermaid 任务图
 ```
 
-- **L0 Events** — write-optimistic. Everything that happened.
-- **L1a Observed Facts** — write-pessimistic. Must have a `source_ref`.
-- **L1b Derived Facts** — write-pessimistic. Must declare supporting facts (cascading invalidation).
-- **L2 Prompt Context** — provenance-filtered. Stale evidence is flagged; expired evidence is blocked.
+- `refs/*.md` is the **raw evidence layer**, not a summary. It holds complete tool calls, API responses, test logs, and file fragments.
+- `offload JSONL` is the **mid-level index**. Each record carries `node_id`, `result_ref`, `tool_call_id`, `summary`, `score`, `timestamp`. Here `score` means "how well the summary can replace the original" — not fact confidence.
+- `TaskGraph` is the **core short-term memory**. It is a structured object, not just Mermaid text:
 
-## What it is
+  ```
+  task_id / node_id / node_type / status / anchors
+  refs / facts / dependencies / blocked_reason / suggested_action
+  ```
 
-A Python library (`pip install evidence-gated-memory`) that adds an evidence-gated memory layer to any AI agent. Domain rules (entity types, TTLs, quality gates) are driven by YAML schemas — not hardcoded.
+  Mermaid is one readable projection of the TaskGraph. The agent attends to the high-level map and drills down to lower layers via `node_id` / `result_ref` only when needed.
 
-## What it is not
+**2. Long-term semantic memory — cross-session background**
 
-- Not an agent framework
-- Not a vector database
-- Not a chatbot memory layer
+User dialogue is not flat embedding search. It is distilled through a semantic pyramid:
+
+```
+L0 Conversation  →  L1 Atom  →  L2 Scenario  →  L3 Persona
+```
+
+This answers "who is the user, what is the project background, what were the historical decisions." For hard-anchor enterprise agents the top symbol is the **task map** rather than a persona, but the long-term background pyramid still applies.
+
+**3. Evidence-gated quality layer — what makes the graph and facts trustworthy**
+
+This is EGM's key enhancement over plain graph memory. TencentDB Agent Memory emphasizes traceability; EGM adds the discipline that **no conclusion becomes a fact without evidence**:
+
+```
+No payment_record        → cannot say the order is refundable.
+No refund_api_response   → cannot say the refund is completed.
+Expired refund_api_response → cannot keep using stale evidence.
+source_system not allowlisted → cannot support a high-stakes fact.
+A derived fact whose observed parent has expired → must also expire.
+```
+
+- **Domain Schema** is the business rulebook (entities, evidence types, trusted sources, TTLs, required evidence per claim, gates per state transition). This is where gate rules come from — they are configured per domain in YAML, not hardcoded.
+- **Entity Anchor Index** resolves hard anchors via a chain: `metadata → connector → regex → LLM fallback`. LLM-extracted entities carry a source span and confidence and are stored as **low-trust annotations only** — they are never an acceptable source for fact grounding.
+- **Quality Gates** enforce required evidence, source allowlists, freshness, and state-transition rules.
+- **Actionable Rejection** never just returns `False`. It returns: what evidence is missing, why it was rejected, which tool to call, which source to query, and the `audit_id` of the rejection.
+- **Audit & Replay** keeps the full evidence chain, rejection records, and state changes — so history is recoverable after a context wipe.
+
+---
 
 ## Quick start
 
@@ -35,38 +174,129 @@ A Python library (`pip install evidence-gated-memory`) that adds an evidence-gat
 from evidence_gated_memory import EvidenceGatedMemory
 from evidence_gated_memory.schemas.builtin import REFUND
 
-memory = EvidenceGatedMemory(
-    workspace=".egm",
-    domain_schema=REFUND,
-)
+memory = EvidenceGatedMemory(workspace=".egm", domain_schema=REFUND)
 
+# 1. The user asks for a refund — recorded as an event and a task node.
 memory.record_event(role="user", content="Process refund for ORD-123")
 
+# 2. Tool results are written to refs/ and indexed into the task graph.
 order_ref = memory.record_evidence(
     evidence_type="order_record",
-    source="order_api",
     source_system="order_api",
     content=order_api_result,
     metadata={"order_id": "ORD-123"},
 )
 
-policy_ref = memory.record_evidence(
-    evidence_type="refund_policy",
-    source="policy_db",
-    source_system="policy_db",
-    content=current_policy_text,
-)
-
+# 3. Asserting a fact must pass the gate.
 result = memory.assert_fact(
     "Order ORD-123 is eligible for refund",
     claim_type="refund_eligibility",
-    evidence=[order_ref, policy_ref],
+    evidence=[order_ref],
 )
 
 if not result.accepted:
-    print(result.rejection_reason)   # e.g. "missing required evidence types: ['refund_policy']"
-    print(result.suggested_action)   # e.g. "fetch the current refund_policy from policy_db"
+    print(result.rejection_reason)   # "missing required evidence types: ['payment_record']"
+    print(result.suggested_action)   # "fetch payment_record for ORD-123 from payment_api"
 ```
+
+---
+
+## Refund demo — the full loop
+
+`examples/refund_agent/run.py` walks the complete hard-anchor loop:
+
+```
+用户要求退款 ORD-123
+        │  record_event → 任务图新建 refund 节点（anchor: order_id=ORD-123）
+        ▼
+工具返回订单数据 → 写入 refs/ → offload 索引 → 挂到任务节点
+        ▼
+assert refund_eligibility
+        │  gate: 缺 payment_record
+        ▼
+[BLOCKED] eligibility 节点
+   reason: missing payment_record
+   suggested_action: call payment_api.get_payment(order_id="ORD-123")
+        ▼
+补 payment_record 证据 → 重新 assert → 通过 → 写入 Fact Layer，节点状态流转
+        ▼
+assert refund_completed
+        │  gate: 缺 refund_api_response（state transition 门控）
+        ▼
+[BLOCKED] completed 节点
+   reason: refund_completed requires fresh refund_api_response
+        ▼
+build_context()
+        ▼
+输出 = Mermaid 任务图 + gated facts + refs 指针（带 fresh/stale/expired 标注）
+```
+
+Run it without any API key:
+
+```bash
+python examples/refund_agent/run.py
+```
+
+An optional DeepSeek-backed variant drafts the claims with a real LLM (EGM still decides acceptance):
+
+```bash
+python examples/deepseek_refund_agent/run.py --mock          # no key needed
+DEEPSEEK_API_KEY=... python examples/deepseek_refund_agent/run.py
+```
+
+---
+
+## What context looks like
+
+`build_context()` returns a compact, provenance-labeled prompt — a task map plus gated facts plus drill-down pointers:
+
+```
+<task_map>
+```mermaid
+flowchart TD
+    N1["Refund ORD-123"]:::done --> N2["Check eligibility"]:::done
+    N2 --> N3["Complete refund"]:::blocked
+```
+</task_map>
+
+<current_state>TESTING</current_state>
+
+[FACT] Order ORD-123 status is PAID
+  source: order_api  observed: 2026-05-26T10:00  freshness: fresh
+  node: N2  ref: refs/ref_0b51.md
+
+[BLOCKED] Refund REF-456 is completed
+  gate: state_transition_requires_evidence
+  reason: refund_completed requires fresh refund_api_response
+  action: call refund_api.get_refund(refund_id="REF-456")
+  audit: audit_017
+```
+
+The agent reads the high-level map; when it needs to verify, it drills down by `node_id` / `result_ref` to the raw `refs`.
+
+---
+
+## CLI
+
+```bash
+egm schema validate refund
+egm inspect .egm --schema refund
+egm context .egm --schema refund --query ORD-123
+egm graph .egm --schema refund            # render the current Mermaid task graph
+egm audit .egm --limit 20
+egm sweep .egm --schema refund            # expire stale evidence, cascade-invalidate
+egm ref .egm ref_abc123                   # drill down to raw evidence
+```
+
+---
+
+## What it is / is not
+
+**It is:** a Python library (`pip install evidence-gated-memory`) that gives a hard-anchor enterprise agent a graph-structured, evidence-gated memory system. Domain rules are driven by YAML schemas, not hardcoded.
+
+**It is not:** an agent framework, a vector database, or an open-ended chatbot memory. You orchestrate your agent with whatever you like (LangGraph, a hand-written loop); EGM manages its memory, evidence, and task state.
+
+---
 
 ## Differentiators
 
@@ -74,13 +304,42 @@ if not result.accepted:
 |---|---|---|
 | Default policy | write-optimistic | **write-pessimistic at fact layer** |
 | Evidence required | optional | **mandatory** |
+| Task structure | flat / graph-of-facts | **hard-anchor task graph + soft state machine** |
 | Ref-level freshness | no | **yes (TTL per evidence type)** |
-| Cascading invalidation | no | **yes (derived facts track dependencies)** |
+| Cascading invalidation | no | **yes (derived facts track observed parents)** |
+| State-transition gating | no | **yes (e.g. DONE requires verification)** |
 | Gate rejection | boolean | **actionable (what's missing + what to do)** |
+| Drill-down to raw evidence | usually lost | **yes (refs preserved, indexed by node_id)** |
 
-## Status
+---
 
-v0.1.1 — alpha hardening. Single-process SQLite backend. Built-in coding + refund schemas are packaged with the wheel. Schema-declared claim/evidence types fail closed, source_system allowlists are enforced, derived facts inherit support from live parent facts, and business-ID context queries such as `ORD-123` are safe.
+## Benchmarks
+
+Measured on the predecessor `agent_memory_core` over continuous long-horizon sessions:
+
+| Benchmark | Signal | Result |
+|---|---|---|
+| LongMemEval-S | Evidence Source Coverage | **0.87** (matches keyword FTS, with source-backed evidence constraints) |
+| LongMemEval-S | False Fact Rate | **0.00** |
+| BEAM-lite (100K tokens / 50 cases) | recall under pressure | stable on synthetic hard-anchor cases |
+| LoCoMo10 | answer-term recall | **weak** — known limitation on relationship-heavy open dialogue |
+
+The honest reading: EGM is strongest on **hard-anchor, strong-process, strong-evidence** enterprise workflows. It deliberately trades open-ended persona-style recall for provenance and process discipline. Symbolic short-term memory is **not** suited to weak-anchor, high-entanglement conversational products.
+
+---
+
+## Core principle
+
+```
+Raw events are append-only.
+Facts are evidence-gated.
+Task-state transitions are evidence-gated.
+Prompt context is provenance-filtered and drillable.
+```
+
+A rejected claim must be actionable. Evidence can expire; facts must follow.
+
+---
 
 ## License
 
