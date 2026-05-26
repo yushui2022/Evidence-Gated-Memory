@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Optional, Union
 
 from evidence_gated_memory.core.context import build_context
+from evidence_gated_memory.core.entities import EntityFallback, ExtractedEntity, extract_entities
 from evidence_gated_memory.core.freshness import freshness_of, is_usable
 from evidence_gated_memory.core.gates import check_gate
 from evidence_gated_memory.core.models import (
@@ -27,6 +28,8 @@ from evidence_gated_memory.core.models import (
     FactKind,
     Freshness,
     GateResult,
+    TaskNode,
+    TaskNodeStatus,
 )
 from evidence_gated_memory.schemas.loader import DomainSchema, load_schema, load_schema_dict
 from evidence_gated_memory.storage.sqlite import SqliteStore
@@ -49,9 +52,16 @@ class EvidenceGatedMemory:
     Sync API (SQLite is cheap enough that async wrapping adds complexity without speedup at v0.1).
     """
 
-    def __init__(self, workspace: str | Path, domain_schema: SchemaInput):
+    def __init__(
+        self,
+        workspace: str | Path,
+        domain_schema: SchemaInput,
+        *,
+        entity_fallback: Optional[EntityFallback] = None,
+    ):
         self.workspace = Path(workspace)
         self.schema = _resolve_schema(domain_schema)
+        self.entity_fallback = entity_fallback
         self.store = SqliteStore(self.workspace)
 
     def close(self) -> None:
@@ -80,6 +90,11 @@ class EvidenceGatedMemory:
     ) -> Evidence:
         type_def = self.schema.evidence_type(evidence_type)
         resolved_risk = risk_level or (type_def.risk if type_def else "medium")
+        resolved_metadata = dict(metadata or {})
+        entities = extract_entities(content, resolved_metadata, self.schema, self.entity_fallback)
+        if entities:
+            resolved_metadata["entities"] = [e.model_dump() for e in entities]
+
         ev = Evidence(
             evidence_type=evidence_type,
             source=source,
@@ -87,7 +102,7 @@ class EvidenceGatedMemory:
             risk_level=resolved_risk,
             summary=summary or _auto_summary(content),
             observed_at=observed_at or datetime.now(timezone.utc),
-            metadata=metadata or {},
+            metadata=resolved_metadata,
             stale_after_seconds=stale_after_seconds,
             expired_after_seconds=expired_after_seconds,
         )
@@ -100,6 +115,168 @@ class EvidenceGatedMemory:
 
     def read_ref(self, evidence_id: str) -> str:
         return self.store.read_ref_content(evidence_id)
+
+    def extract_entities(
+        self,
+        content: str,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> list[ExtractedEntity]:
+        return extract_entities(content, metadata or {}, self.schema, self.entity_fallback)
+
+    # ---------- Task Graph ----------
+
+    def create_task_node(
+        self,
+        task_id: str,
+        node_type: str,
+        title: str,
+        *,
+        anchors: Optional[dict[str, str]] = None,
+        parent_id: Optional[str] = None,
+        status: TaskNodeStatus = TaskNodeStatus.PENDING,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> TaskNode:
+        node = TaskNode(
+            task_id=task_id,
+            node_type=node_type,
+            title=title,
+            status=status,
+            anchors=anchors or {},
+            parent_id=parent_id,
+            metadata=metadata or {},
+        )
+        self.store.insert_task_node(node)
+        self.store.append_audit(
+            event_type="task_node_created",
+            detail={
+                "node_id": node.id,
+                "task_id": node.task_id,
+                "node_type": node.node_type,
+                "title": node.title,
+                "status": node.status.value,
+                "anchors": node.anchors,
+                "parent_id": node.parent_id,
+            },
+        )
+        return node
+
+    def get_task_node(self, node_id: str) -> Optional[TaskNode]:
+        return self.store.get_task_node(node_id)
+
+    def list_task_nodes(
+        self,
+        task_id: Optional[str] = None,
+        status: Optional[TaskNodeStatus] = None,
+    ) -> list[TaskNode]:
+        return self.store.list_task_nodes(task_id=task_id, status=status)
+
+    def update_task_node_status(
+        self,
+        node_id: str,
+        status: TaskNodeStatus,
+        *,
+        blocked_reason: Optional[str] = None,
+        suggested_action: Optional[str] = None,
+    ) -> TaskNode:
+        """Low-level CRUD for a node's status field.
+
+        This is **not** the gated business API. It mutates the node's status
+        directly without consulting any quality gate. Use it for setup,
+        recovery, or tests. The gated counterpart is `transition_node()`
+        (TODO: see task #31), which enforces schema-defined transition rules.
+        """
+        node = self.store.get_task_node(node_id)
+        if node is None:
+            raise KeyError(f"task node not found: {node_id}")
+        prev_status = node.status
+        prev_blocked_reason = node.blocked_reason
+        prev_suggested_action = node.suggested_action
+
+        node.status = status
+        if blocked_reason is not None:
+            node.blocked_reason = blocked_reason
+        if suggested_action is not None:
+            node.suggested_action = suggested_action
+        if status != TaskNodeStatus.BLOCKED:
+            # leaving BLOCKED clears the current node's reason/action so the
+            # snapshot reflects the new state; the previous values are
+            # preserved in the audit entry below.
+            node.blocked_reason = None
+            node.suggested_action = None
+        node.updated_at = datetime.now(timezone.utc)
+        self.store.update_task_node(node)
+
+        self.store.append_audit(
+            event_type="task_node_status_changed",
+            detail={
+                "node_id": node.id,
+                "task_id": node.task_id,
+                "from_status": prev_status.value,
+                "to_status": node.status.value,
+                "prev_blocked_reason": prev_blocked_reason,
+                "prev_suggested_action": prev_suggested_action,
+                "new_blocked_reason": node.blocked_reason,
+                "new_suggested_action": node.suggested_action,
+            },
+        )
+        return node
+
+    def attach_evidence_to_node(self, node_id: str, evidence_id: str) -> TaskNode:
+        """Link an evidence ref to a task node.
+
+        The evidence must already exist in the store — attaching a phantom ref
+        would silently break the drill-down promise. Raises KeyError otherwise.
+        """
+        node = self.store.get_task_node(node_id)
+        if node is None:
+            raise KeyError(f"task node not found: {node_id}")
+        if self.store.get_evidence(evidence_id) is None:
+            raise KeyError(f"evidence not found: {evidence_id}")
+        if evidence_id not in node.evidence_refs:
+            node.evidence_refs.append(evidence_id)
+            node.updated_at = datetime.now(timezone.utc)
+            self.store.update_task_node(node)
+            self.store.append_audit(
+                event_type="task_node_evidence_attached",
+                detail={
+                    "node_id": node.id,
+                    "task_id": node.task_id,
+                    "evidence_id": evidence_id,
+                },
+            )
+        return node
+
+    def attach_fact_to_node(self, node_id: str, fact_id: str) -> TaskNode:
+        """Link a gated fact to a task node.
+
+        The fact must already exist and still be active (not invalidated).
+        Attaching a phantom or invalidated fact would break EGM's promise
+        that a node's fact_refs are always drillable to live evidence.
+        """
+        node = self.store.get_task_node(node_id)
+        if node is None:
+            raise KeyError(f"task node not found: {node_id}")
+        fact = self.store.get_fact(fact_id)
+        if fact is None:
+            raise KeyError(f"fact not found: {fact_id}")
+        if fact.invalidated_at is not None:
+            raise ValueError(
+                f"cannot attach invalidated fact {fact_id} "
+                f"(reason: {fact.invalidation_reason})"
+            )
+        if fact_id not in node.fact_refs:
+            node.fact_refs.append(fact_id)
+            node.updated_at = datetime.now(timezone.utc)
+            self.store.update_task_node(node)
+            self.store.append_audit(
+                event_type="task_node_fact_attached",
+                detail={
+                    "node_id": node.id,
+                    "task_id": node.task_id,
+                    "fact_id": fact_id,
+                },
+            )
+        return node
 
     # ---------- L1: claim → fact ----------
 

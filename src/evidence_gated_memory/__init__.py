@@ -1,6 +1,7 @@
 """Evidence-Gated Memory — provenance-first memory for high-stakes AI agents."""
 
 from evidence_gated_memory.core.memory import EvidenceGatedMemory
+from evidence_gated_memory.core.entities import ExtractedEntity
 from evidence_gated_memory.core.models import (
     Claim,
     Evidence,
@@ -9,12 +10,15 @@ from evidence_gated_memory.core.models import (
     FactKind,
     Freshness,
     GateResult,
+    TaskNode,
+    TaskNodeStatus,
 )
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 __all__ = [
     "EvidenceGatedMemory",
+    "ExtractedEntity",
     "Event",
     "Evidence",
     "Claim",
@@ -22,4 +26,6 @@ __all__ = [
     "FactKind",
     "Freshness",
     "GateResult",
+    "TaskNode",
+    "TaskNodeStatus",
 ]

@@ -49,8 +49,10 @@ def main() -> int:
 
         if sys.platform == "win32":
             py = venv / "Scripts" / "python.exe"
+            egm = venv / "Scripts" / "egm.exe"
         else:
             py = venv / "bin" / "python"
+            egm = venv / "bin" / "egm"
 
         r = _run([str(py), "-m", "pip", "install", "--quiet", str(wheels[0]), "pydantic>=2.0", "PyYAML>=6.0"])
         if r.returncode != 0:
@@ -67,6 +69,11 @@ def main() -> int:
             "print('SMOKE OK', s1.name, s2.name)"
         )
         r = _run([str(py), "-c", code])
+        if r.returncode != 0:
+            return 1
+        sys.stdout.write(r.stdout)
+
+        r = _run([str(egm), "--version"])
         if r.returncode != 0:
             return 1
         sys.stdout.write(r.stdout)

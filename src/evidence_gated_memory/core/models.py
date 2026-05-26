@@ -40,6 +40,16 @@ class FactKind(str, enum.Enum):
     DERIVED = "derived"     # L1b — grounded in other Facts
 
 
+class TaskNodeStatus(str, enum.Enum):
+    """Soft state for a task graph node. Not a strict workflow — transitions go through gates."""
+
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    BLOCKED = "blocked"
+    DONE = "done"
+    SKIPPED = "skipped"
+
+
 class Event(BaseModel):
     """L0 — raw append-only log entry. Never gated."""
 
@@ -111,6 +121,34 @@ class Fact(BaseModel):
     invalidated_at: Optional[datetime] = None
     invalidation_reason: Optional[str] = None
 
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class TaskNode(BaseModel):
+    """A node in the hard-anchor task graph.
+
+    The TaskGraph is the structured object; Mermaid is one readable projection of it.
+    Nodes are created explicitly by the orchestrator and carry hard anchors
+    (order_id, ticket_id, ...) plus links to the evidence and facts behind them.
+    """
+
+    id: str = Field(default_factory=lambda: _new_id("node"))
+    task_id: str
+    node_type: str                                     # business-defined, e.g. "eligibility_check"
+    title: str
+    status: TaskNodeStatus = TaskNodeStatus.PENDING
+
+    anchors: dict[str, str] = Field(default_factory=dict)   # {"order_id": "ORD-123"}
+    parent_id: Optional[str] = None
+
+    evidence_refs: list[str] = Field(default_factory=list)  # populated as evidence attaches
+    fact_refs: list[str] = Field(default_factory=list)
+
+    blocked_reason: Optional[str] = None
+    suggested_action: Optional[str] = None
+
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

@@ -21,6 +21,8 @@ from evidence_gated_memory.core.models import (
     Fact,
     FactKind,
     GateResult,
+    TaskNode,
+    TaskNodeStatus,
 )
 
 
@@ -98,9 +100,28 @@ CREATE VIRTUAL TABLE IF NOT EXISTS facts_fts USING fts5(
     tokenize = 'unicode61'
 );
 
+CREATE TABLE IF NOT EXISTS task_nodes (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL,
+    node_type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    status TEXT NOT NULL,
+    anchors TEXT NOT NULL,
+    parent_id TEXT,
+    evidence_refs TEXT NOT NULL,
+    fact_refs TEXT NOT NULL,
+    blocked_reason TEXT,
+    suggested_action TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    metadata TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_evidence_type ON evidence(evidence_type);
 CREATE INDEX IF NOT EXISTS idx_facts_claim_type ON facts(claim_type);
 CREATE INDEX IF NOT EXISTS idx_facts_invalidated ON facts(invalidated_at);
+CREATE INDEX IF NOT EXISTS idx_task_nodes_task_id ON task_nodes(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_nodes_status ON task_nodes(status);
 """
 
 
@@ -282,6 +303,65 @@ class SqliteStore:
         ).fetchall()
         return [_row_to_fact(r) for r in rows]
 
+    # ---------- Task Graph ----------
+
+    def insert_task_node(self, node: TaskNode) -> None:
+        self.conn.execute(
+            """INSERT INTO task_nodes(
+                id, task_id, node_type, title, status, anchors, parent_id,
+                evidence_refs, fact_refs, blocked_reason, suggested_action,
+                created_at, updated_at, metadata
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                node.id, node.task_id, node.node_type, node.title, node.status.value,
+                _dumps(node.anchors), node.parent_id,
+                _dumps(node.evidence_refs), _dumps(node.fact_refs),
+                node.blocked_reason, node.suggested_action,
+                _iso(node.created_at), _iso(node.updated_at), _dumps(node.metadata),
+            ),
+        )
+        self.conn.commit()
+
+    def get_task_node(self, node_id: str) -> Optional[TaskNode]:
+        row = self.conn.execute("SELECT * FROM task_nodes WHERE id=?", (node_id,)).fetchone()
+        return _row_to_task_node(row) if row else None
+
+    def list_task_nodes(
+        self,
+        task_id: Optional[str] = None,
+        status: Optional[TaskNodeStatus] = None,
+    ) -> list[TaskNode]:
+        clauses, args = [], []
+        if task_id is not None:
+            clauses.append("task_id = ?")
+            args.append(task_id)
+        if status is not None:
+            clauses.append("status = ?")
+            args.append(status.value)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        rows = self.conn.execute(
+            f"SELECT * FROM task_nodes {where} ORDER BY created_at ASC", args
+        ).fetchall()
+        return [_row_to_task_node(r) for r in rows]
+
+    def update_task_node(self, node: TaskNode) -> None:
+        self.conn.execute(
+            """UPDATE task_nodes SET
+                node_type=?, title=?, status=?, anchors=?, parent_id=?,
+                evidence_refs=?, fact_refs=?, blocked_reason=?, suggested_action=?,
+                updated_at=?, metadata=?
+               WHERE id=?""",
+            (
+                node.node_type, node.title, node.status.value,
+                _dumps(node.anchors), node.parent_id,
+                _dumps(node.evidence_refs), _dumps(node.fact_refs),
+                node.blocked_reason, node.suggested_action,
+                _iso(node.updated_at), _dumps(node.metadata),
+                node.id,
+            ),
+        )
+        self.conn.commit()
+
     # ---------- Audit ----------
 
     def append_audit(
@@ -358,5 +438,24 @@ def _row_to_fact(row: sqlite3.Row) -> Fact:
         depends_on=json.loads(row["depends_on"]),
         invalidated_at=_from_iso(row["invalidated_at"]),
         invalidation_reason=row["invalidation_reason"],
+        metadata=json.loads(row["metadata"]),
+    )
+
+
+def _row_to_task_node(row: sqlite3.Row) -> TaskNode:
+    return TaskNode(
+        id=row["id"],
+        task_id=row["task_id"],
+        node_type=row["node_type"],
+        title=row["title"],
+        status=TaskNodeStatus(row["status"]),
+        anchors=json.loads(row["anchors"]),
+        parent_id=row["parent_id"],
+        evidence_refs=json.loads(row["evidence_refs"]),
+        fact_refs=json.loads(row["fact_refs"]),
+        blocked_reason=row["blocked_reason"],
+        suggested_action=row["suggested_action"],
+        created_at=_from_iso(row["created_at"]),
+        updated_at=_from_iso(row["updated_at"]),
         metadata=json.loads(row["metadata"]),
     )

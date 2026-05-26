@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "evidence-gated-memory"
-version = "0.1.1"
+version = "0.2.0"
 description = "Provenance-first memory for high-stakes AI agents. Memory that knows what it doesn't know."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -32,6 +32,9 @@ dev = [
 
 [project.urls]
 Repository = "https://github.com/yushui2022/Evidence-Gated-Memory"
+
+[project.scripts]
+egm = "evidence_gated_memory.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

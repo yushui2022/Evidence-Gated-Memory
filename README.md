@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/egm-banner.svg" alt="EGM - Evidence-Gated Graph Memory" width="100%">
+</p>
+
 # Evidence-Gated Memory (EGM)
 
 > **Graph-structured, evidence-gated memory for hard-anchor enterprise agents.**
@@ -344,3 +348,121 @@ A rejected claim must be actionable. Evidence can expire; facts must follow.
 ## License
 
 MIT
+
+---
+
+## Project status & handoff (updated 2026-05-26)
+
+This section is the single source of truth for "where the project is right now."
+It is meant to be read cold — by a future-me, a collaborator, or a new Claude/Codex session — and be enough to resume work without losing context.
+
+### Where we are
+
+EGM is mid-way through **Milestone M1: restoring the graph-memory pillar** on top of the v0.1 evidence-gating core.
+
+- **v0.1 (shipped):** evidence + claims + facts + freshness + cascading invalidation + audit + CLI. Tests green (49/49).
+- **M1 in progress:** turn the flat fact store into a hard-anchor **task graph** with structured TaskNodes, evidence-gated state transitions, and a Mermaid projection that the agent can read as a task map.
+- **Not started:** M2 (long-term semantic pyramid L0→L1→L2→L3), M3 (offload JSONL mid-layer index).
+
+### Status of every tracked task
+
+Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another task
+
+#### v0.1 hardening (mostly cleanup of the original evidence-gating core)
+
+| # | Status | Task | Notes |
+|---|---|---|---|
+| 11 | ✅ | Fix wheel packaging (YAML schemas) | shipped |
+| 12 | ✅ | FTS query escape | shipped |
+| 13 | ⬜ | Strict schema: reject unknown evidence/claim types outright | small, can be done anytime |
+| 14 | ⬜ | `source_system` allowlist gate | depends on schema field — small |
+| 15 | ⬜ | Rewrite derived-fact semantics | needs design pass first |
+| 16 | 🟡 | Expired semantics: critical-field plan C | half-implemented, needs decision |
+| 17 | ⬜ | `commit_fact` must require a `GateResult` | API tightening |
+| 18 | ⬜ | README ↔ API alignment | do **after** M1 lands or it'll re-rot |
+| 19 | 🟡 | Regression tests | grows alongside every task |
+
+#### M1 — short-term graph memory (current focus)
+
+| # | Status | Task | Blocked by |
+|---|---|---|---|
+| 28 | ✅ | TaskGraph structured object (TaskNode model + SQLite table + CRUD) | — |
+| 30 | ✅ | Attach-reference validation + TaskNode audit log | #28 |
+| 20 | ⬜ | **NEXT** — `render_mermaid()` projection over task_nodes | #28 ✅ |
+| 21 | 🔒 | Soft state machine: `TaskState` + current-state table | #20 |
+| 22 | 🔒 | Promote node state transitions into the gate system | #20, #21 |
+| 31 | 🔒 | `transition_node()` — the **gated** business API (current `update_task_node_status` is low-level CRUD only) | #22 |
+| 23 | 🔒 | Add `node_id` link from evidence & facts back to task nodes | #20 |
+| 24 | 🔒 | `build_context()` emits a `<task_map>` block with gated facts inline | #20, #23 |
+| 25 | 🔒 | Retrieval picks up a `task_focus` signal | #23 |
+| 32 | ⬜ | Top-level `Task` model + `TaskEdge` (round out the "graph" in TaskGraph) | #28 ✅ — can run in parallel with #20 |
+| 26 | 🔒 | Architecture doc: three pillars + lineage from TencentDB Agent Memory | #20–#25 |
+
+#### M2 — long-term semantic pyramid (not started)
+
+| # | Status | Task |
+|---|---|---|
+| 29 | ⬜ | L0 conversation → L1 atom → L2 scenario → L3 persona distillation pipeline |
+
+#### M3 — offload mid-layer index (not started)
+
+| # | Status | Task |
+|---|---|---|
+| 27 | ⬜ | offload JSONL index: `tool_call_id / node_id / result_ref / summary / score` |
+
+### Agreed execution order for the next sessions
+
+The principle we converged on is **"build trust at the base before growing up"** — every layer must be auditable and drill-downable before the next layer sits on it.
+
+```
+✅ #28  TaskNode structured object
+✅ #30  attach validation + audit          ← we are here
+⬜ #20  render_mermaid                     ← NEXT
+⬜ #22  state transitions inside the gate system   (needs #21 first)
+⬜ #31  transition_node — the gated state API
+⬜ #32  Task + TaskEdge top-level model
+⬜ #23  evidence/fact ↔ node_id link
+⬜ #24  build_context emits task_map block
+⬜ #25  retrieval task_focus signal
+⬜ #26  architecture doc
+```
+
+After M1 closes, pick up M2 (#29) and M3 (#27). The v0.1 hardening items (#13–#19) can be batched in between whenever a contributor wants a small, isolated PR.
+
+### How to resume tomorrow
+
+1. **Verify the baseline still works.**
+   ```bash
+   python -m pytest          # expect 49 passed
+   ```
+2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py` (TaskGraph API region, around the `# ---------- Task Graph ----------` comment) and `tests/test_task_graph.py`.
+3. **Start #20.** The shape is:
+   - new module `src/evidence_gated_memory/core/mermaid.py` with a pure function `render_mermaid(nodes: list[TaskNode]) -> str`
+   - status → CSS class: pending/in_progress/blocked/done/skipped → `:::pending`, etc.
+   - parent_id → edge `parent --> child`
+   - call site: a new `EvidenceGatedMemory.render_task_graph(task_id: str | None = None) -> str`
+   - tests: empty graph, single node per status, parent/child edges, multi-task isolation
+4. **Do not touch** `update_task_node_status`'s behavior — it is intentionally low-level CRUD. The gated API is `transition_node()` and lives in #31.
+
+### Uncommitted local state (as of writing)
+
+`git status` shows local edits not yet pushed. Before resuming, decide whether to commit M1 progress so far as a single "M1: TaskGraph foundation (#28 + #30)" commit, or keep iterating and squash later. Files involved:
+
+- `src/evidence_gated_memory/core/models.py` — TaskNode + TaskNodeStatus
+- `src/evidence_gated_memory/storage/sqlite.py` — task_nodes table + DAO
+- `src/evidence_gated_memory/core/memory.py` — TaskGraph API (CRUD + attach + audit)
+- `src/evidence_gated_memory/__init__.py` — re-exports
+- `tests/test_task_graph.py` — new, 13 tests, all green
+- `README.md` — this section + banner
+
+### Key design decisions worth not re-litigating
+
+These were debated and settled; revisit only with new evidence, not just second thoughts.
+
+- **TaskNode granularity = business node** (e.g. "check refund eligibility"), not per-message or per-tool-call.
+- **TaskNodes are created by explicit API call**, not auto-derived from events.
+- **`update_task_node_status` is low-level CRUD.** It does not consult any gate. The gated counterpart is `transition_node()` (#31). This split is intentional — keep tests/setup unblocked, keep production paths gated.
+- **`attach_*_to_node` validates the target exists** (and for facts: is not invalidated). A node's `evidence_refs` / `fact_refs` are a live, drillable set — phantom refs would silently break EGM's core promise.
+- **Every TaskNode mutation writes an audit entry.** No silent state change.
+- **Build the validation/audit floor before the Mermaid projection.** Rendering a graph that contains un-audited state changes or ghost references would contradict the whole point of EGM.
+
