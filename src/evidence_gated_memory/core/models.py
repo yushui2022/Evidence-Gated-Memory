@@ -286,6 +286,22 @@ class TransitionGateResult(BaseModel):
         return " | ".join(actions)
 
 
+class TransitionResult(BaseModel):
+    """Result of the gated `transition_node` API."""
+
+    accepted: bool
+    node: TaskNode
+    gate: TransitionGateResult
+
+    @property
+    def rejection_reason(self) -> str:
+        return self.gate.rejection_reason
+
+    @property
+    def suggested_action(self) -> str:
+        return self.gate.suggested_action
+
+
 class AssertResult(BaseModel):
     """Result of the one-shot `assert_fact` API: propose → gate → commit."""
 

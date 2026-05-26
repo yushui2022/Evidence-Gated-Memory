@@ -36,6 +36,7 @@ from evidence_gated_memory.core.models import (
     TaskNodeStatus,
     TaskStatus,
     TransitionGateResult,
+    TransitionResult,
     derive_task_state,
 )
 from evidence_gated_memory.schemas.loader import DomainSchema, load_schema, load_schema_dict
@@ -311,7 +312,7 @@ class EvidenceGatedMemory:
         This is **not** the gated business API. It mutates the node's status
         directly without consulting any quality gate. Use it for setup,
         recovery, or tests. The gated counterpart is `transition_node()`
-        (TODO: see task #31), which enforces schema-defined transition rules.
+        which enforces schema-defined transition rules.
         """
         node = self.store.get_task_node(node_id)
         if node is None:
@@ -392,6 +393,46 @@ class EvidenceGatedMemory:
             },
         )
         return result
+
+    def transition_node(
+        self,
+        node_id: str,
+        to_status: TaskNodeStatus,
+        *,
+        evidence: Optional[list[Union[str, Evidence]]] = None,
+        blocked_reason: Optional[str] = None,
+        suggested_action: Optional[str] = None,
+    ) -> TransitionResult:
+        """Gated business API for moving a TaskNode to a new status.
+
+        Unlike `update_task_node_status`, this first runs schema-defined
+        transition gates. Rejected transitions do not mutate the node.
+        Accepted transitions attach any supplied evidence refs before the
+        status change so the graph remains drill-downable.
+        """
+        node = self.store.get_task_node(node_id)
+        if node is None:
+            raise KeyError(f"task node not found: {node_id}")
+
+        gate = self.check_node_transition_gate(
+            node_id,
+            to_status,
+            evidence=evidence,
+        )
+        if not gate.accepted:
+            return TransitionResult(accepted=False, node=node, gate=gate)
+
+        for item in evidence or []:
+            evidence_id = item.id if isinstance(item, Evidence) else item
+            self.attach_evidence_to_node(node_id, evidence_id)
+
+        updated = self.update_task_node_status(
+            node_id,
+            to_status,
+            blocked_reason=blocked_reason,
+            suggested_action=suggested_action,
+        )
+        return TransitionResult(accepted=True, node=updated, gate=gate)
 
     def attach_evidence_to_node(self, node_id: str, evidence_id: str) -> TaskNode:
         """Link an evidence ref to a task node.

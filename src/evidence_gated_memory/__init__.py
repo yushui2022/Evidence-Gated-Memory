@@ -18,6 +18,7 @@ from evidence_gated_memory.core.models import (
     TaskState,
     TaskStatus,
     TransitionGateResult,
+    TransitionResult,
 )
 
 __version__ = "0.2.0"
@@ -40,4 +41,5 @@ __all__ = [
     "TaskState",
     "TaskStatus",
     "TransitionGateResult",
+    "TransitionResult",
 ]

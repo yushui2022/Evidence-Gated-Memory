@@ -395,8 +395,8 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 | 25 | ✅ | Retrieval picks up a `task_focus` signal (uses the new `node_id` back-link) | #23 |
 | 21 | ✅ | Soft state machine: `TaskState` + current-state table | #20 ✅ |
 | 22 | ✅ | Promote node state transitions into the gate system | #21 ✅ |
-| 31 | ⬜ | **NEXT** — `transition_node()` — the **gated** business API (current `update_task_node_status` is low-level CRUD only) | #22 ✅ |
-| 26 | 🔒 | Architecture doc: three pillars + lineage from TencentDB Agent Memory | #31 |
+| 31 | ✅ | `transition_node()` — the **gated** business API (current `update_task_node_status` is low-level CRUD only) | #22 ✅ |
+| 26 | ⬜ | **NEXT** — Architecture doc: three pillars + lineage from TencentDB Agent Memory | #31 ✅ |
 
 #### M2 — long-term semantic pyramid (not started)
 
@@ -424,8 +424,8 @@ The principle we converged on is **"build trust at the base before growing up"**
 ✅ #25  retrieval task_focus signal
 ✅ #21  soft state machine (TaskState + current_state)
 ✅ #22  state transitions inside the gate system
-⬜ #31  transition_node — the gated state API     ← NEXT
-⬜ #26  architecture doc
+✅ #31  transition_node — the gated state API
+⬜ #26  architecture doc                         ← NEXT
 ```
 
 After M1 closes, pick up M2 (#29) and M3 (#27). The v0.1 hardening items (#13–#19) can be batched in between whenever a contributor wants a small, isolated PR.
@@ -434,23 +434,23 @@ After M1 closes, pick up M2 (#29) and M3 (#27). The v0.1 hardening items (#13–
 
 1. **Verify the baseline still works.**
    ```bash
-   python -m pytest          # expect 92 passed
+   python -m pytest          # expect 98 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Start #31 (`transition_node()`).** Use `check_node_transition_gate()` as the read-only gate check, then make the new mutating API update the node only when the gate accepts; rejected transitions should return actionable violations without changing node state.
-4. **Do not touch** `update_task_node_status`'s behavior. The gated API is `transition_node()` (#31).
+3. **Start #26 (architecture doc).** Now that the short-term graph-memory code path is in place, document the three pillars clearly: TaskGraph + refs/offload lineage, evidence-gated facts, and gated task-state transitions.
+4. After #26, M1 is ready to close; then pick either M2 long-term semantic pyramid (#29) or M3 offload JSONL index (#27).
 
 ### Uncommitted local state (as of writing)
 
 `git status` shows local edits not yet pushed. Before resuming, decide whether to commit M1 progress so far as a single "M1: TaskGraph foundation (#28 + #30)" commit, or keep iterating and squash later. Files involved:
 
-- `src/evidence_gated_memory/core/models.py` — TaskNode, TaskNodeStatus, Task, TaskStatus, TaskState, TransitionGateResult, TaskEdge, TaskEdgeKind; node_id back-link on Evidence and Fact
+- `src/evidence_gated_memory/core/models.py` — TaskNode, TaskNodeStatus, Task, TaskStatus, TaskState, TransitionGateResult, TransitionResult, TaskEdge, TaskEdgeKind; node_id back-link on Evidence and Fact
 - `src/evidence_gated_memory/core/gates.py` — claim gates plus read-only state-transition gate checks
 - `src/evidence_gated_memory/schemas/loader.py` — schema support for `state_gates`
 - `src/evidence_gated_memory/schemas/builtin/refund.yaml` — refund workflow `state_gates`
 - `src/evidence_gated_memory/schemas/builtin/coding.yaml` — coding workflow `state_gates`
 - `src/evidence_gated_memory/storage/sqlite.py` — task_nodes / tasks / task_edges tables + DAO; `tasks.current_state` migration; node_id columns + setters on evidence / facts
-- `src/evidence_gated_memory/core/memory.py` — TaskGraph API (CRUD + attach + audit + `render_task_graph`); Task + TaskEdge APIs; back-link writes on attach; derived `refresh_task_state`
+- `src/evidence_gated_memory/core/memory.py` — TaskGraph API (CRUD + attach + audit + `render_task_graph`); Task + TaskEdge APIs; back-link writes on attach; derived `refresh_task_state`; gated `transition_node`
 - `src/evidence_gated_memory/core/mermaid.py` — pure projection function with typed-edge rendering
 - `src/evidence_gated_memory/core/context.py` — `<task_map>` and `<current_state>` blocks plus node-linked fact/evidence lines
 - `src/evidence_gated_memory/cli.py` — `egm context --task-id ...`
@@ -462,7 +462,8 @@ After M1 closes, pick up M2 (#29) and M3 (#27). The v0.1 hardening items (#13–
 - `tests/test_context_task_map.py` — 4 tests
 - `tests/test_task_state.py` — 8 tests
 - `tests/test_state_gates.py` — 7 tests
-- Suite total: **92 passed**
+- `tests/test_transition_node.py` — 6 tests
+- Suite total: **98 passed**
 - `README.md` — handoff section + banner
 
 ### Key design decisions worth not re-litigating
