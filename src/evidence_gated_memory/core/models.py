@@ -85,12 +85,31 @@ class TaskEdgeKind(str, enum.Enum):
     BLOCKS = "blocks"           # A explicitly blocks B (e.g. compliance hold)
 
 
+class MemoryAtomKind(str, enum.Enum):
+    """L1 long-term memory atom type."""
+
+    PERSONA = "persona"
+    EPISODIC = "episodic"
+    INSTRUCTION = "instruction"
+
+
 class Event(BaseModel):
     """L0 — raw append-only log entry. Never gated."""
 
     id: str = Field(default_factory=lambda: _new_id("evt"))
     created_at: datetime = Field(default_factory=_utcnow)
     role: str                      # "user" | "assistant" | "tool" | "system"
+    content: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class ConversationMessage(BaseModel):
+    """L0 long-term memory message: raw user/assistant conversation."""
+
+    id: str = Field(default_factory=lambda: _new_id("msg"))
+    created_at: datetime = Field(default_factory=_utcnow)
+    session_id: str = "default"
+    role: str
     content: str
     metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -124,6 +143,18 @@ class Evidence(BaseModel):
     # Set lazily by `attach_evidence_to_node`. Lets retrieval and
     # build_context light up `task_focus` (#25) without a join.
     node_id: Optional[str] = None
+
+
+class MemoryAtom(BaseModel):
+    """L1 long-term memory atom promoted from L0 conversation messages."""
+
+    id: str = Field(default_factory=lambda: _new_id("atom"))
+    created_at: datetime = Field(default_factory=_utcnow)
+    kind: MemoryAtomKind
+    text: str
+    source_message_ids: list[str] = Field(default_factory=list)
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class OffloadRecord(BaseModel):

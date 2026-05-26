@@ -23,12 +23,15 @@ from evidence_gated_memory.core.mermaid import render_mermaid
 from evidence_gated_memory.core.models import (
     AssertResult,
     Claim,
+    ConversationMessage,
     Evidence,
     Event,
     Fact,
     FactKind,
     Freshness,
     GateResult,
+    MemoryAtom,
+    MemoryAtomKind,
     OffloadRecord,
     Task,
     TaskEdge,
@@ -82,6 +85,85 @@ class EvidenceGatedMemory:
         event = Event(role=role, content=content, metadata=metadata)
         self.store.insert_event(event)
         return event
+
+    # ---------- Long-term memory: L0 conversation / L1 atoms ----------
+
+    def record_conversation_message(
+        self,
+        role: str,
+        content: str,
+        *,
+        session_id: str = "default",
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> ConversationMessage:
+        """Record a raw user/assistant message for cross-session memory.
+
+        This is storage only. EGM does not auto-distill L1 atoms here; callers
+        decide which conversation messages deserve promotion.
+        """
+        message = ConversationMessage(
+            role=role,
+            content=content,
+            session_id=session_id,
+            metadata=metadata or {},
+        )
+        self.store.insert_conversation_message(message)
+        return message
+
+    def list_conversation_messages(
+        self,
+        session_id: Optional[str] = None,
+    ) -> list[ConversationMessage]:
+        return self.store.list_conversation_messages(session_id=session_id)
+
+    def record_memory_atom(
+        self,
+        kind: Union[MemoryAtomKind, str],
+        text: str,
+        *,
+        source_messages: Optional[list[Union[str, ConversationMessage]]] = None,
+        confidence: float = 1.0,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> MemoryAtom:
+        """Record a manually curated L1 atom grounded in L0 messages."""
+        source_ids = [
+            message.id if isinstance(message, ConversationMessage) else message
+            for message in (source_messages or [])
+        ]
+        existing = self.store.get_conversation_messages_many(source_ids)
+        existing_ids = {message.id for message in existing}
+        missing = [message_id for message_id in source_ids if message_id not in existing_ids]
+        if missing:
+            raise KeyError(f"conversation message(s) not found: {missing}")
+
+        atom = MemoryAtom(
+            kind=MemoryAtomKind(kind),
+            text=text,
+            source_message_ids=source_ids,
+            confidence=confidence,
+            metadata=metadata or {},
+        )
+        self.store.insert_memory_atom(atom)
+        self.store.append_audit(
+            event_type="memory_atom_recorded",
+            detail={
+                "atom_id": atom.id,
+                "kind": atom.kind.value,
+                "source_message_ids": source_ids,
+                "confidence": confidence,
+            },
+        )
+        return atom
+
+    def list_memory_atoms(
+        self,
+        kind: Optional[Union[MemoryAtomKind, str]] = None,
+    ) -> list[MemoryAtom]:
+        resolved_kind = MemoryAtomKind(kind) if kind is not None else None
+        return self.store.list_memory_atoms(kind=resolved_kind)
+
+    def search_memory_atoms(self, query: str, limit: int = 10) -> list[MemoryAtom]:
+        return self.store.search_memory_atoms(query=query, limit=limit)
 
     def record_evidence(
         self,

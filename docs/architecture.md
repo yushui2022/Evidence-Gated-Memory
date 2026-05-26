@@ -47,8 +47,9 @@ unless the required evidence is present, trusted, and fresh enough."
 
 ## What Is Implemented Now
 
-The current repository implements the M1 short-term graph-memory pillar plus
-the v0.1 evidence-gating core:
+The current repository implements the M1 short-term graph-memory pillar, the
+M3 offload index, the v0.1 evidence-gating core, and the first M2 long-term
+memory foundation:
 
 - append-only events and raw evidence refs
 - claims, gate checks, committed facts
@@ -59,6 +60,8 @@ the v0.1 evidence-gating core:
 - node backlinks from evidence and facts
 - task-focused context building
 - offload JSONL records for heavy tool-result summaries
+- L0 conversation messages for raw user / assistant dialogue
+- L1 memory atoms for manually promoted persona / episodic / instruction memory
 - derived `Task.current_state`
 - schema-driven task-state gates
 - gated `transition_node()`
@@ -66,11 +69,15 @@ the v0.1 evidence-gating core:
 
 The following are intentionally not implemented yet:
 
-- M2: long-term semantic pyramid (`L0 Conversation -> L1 Atom -> L2 Scenario -> L3 Persona`)
+- M2 upper layers: `L2 Scenario` and `L3 Persona`
+- automatic LLM distillation from L0 messages into L1/L2/L3 memory
 - hosted server, UI, vector backend, graph database backend, or framework adapters
 
 Those are future layers. The implemented short-term path now covers refs,
 offload JSONL, TaskGraph, Mermaid projection, facts, and gated transitions.
+The implemented long-term path is deliberately narrower: record L0 messages,
+manually promote L1 atoms, keep source-message back-links, and audit the
+promotion decision.
 
 ## System Shape
 

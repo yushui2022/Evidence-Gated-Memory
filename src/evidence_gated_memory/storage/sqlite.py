@@ -17,11 +17,14 @@ from typing import Any, Iterable, Optional
 
 from evidence_gated_memory.core.models import (
     Claim,
+    ConversationMessage,
     Evidence,
     Event,
     Fact,
     FactKind,
     GateResult,
+    MemoryAtom,
+    MemoryAtomKind,
     OffloadRecord,
     Task,
     TaskEdge,
@@ -39,6 +42,25 @@ CREATE TABLE IF NOT EXISTS events (
     created_at TEXT NOT NULL,
     role TEXT NOT NULL,
     content TEXT NOT NULL,
+    metadata TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS conversation_messages (
+    id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    metadata TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS memory_atoms (
+    id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    text TEXT NOT NULL,
+    source_message_ids TEXT NOT NULL,
+    confidence REAL NOT NULL,
     metadata TEXT NOT NULL
 );
 
@@ -109,6 +131,13 @@ CREATE VIRTUAL TABLE IF NOT EXISTS facts_fts USING fts5(
     tokenize = 'unicode61'
 );
 
+CREATE VIRTUAL TABLE IF NOT EXISTS memory_atoms_fts USING fts5(
+    id UNINDEXED,
+    text,
+    kind,
+    tokenize = 'unicode61'
+);
+
 CREATE TABLE IF NOT EXISTS task_nodes (
     id TEXT PRIMARY KEY,
     task_id TEXT NOT NULL,
@@ -129,6 +158,8 @@ CREATE TABLE IF NOT EXISTS task_nodes (
 CREATE INDEX IF NOT EXISTS idx_evidence_type ON evidence(evidence_type);
 CREATE INDEX IF NOT EXISTS idx_facts_claim_type ON facts(claim_type);
 CREATE INDEX IF NOT EXISTS idx_facts_invalidated ON facts(invalidated_at);
+CREATE INDEX IF NOT EXISTS idx_conversation_session ON conversation_messages(session_id);
+CREATE INDEX IF NOT EXISTS idx_memory_atoms_kind ON memory_atoms(kind);
 CREATE INDEX IF NOT EXISTS idx_task_nodes_task_id ON task_nodes(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_nodes_status ON task_nodes(status);
 
@@ -213,6 +244,104 @@ class SqliteStore:
             (event.id, _iso(event.created_at), event.role, event.content, _dumps(event.metadata)),
         )
         self.conn.commit()
+
+    # ---------- Long-term memory: L0 conversation / L1 atoms ----------
+
+    def insert_conversation_message(self, message: ConversationMessage) -> None:
+        self.conn.execute(
+            """INSERT INTO conversation_messages(
+                id, created_at, session_id, role, content, metadata
+            ) VALUES (?,?,?,?,?,?)""",
+            (
+                message.id, _iso(message.created_at), message.session_id,
+                message.role, message.content, _dumps(message.metadata),
+            ),
+        )
+        self.conn.commit()
+
+    def get_conversation_message(self, message_id: str) -> Optional[ConversationMessage]:
+        row = self.conn.execute(
+            "SELECT * FROM conversation_messages WHERE id=?",
+            (message_id,),
+        ).fetchone()
+        return _row_to_conversation_message(row) if row else None
+
+    def get_conversation_messages_many(self, ids: Iterable[str]) -> list[ConversationMessage]:
+        ids = list(ids)
+        if not ids:
+            return []
+        placeholders = ",".join("?" * len(ids))
+        rows = self.conn.execute(
+            f"SELECT * FROM conversation_messages WHERE id IN ({placeholders})", ids
+        ).fetchall()
+        return [_row_to_conversation_message(r) for r in rows]
+
+    def list_conversation_messages(
+        self,
+        session_id: Optional[str] = None,
+    ) -> list[ConversationMessage]:
+        if session_id is None:
+            rows = self.conn.execute(
+                "SELECT * FROM conversation_messages ORDER BY created_at ASC"
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM conversation_messages WHERE session_id=? ORDER BY created_at ASC",
+                (session_id,),
+            ).fetchall()
+        return [_row_to_conversation_message(r) for r in rows]
+
+    def insert_memory_atom(self, atom: MemoryAtom) -> None:
+        self.conn.execute(
+            """INSERT INTO memory_atoms(
+                id, created_at, kind, text, source_message_ids, confidence, metadata
+            ) VALUES (?,?,?,?,?,?,?)""",
+            (
+                atom.id, _iso(atom.created_at), atom.kind.value, atom.text,
+                _dumps(atom.source_message_ids), atom.confidence, _dumps(atom.metadata),
+            ),
+        )
+        self.conn.execute(
+            "INSERT INTO memory_atoms_fts(id, text, kind) VALUES (?,?,?)",
+            (atom.id, atom.text, atom.kind.value),
+        )
+        self.conn.commit()
+
+    def list_memory_atoms(self, kind: Optional[MemoryAtomKind] = None) -> list[MemoryAtom]:
+        if kind is None:
+            rows = self.conn.execute(
+                "SELECT * FROM memory_atoms ORDER BY created_at DESC"
+            ).fetchall()
+        else:
+            rows = self.conn.execute(
+                "SELECT * FROM memory_atoms WHERE kind=? ORDER BY created_at DESC",
+                (kind.value,),
+            ).fetchall()
+        return [_row_to_memory_atom(r) for r in rows]
+
+    def search_memory_atoms(self, query: str, limit: int = 10) -> list[MemoryAtom]:
+        safe = _sanitize_fts_query(query)
+        if safe:
+            try:
+                rows = self.conn.execute(
+                    "SELECT memory_atoms.* FROM memory_atoms "
+                    "JOIN memory_atoms_fts ON memory_atoms.id = memory_atoms_fts.id "
+                    "WHERE memory_atoms_fts MATCH ? "
+                    "ORDER BY rank LIMIT ?",
+                    (safe, limit),
+                ).fetchall()
+                if rows:
+                    return [_row_to_memory_atom(r) for r in rows]
+            except sqlite3.OperationalError:
+                pass
+
+        like = f"%{query}%"
+        rows = self.conn.execute(
+            "SELECT * FROM memory_atoms WHERE text LIKE ? "
+            "ORDER BY created_at DESC LIMIT ?",
+            (like, limit),
+        ).fetchall()
+        return [_row_to_memory_atom(r) for r in rows]
 
     # ---------- Evidence ----------
 
@@ -578,6 +707,29 @@ def _sanitize_fts_query(query: str) -> str:
     if not tokens:
         return ""
     return " ".join(f'"{t}"' for t in tokens)
+
+
+def _row_to_conversation_message(row: sqlite3.Row) -> ConversationMessage:
+    return ConversationMessage(
+        id=row["id"],
+        created_at=_from_iso(row["created_at"]),
+        session_id=row["session_id"],
+        role=row["role"],
+        content=row["content"],
+        metadata=json.loads(row["metadata"]),
+    )
+
+
+def _row_to_memory_atom(row: sqlite3.Row) -> MemoryAtom:
+    return MemoryAtom(
+        id=row["id"],
+        created_at=_from_iso(row["created_at"]),
+        kind=MemoryAtomKind(row["kind"]),
+        text=row["text"],
+        source_message_ids=json.loads(row["source_message_ids"]),
+        confidence=row["confidence"],
+        metadata=json.loads(row["metadata"]),
+    )
 
 
 def _row_to_evidence(row: sqlite3.Row) -> Evidence:

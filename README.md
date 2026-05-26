@@ -13,7 +13,7 @@ Evidence-Gated Graph Memory turns a linear agent history into a layered, recover
 It combines three ideas:
 
 1. **Symbolic short-term memory** — heavy tool outputs are offloaded into `refs/*.md`, indexed by `node_id` / `result_ref`, and folded into a Mermaid task graph.
-2. **Layered long-term memory** — conversations are distilled from L0 raw messages into L1 atoms, L2 scenarios, and L3 persona.
+2. **Layered long-term memory** — the current foundation records L0 raw messages and manually promoted L1 atoms; L2 scenarios and L3 persona are planned next.
 3. **Evidence-gated quality control** — business facts and task-state transitions must pass schema-defined gates for required evidence, trusted sources, freshness, and auditability.
 
 **The goal is not to remember more text. The goal is to keep a compact task map while preserving a path back to the original evidence.**
@@ -146,13 +146,13 @@ refs 原文  →  offload JSONL 摘要索引  →  Mermaid 任务图
 
 **2. Long-term semantic memory — cross-session background**
 
-User dialogue is not flat embedding search. It is distilled through a semantic pyramid:
+User dialogue should not become flat embedding search. The target design is a semantic pyramid:
 
 ```
 L0 Conversation  →  L1 Atom  →  L2 Scenario  →  L3 Persona
 ```
 
-This answers "who is the user, what is the project background, what were the historical decisions." For hard-anchor enterprise agents the top symbol is the **task map** rather than a persona, but the long-term background pyramid still applies.
+This answers "who is the user, what is the project background, what were the historical decisions." The current implementation has the L0/L1 foundation only: raw conversation messages plus manually promoted persona / episodic / instruction atoms. L2 scenarios and L3 persona are intentionally left for the next #29 slice.
 
 **3. Evidence-gated quality layer — what makes the graph and facts trustworthy**
 
@@ -364,7 +364,7 @@ EGM has completed **Milestone M1: restoring the graph-memory pillar** on top of 
 
 - **v0.1 (shipped):** evidence + claims + facts + freshness + cascading invalidation + audit + CLI. Tests green (49/49).
 - **M1 complete:** the flat fact store now has a hard-anchor **task graph** with structured TaskNodes, evidence-gated state transitions, and a Mermaid projection that the agent can read as a task map.
-- **Not started:** M2 (long-term semantic pyramid L0→L1→L2→L3).
+- **M2 in progress:** L0 Conversation + L1 Atom foundation has landed. L2 Scenario and L3 Persona are still pending.
 
 ### Status of every tracked task
 
@@ -400,11 +400,11 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 | 31 | ✅ | `transition_node()` — the **gated** business API (current `update_task_node_status` is low-level CRUD only) | #22 ✅ |
 | 26 | ✅ | Architecture doc: three pillars + lineage from TencentDB Agent Memory | #31 ✅ |
 
-#### M2 — long-term semantic pyramid (not started)
+#### M2 — long-term semantic pyramid (in progress)
 
 | # | Status | Task |
 |---|---|---|
-| 29 | ⬜ | **NEXT** — L0 conversation → L1 atom → L2 scenario → L3 persona distillation pipeline |
+| 29 | 🟡 | **IN PROGRESS** — L0 conversation + L1 atom foundation landed; L2 scenario + L3 persona pending |
 
 #### M3 — offload mid-layer index
 
@@ -429,48 +429,32 @@ The principle we converged on is **"build trust at the base before growing up"**
 ✅ #31  transition_node — the gated state API
 ✅ #26  architecture doc
 ✅ #27  offload JSONL index
-⬜ #29  long-term semantic pyramid                ← NEXT
+🟡 #29  long-term semantic pyramid                ← IN PROGRESS
 ```
 
-M1 and M3 are now closed. Next, pick up M2 (#29) for the long-term semantic pyramid. The v0.1 hardening items (#13–#19) can be batched in between whenever a contributor wants a small, isolated PR.
+M1 and M3 are now closed. M2 (#29) has started with the conservative L0/L1 foundation. Next, continue #29 by adding L2 scenario blocks only after the L1 atom API stays stable. The v0.1 hardening items (#13–#19) can be batched in between whenever a contributor wants a small, isolated PR.
 
 ### How to resume tomorrow
 
 1. **Verify the baseline still works.**
    ```bash
-   python -m pytest          # expect 104 passed
+   python -m pytest          # expect 110 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Start #29 (long-term semantic pyramid).** Add the L0 conversation layer first, then extract L1 atoms before attempting L2 scenarios or L3 persona.
+3. **Continue #29 (long-term semantic pyramid).** L0 conversation messages and manually recorded L1 atoms are implemented. Add L2 scenario blocks next; do not add automatic LLM distillation yet.
 4. Keep this separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
 
-### Uncommitted local state (as of writing)
+### Latest #29 slice
 
-`git status` shows local edits not yet pushed. Before resuming, decide whether to commit M1 progress so far as a single "M1: TaskGraph foundation (#28 + #30)" commit, or keep iterating and squash later. Files involved:
+This slice intentionally stops at the long-term memory foundation:
 
-- `src/evidence_gated_memory/core/models.py` — TaskNode, TaskNodeStatus, Task, TaskStatus, TaskState, TransitionGateResult, TransitionResult, TaskEdge, TaskEdgeKind, OffloadRecord; node_id back-link on Evidence and Fact
-- `src/evidence_gated_memory/core/gates.py` — claim gates plus read-only state-transition gate checks
-- `src/evidence_gated_memory/schemas/loader.py` — schema support for `state_gates`
-- `src/evidence_gated_memory/schemas/builtin/refund.yaml` — refund workflow `state_gates`
-- `src/evidence_gated_memory/schemas/builtin/coding.yaml` — coding workflow `state_gates`
-- `src/evidence_gated_memory/storage/sqlite.py` — task_nodes / tasks / task_edges tables + DAO; offload JSONL store; `tasks.current_state` migration; node_id columns + setters on evidence / facts
-- `src/evidence_gated_memory/core/memory.py` — TaskGraph API (CRUD + attach + audit + `render_task_graph`); Task + TaskEdge APIs; back-link writes on attach; derived `refresh_task_state`; gated `transition_node`; `record_offload` / `list_offloads`
-- `src/evidence_gated_memory/core/mermaid.py` — pure projection function with typed-edge rendering
-- `src/evidence_gated_memory/core/context.py` — `<task_map>` and `<current_state>` blocks plus node-linked fact/evidence lines
-- `src/evidence_gated_memory/cli.py` — `egm context --task-id ...`
-- `src/evidence_gated_memory/__init__.py` — re-exports
-- `docs/architecture.md` — M1 architecture doc and TencentDB Agent Memory lineage
-- `tests/test_task_graph.py` — 13 tests
-- `tests/test_mermaid.py` — 7 tests
-- `tests/test_task_top_level.py` — 13 tests
-- `tests/test_node_id_backlink.py` — 4 tests
-- `tests/test_context_task_map.py` — 4 tests
-- `tests/test_task_state.py` — 8 tests
-- `tests/test_state_gates.py` — 7 tests
-- `tests/test_transition_node.py` — 6 tests
-- `tests/test_offload.py` — 6 tests
-- Suite total: **104 passed**
-- `README.md` — handoff section + banner
+- `ConversationMessage` stores L0 raw user / assistant messages by `session_id`.
+- `MemoryAtom` stores manually promoted L1 atoms with `persona`, `episodic`, or `instruction` kind.
+- L1 atoms can point back to source L0 message ids; missing source ids are rejected.
+- L1 atom search uses the same safe FTS pattern as fact search, with LIKE fallback.
+- `memory_atom_recorded` audit entries preserve promotion decisions.
+- L2 Scenario, L3 Persona, and automatic LLM distillation are not implemented yet.
+- Suite total after this slice: **110 passed**.
 
 ### Key design decisions worth not re-litigating
 
