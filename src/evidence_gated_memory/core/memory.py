@@ -32,6 +32,7 @@ from evidence_gated_memory.core.models import (
     GateResult,
     MemoryAtom,
     MemoryAtomKind,
+    MemoryScenario,
     OffloadRecord,
     Task,
     TaskEdge,
@@ -116,6 +117,9 @@ class EvidenceGatedMemory:
     ) -> list[ConversationMessage]:
         return self.store.list_conversation_messages(session_id=session_id)
 
+    def get_conversation_message(self, message_id: str) -> Optional[ConversationMessage]:
+        return self.store.get_conversation_message(message_id)
+
     def record_memory_atom(
         self,
         kind: Union[MemoryAtomKind, str],
@@ -162,8 +166,56 @@ class EvidenceGatedMemory:
         resolved_kind = MemoryAtomKind(kind) if kind is not None else None
         return self.store.list_memory_atoms(kind=resolved_kind)
 
+    def get_memory_atom(self, atom_id: str) -> Optional[MemoryAtom]:
+        return self.store.get_memory_atom(atom_id)
+
     def search_memory_atoms(self, query: str, limit: int = 10) -> list[MemoryAtom]:
         return self.store.search_memory_atoms(query=query, limit=limit)
+
+    def record_memory_scenario(
+        self,
+        title: str,
+        summary: str,
+        *,
+        atoms: list[Union[str, MemoryAtom]],
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> MemoryScenario:
+        """Record a manually curated L2 scenario grounded in L1 atoms."""
+        atom_ids = [atom.id if isinstance(atom, MemoryAtom) else atom for atom in atoms]
+        if not atom_ids:
+            raise ValueError("memory scenario requires at least one source atom")
+
+        existing = self.store.get_memory_atoms_many(atom_ids)
+        existing_ids = {atom.id for atom in existing}
+        missing = [atom_id for atom_id in atom_ids if atom_id not in existing_ids]
+        if missing:
+            raise KeyError(f"memory atom(s) not found: {missing}")
+
+        scenario = MemoryScenario(
+            title=title,
+            summary=summary,
+            atom_ids=atom_ids,
+            metadata=metadata or {},
+        )
+        self.store.insert_memory_scenario(scenario)
+        self.store.append_audit(
+            event_type="memory_scenario_recorded",
+            detail={
+                "scenario_id": scenario.id,
+                "title": title,
+                "atom_ids": atom_ids,
+            },
+        )
+        return scenario
+
+    def get_memory_scenario(self, scenario_id: str) -> Optional[MemoryScenario]:
+        return self.store.get_memory_scenario(scenario_id)
+
+    def list_memory_scenarios(self) -> list[MemoryScenario]:
+        return self.store.list_memory_scenarios()
+
+    def search_memory_scenarios(self, query: str, limit: int = 10) -> list[MemoryScenario]:
+        return self.store.search_memory_scenarios(query=query, limit=limit)
 
     def record_evidence(
         self,

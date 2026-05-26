@@ -25,6 +25,7 @@ from evidence_gated_memory.core.models import (
     GateResult,
     MemoryAtom,
     MemoryAtomKind,
+    MemoryScenario,
     OffloadRecord,
     Task,
     TaskEdge,
@@ -61,6 +62,16 @@ CREATE TABLE IF NOT EXISTS memory_atoms (
     text TEXT NOT NULL,
     source_message_ids TEXT NOT NULL,
     confidence REAL NOT NULL,
+    metadata TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS memory_scenarios (
+    id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    atom_ids TEXT NOT NULL,
     metadata TEXT NOT NULL
 );
 
@@ -135,6 +146,13 @@ CREATE VIRTUAL TABLE IF NOT EXISTS memory_atoms_fts USING fts5(
     id UNINDEXED,
     text,
     kind,
+    tokenize = 'unicode61'
+);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS memory_scenarios_fts USING fts5(
+    id UNINDEXED,
+    title,
+    summary,
     tokenize = 'unicode61'
 );
 
@@ -307,6 +325,23 @@ class SqliteStore:
         )
         self.conn.commit()
 
+    def get_memory_atom(self, atom_id: str) -> Optional[MemoryAtom]:
+        row = self.conn.execute(
+            "SELECT * FROM memory_atoms WHERE id=?",
+            (atom_id,),
+        ).fetchone()
+        return _row_to_memory_atom(row) if row else None
+
+    def get_memory_atoms_many(self, ids: Iterable[str]) -> list[MemoryAtom]:
+        ids = list(ids)
+        if not ids:
+            return []
+        placeholders = ",".join("?" * len(ids))
+        rows = self.conn.execute(
+            f"SELECT * FROM memory_atoms WHERE id IN ({placeholders})", ids
+        ).fetchall()
+        return [_row_to_memory_atom(r) for r in rows]
+
     def list_memory_atoms(self, kind: Optional[MemoryAtomKind] = None) -> list[MemoryAtom]:
         if kind is None:
             rows = self.conn.execute(
@@ -342,6 +377,60 @@ class SqliteStore:
             (like, limit),
         ).fetchall()
         return [_row_to_memory_atom(r) for r in rows]
+
+    def insert_memory_scenario(self, scenario: MemoryScenario) -> None:
+        self.conn.execute(
+            """INSERT INTO memory_scenarios(
+                id, created_at, updated_at, title, summary, atom_ids, metadata
+            ) VALUES (?,?,?,?,?,?,?)""",
+            (
+                scenario.id, _iso(scenario.created_at), _iso(scenario.updated_at),
+                scenario.title, scenario.summary, _dumps(scenario.atom_ids),
+                _dumps(scenario.metadata),
+            ),
+        )
+        self.conn.execute(
+            "INSERT INTO memory_scenarios_fts(id, title, summary) VALUES (?,?,?)",
+            (scenario.id, scenario.title, scenario.summary),
+        )
+        self.conn.commit()
+
+    def get_memory_scenario(self, scenario_id: str) -> Optional[MemoryScenario]:
+        row = self.conn.execute(
+            "SELECT * FROM memory_scenarios WHERE id=?",
+            (scenario_id,),
+        ).fetchone()
+        return _row_to_memory_scenario(row) if row else None
+
+    def list_memory_scenarios(self) -> list[MemoryScenario]:
+        rows = self.conn.execute(
+            "SELECT * FROM memory_scenarios ORDER BY updated_at DESC"
+        ).fetchall()
+        return [_row_to_memory_scenario(r) for r in rows]
+
+    def search_memory_scenarios(self, query: str, limit: int = 10) -> list[MemoryScenario]:
+        safe = _sanitize_fts_query(query)
+        if safe:
+            try:
+                rows = self.conn.execute(
+                    "SELECT memory_scenarios.* FROM memory_scenarios "
+                    "JOIN memory_scenarios_fts ON memory_scenarios.id = memory_scenarios_fts.id "
+                    "WHERE memory_scenarios_fts MATCH ? "
+                    "ORDER BY rank LIMIT ?",
+                    (safe, limit),
+                ).fetchall()
+                if rows:
+                    return [_row_to_memory_scenario(r) for r in rows]
+            except sqlite3.OperationalError:
+                pass
+
+        like = f"%{query}%"
+        rows = self.conn.execute(
+            "SELECT * FROM memory_scenarios WHERE title LIKE ? OR summary LIKE ? "
+            "ORDER BY updated_at DESC LIMIT ?",
+            (like, like, limit),
+        ).fetchall()
+        return [_row_to_memory_scenario(r) for r in rows]
 
     # ---------- Evidence ----------
 
@@ -728,6 +817,18 @@ def _row_to_memory_atom(row: sqlite3.Row) -> MemoryAtom:
         text=row["text"],
         source_message_ids=json.loads(row["source_message_ids"]),
         confidence=row["confidence"],
+        metadata=json.loads(row["metadata"]),
+    )
+
+
+def _row_to_memory_scenario(row: sqlite3.Row) -> MemoryScenario:
+    return MemoryScenario(
+        id=row["id"],
+        created_at=_from_iso(row["created_at"]),
+        updated_at=_from_iso(row["updated_at"]),
+        title=row["title"],
+        summary=row["summary"],
+        atom_ids=json.loads(row["atom_ids"]),
         metadata=json.loads(row["metadata"]),
     )
 

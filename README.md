@@ -13,7 +13,7 @@ Evidence-Gated Graph Memory turns a linear agent history into a layered, recover
 It combines three ideas:
 
 1. **Symbolic short-term memory** — heavy tool outputs are offloaded into `refs/*.md`, indexed by `node_id` / `result_ref`, and folded into a Mermaid task graph.
-2. **Layered long-term memory** — the current foundation records L0 raw messages and manually promoted L1 atoms; L2 scenarios and L3 persona are planned next.
+2. **Layered long-term memory** — the current foundation records L0 raw messages, manually promoted L1 atoms, and L2 scenarios; L3 persona is planned next.
 3. **Evidence-gated quality control** — business facts and task-state transitions must pass schema-defined gates for required evidence, trusted sources, freshness, and auditability.
 
 **The goal is not to remember more text. The goal is to keep a compact task map while preserving a path back to the original evidence.**
@@ -152,7 +152,7 @@ User dialogue should not become flat embedding search. The target design is a se
 L0 Conversation  →  L1 Atom  →  L2 Scenario  →  L3 Persona
 ```
 
-This answers "who is the user, what is the project background, what were the historical decisions." The current implementation has the L0/L1 foundation only: raw conversation messages plus manually promoted persona / episodic / instruction atoms. L2 scenarios and L3 persona are intentionally left for the next #29 slice.
+This answers "who is the user, what is the project background, what were the historical decisions." The current implementation has L0/L1/L2: raw conversation messages, manually promoted persona / episodic / instruction atoms, and scenario blocks that group related atoms. L3 persona is intentionally left for the next #29 slice.
 
 **3. Evidence-gated quality layer — what makes the graph and facts trustworthy**
 
@@ -364,7 +364,7 @@ EGM has completed **Milestone M1: restoring the graph-memory pillar** on top of 
 
 - **v0.1 (shipped):** evidence + claims + facts + freshness + cascading invalidation + audit + CLI. Tests green (49/49).
 - **M1 complete:** the flat fact store now has a hard-anchor **task graph** with structured TaskNodes, evidence-gated state transitions, and a Mermaid projection that the agent can read as a task map.
-- **M2 in progress:** L0 Conversation + L1 Atom foundation has landed. L2 Scenario and L3 Persona are still pending.
+- **M2 in progress:** L0 Conversation + L1 Atom + L2 Scenario blocks have landed. L3 Persona is still pending.
 
 ### Status of every tracked task
 
@@ -404,7 +404,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 
 | # | Status | Task |
 |---|---|---|
-| 29 | 🟡 | **IN PROGRESS** — L0 conversation + L1 atom foundation landed; L2 scenario + L3 persona pending |
+| 29 | 🟡 | **IN PROGRESS** — L0 conversation + L1 atom + L2 scenario blocks landed; L3 persona pending |
 
 #### M3 — offload mid-layer index
 
@@ -432,29 +432,32 @@ The principle we converged on is **"build trust at the base before growing up"**
 🟡 #29  long-term semantic pyramid                ← IN PROGRESS
 ```
 
-M1 and M3 are now closed. M2 (#29) has started with the conservative L0/L1 foundation. Next, continue #29 by adding L2 scenario blocks only after the L1 atom API stays stable. The v0.1 hardening items (#13–#19) can be batched in between whenever a contributor wants a small, isolated PR.
+M1 and M3 are now closed. M2 (#29) now has the conservative L0/L1/L2 foundation. Next, continue #29 by adding L3 persona only after the L2 scenario API stays stable. Do not add automatic LLM distillation yet. The v0.1 hardening items (#13–#19) can be batched in between whenever a contributor wants a small, isolated PR.
 
 ### How to resume tomorrow
 
 1. **Verify the baseline still works.**
    ```bash
-   python -m pytest          # expect 110 passed
+   python -m pytest          # expect 115 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Continue #29 (long-term semantic pyramid).** L0 conversation messages and manually recorded L1 atoms are implemented. Add L2 scenario blocks next; do not add automatic LLM distillation yet.
+3. **Continue #29 (long-term semantic pyramid).** L0 conversation messages, manually recorded L1 atoms, and L2 scenario blocks are implemented. Add L3 persona next; do not add automatic LLM distillation yet.
 4. Keep this separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
 
 ### Latest #29 slice
 
-This slice intentionally stops at the long-term memory foundation:
+This slice intentionally stops at the lower/middle long-term memory foundation:
 
 - `ConversationMessage` stores L0 raw user / assistant messages by `session_id`.
 - `MemoryAtom` stores manually promoted L1 atoms with `persona`, `episodic`, or `instruction` kind.
 - L1 atoms can point back to source L0 message ids; missing source ids are rejected.
 - L1 atom search uses the same safe FTS pattern as fact search, with LIKE fallback.
+- `MemoryScenario` stores manually promoted L2 scenario blocks backed by real L1 atom ids.
+- L2 scenario search uses safe FTS with LIKE fallback.
 - `memory_atom_recorded` audit entries preserve promotion decisions.
-- L2 Scenario, L3 Persona, and automatic LLM distillation are not implemented yet.
-- Suite total after this slice: **110 passed**.
+- `memory_scenario_recorded` audit entries preserve scenario promotion decisions.
+- L3 Persona and automatic LLM distillation are not implemented yet.
+- Suite total after this slice: **115 passed**.
 
 ### Key design decisions worth not re-litigating
 

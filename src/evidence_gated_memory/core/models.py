@@ -157,6 +157,18 @@ class MemoryAtom(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class MemoryScenario(BaseModel):
+    """L2 long-term memory scenario grouping related L1 atoms."""
+
+    id: str = Field(default_factory=lambda: _new_id("scene"))
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+    title: str
+    summary: str
+    atom_ids: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class OffloadRecord(BaseModel):
     """Mid-layer index for a heavy tool result stored as raw evidence.
 
