@@ -39,6 +39,8 @@ EGM is built for **hard-anchor** workflows — those organized around stable bus
 
 EGM does not discard the graph structure of TencentDB Agent Memory. It layers an enterprise-grade quality discipline on top of its short-term Mermaid task graph / `refs` / L0–L3 long-term memory.
 
+For the stabilized M1 architecture, see [docs/architecture.md](docs/architecture.md).
+
 ```mermaid
 flowchart TD
     subgraph INPUT["Agent 运行输入"]
@@ -358,10 +360,10 @@ It is meant to be read cold — by a future-me, a collaborator, or a new Claude/
 
 ### Where we are
 
-EGM is mid-way through **Milestone M1: restoring the graph-memory pillar** on top of the v0.1 evidence-gating core.
+EGM has completed **Milestone M1: restoring the graph-memory pillar** on top of the v0.1 evidence-gating core.
 
 - **v0.1 (shipped):** evidence + claims + facts + freshness + cascading invalidation + audit + CLI. Tests green (49/49).
-- **M1 in progress:** turn the flat fact store into a hard-anchor **task graph** with structured TaskNodes, evidence-gated state transitions, and a Mermaid projection that the agent can read as a task map.
+- **M1 complete:** the flat fact store now has a hard-anchor **task graph** with structured TaskNodes, evidence-gated state transitions, and a Mermaid projection that the agent can read as a task map.
 - **Not started:** M2 (long-term semantic pyramid L0→L1→L2→L3), M3 (offload JSONL mid-layer index).
 
 ### Status of every tracked task
@@ -396,7 +398,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 | 21 | ✅ | Soft state machine: `TaskState` + current-state table | #20 ✅ |
 | 22 | ✅ | Promote node state transitions into the gate system | #21 ✅ |
 | 31 | ✅ | `transition_node()` — the **gated** business API (current `update_task_node_status` is low-level CRUD only) | #22 ✅ |
-| 26 | ⬜ | **NEXT** — Architecture doc: three pillars + lineage from TencentDB Agent Memory | #31 ✅ |
+| 26 | ✅ | Architecture doc: three pillars + lineage from TencentDB Agent Memory | #31 ✅ |
 
 #### M2 — long-term semantic pyramid (not started)
 
@@ -408,7 +410,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 
 | # | Status | Task |
 |---|---|---|
-| 27 | ⬜ | offload JSONL index: `tool_call_id / node_id / result_ref / summary / score` |
+| 27 | ⬜ | **NEXT** — offload JSONL index: `tool_call_id / node_id / result_ref / summary / score` |
 
 ### Agreed execution order for the next sessions
 
@@ -425,10 +427,12 @@ The principle we converged on is **"build trust at the base before growing up"**
 ✅ #21  soft state machine (TaskState + current_state)
 ✅ #22  state transitions inside the gate system
 ✅ #31  transition_node — the gated state API
-⬜ #26  architecture doc                         ← NEXT
+✅ #26  architecture doc
+⬜ #27  offload JSONL index                       ← NEXT
+⬜ #29  long-term semantic pyramid
 ```
 
-After M1 closes, pick up M2 (#29) and M3 (#27). The v0.1 hardening items (#13–#19) can be batched in between whenever a contributor wants a small, isolated PR.
+M1 is now closed. Next, pick up M3 (#27) to complete the refs/offload/Mermaid short-term memory lineage, then M2 (#29) for the long-term semantic pyramid. The v0.1 hardening items (#13–#19) can be batched in between whenever a contributor wants a small, isolated PR.
 
 ### How to resume tomorrow
 
@@ -437,8 +441,8 @@ After M1 closes, pick up M2 (#29) and M3 (#27). The v0.1 hardening items (#13–
    python -m pytest          # expect 98 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Start #26 (architecture doc).** Now that the short-term graph-memory code path is in place, document the three pillars clearly: TaskGraph + refs/offload lineage, evidence-gated facts, and gated task-state transitions.
-4. After #26, M1 is ready to close; then pick either M2 long-term semantic pyramid (#29) or M3 offload JSONL index (#27).
+3. **Start #27 (offload JSONL index).** Add the mid-layer record that links heavy tool results to `node_id`, `result_ref`, `summary`, `score`, and timestamp.
+4. Keep TaskNodes as business nodes. Offload records can be per tool result, but they should point back to a business TaskNode instead of becoming graph nodes themselves.
 
 ### Uncommitted local state (as of writing)
 
@@ -455,6 +459,7 @@ After M1 closes, pick up M2 (#29) and M3 (#27). The v0.1 hardening items (#13–
 - `src/evidence_gated_memory/core/context.py` — `<task_map>` and `<current_state>` blocks plus node-linked fact/evidence lines
 - `src/evidence_gated_memory/cli.py` — `egm context --task-id ...`
 - `src/evidence_gated_memory/__init__.py` — re-exports
+- `docs/architecture.md` — M1 architecture doc and TencentDB Agent Memory lineage
 - `tests/test_task_graph.py` — 13 tests
 - `tests/test_mermaid.py` — 7 tests
 - `tests/test_task_top_level.py` — 13 tests
