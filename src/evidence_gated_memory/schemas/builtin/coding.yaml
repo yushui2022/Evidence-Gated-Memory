@@ -1,0 +1,63 @@
+name: coding
+description: Coding-agent memory schema. Demonstrates that EGM is not refund-specific.
+
+entities:
+  - name: file
+    patterns: ['[\w./\\-]+\.(py|ts|tsx|js|jsx|go|rs|java|md)']
+  - name: function
+  - name: test
+  - name: error
+
+evidence_types:
+  file_read:
+    stale_after: PT30M
+    expired_after: PT4H
+    source_systems: ["filesystem"]
+    risk: medium
+
+  test_log:
+    stale_after: PT10M
+    expired_after: PT2H
+    source_systems: ["test_runner"]
+    risk: high
+
+  diff:
+    stale_after: PT5M
+    expired_after: PT1H
+    source_systems: ["git"]
+    risk: high
+
+  command_log:
+    stale_after: PT10M
+    expired_after: PT1H
+    source_systems: ["shell"]
+    risk: medium
+
+claim_types:
+  file_content:
+    required_evidence: ["file_read"]
+    description: A claim about the contents of a specific file.
+
+  error_diagnosis:
+    required_evidence: ["test_log"]
+    description: A claim about why a test or command failed.
+
+  task_done:
+    required_evidence: ["test_log"]
+    requires_fresh_evidence: true
+    description: A claim that the coding task is complete.
+
+gates:
+  - name: file_claim_requires_read
+    when: { claim_type: file_content }
+    require:
+      evidence_types: ["file_read"]
+      freshness: stale
+    suggested_action: "read the file before describing its contents"
+
+  - name: done_requires_passing_test
+    when: { claim_type: task_done }
+    require:
+      evidence_types: ["test_log"]
+      freshness: fresh
+    suggested_action: "run the tests and attach a fresh passing log before declaring done"

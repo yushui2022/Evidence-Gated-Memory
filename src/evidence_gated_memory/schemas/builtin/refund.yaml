@@ -1,0 +1,76 @@
+name: refund
+description: Refund-workflow memory schema for enterprise customer-support agents.
+
+entities:
+  - name: customer
+    patterns: ["CUST-[0-9]+"]
+    metadata_fields: ["customer_id"]
+  - name: order
+    patterns: ["ORD-[0-9]+"]
+    metadata_fields: ["order_id"]
+  - name: payment
+    patterns: ["PAY-[0-9]+"]
+    metadata_fields: ["payment_id"]
+  - name: refund
+    patterns: ["REF-[0-9]+"]
+    metadata_fields: ["refund_id"]
+
+evidence_types:
+  order_record:
+    stale_after: PT30M
+    expired_after: PT24H
+    source_systems: ["order_api"]
+    risk: medium
+
+  payment_record:
+    stale_after: PT5M
+    expired_after: PT1H
+    source_systems: ["payment_api"]
+    risk: high
+
+  refund_policy:
+    stale_after: P7D
+    expired_after: P30D
+    source_systems: ["policy_db"]
+    risk: medium
+
+  refund_api_response:
+    stale_after: PT2M
+    expired_after: PT15M
+    source_systems: ["refund_api"]
+    risk: high
+
+  approval_record:
+    stale_after: P30D
+    expired_after: P180D
+    source_systems: ["approval_system"]
+    risk: high
+
+claim_types:
+  order_status:
+    required_evidence: ["order_record"]
+    description: Current status of an order.
+
+  refund_eligibility:
+    required_evidence: ["order_record", "refund_policy"]
+    description: Whether an order is eligible for refund under current policy.
+
+  refund_completed:
+    required_evidence: ["refund_api_response"]
+    requires_fresh_evidence: true
+    description: A refund has actually been executed.
+
+gates:
+  - name: refund_completion_requires_api_response
+    when: { claim_type: refund_completed }
+    require:
+      evidence_types: ["refund_api_response"]
+      freshness: fresh
+    suggested_action: "call refund_api and attach its response as evidence before declaring completion"
+
+  - name: refund_eligibility_requires_policy
+    when: { claim_type: refund_eligibility }
+    require:
+      evidence_types: ["refund_policy"]
+      freshness: stale
+    suggested_action: "fetch the current refund_policy from policy_db"
