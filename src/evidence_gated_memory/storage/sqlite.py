@@ -26,6 +26,7 @@ from evidence_gated_memory.core.models import (
     TaskEdgeKind,
     TaskNode,
     TaskNodeStatus,
+    TaskState,
     TaskStatus,
 )
 
@@ -133,6 +134,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     status TEXT NOT NULL,
+    current_state TEXT NOT NULL DEFAULT 'open',
     anchors TEXT NOT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
@@ -180,10 +182,23 @@ class SqliteStore:
         self.conn = sqlite3.connect(self.db_path)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
+        self._migrate_schema()
         self.conn.commit()
 
     def close(self) -> None:
         self.conn.close()
+
+    def _migrate_schema(self) -> None:
+        """Add columns introduced after the initial CREATE TABLE layout."""
+        self._ensure_column("tasks", "current_state", "TEXT NOT NULL DEFAULT 'open'")
+
+    def _ensure_column(self, table: str, column: str, definition: str) -> None:
+        columns = {
+            row["name"]
+            for row in self.conn.execute(f"PRAGMA table_info({table})").fetchall()
+        }
+        if column not in columns:
+            self.conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
     # ---------- Events ----------
 
@@ -414,16 +429,20 @@ class SqliteStore:
         status/title updates — the workflow row is small enough that we
         always write the full snapshot."""
         self.conn.execute(
-            """INSERT INTO tasks(id, title, status, anchors, created_at, updated_at, metadata)
-               VALUES (?,?,?,?,?,?,?)
+            """INSERT INTO tasks(
+                id, title, status, current_state, anchors, created_at, updated_at, metadata
+            )
+               VALUES (?,?,?,?,?,?,?,?)
                ON CONFLICT(id) DO UPDATE SET
                  title=excluded.title,
                  status=excluded.status,
+                 current_state=excluded.current_state,
                  anchors=excluded.anchors,
                  updated_at=excluded.updated_at,
                  metadata=excluded.metadata""",
             (
-                task.id, task.title, task.status.value, _dumps(task.anchors),
+                task.id, task.title, task.status.value,
+                task.current_state.value, _dumps(task.anchors),
                 _iso(task.created_at), _iso(task.updated_at), _dumps(task.metadata),
             ),
         )
@@ -590,6 +609,7 @@ def _row_to_task(row: sqlite3.Row) -> Task:
         id=row["id"],
         title=row["title"],
         status=TaskStatus(row["status"]),
+        current_state=TaskState(row["current_state"]),
         anchors=json.loads(row["anchors"]),
         created_at=_from_iso(row["created_at"]),
         updated_at=_from_iso(row["updated_at"]),

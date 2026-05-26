@@ -10,7 +10,8 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from evidence_gated_memory.core.freshness import freshness_of, is_usable
-from evidence_gated_memory.core.models import Evidence, Fact, FactKind, Freshness
+from evidence_gated_memory.core.mermaid import render_mermaid
+from evidence_gated_memory.core.models import Evidence, Fact, FactKind, Freshness, derive_task_state
 from evidence_gated_memory.schemas.loader import DomainSchema
 from evidence_gated_memory.storage.sqlite import SqliteStore
 
@@ -27,6 +28,7 @@ def build_context(
     store: SqliteStore,
     schema: DomainSchema,
     query: Optional[str] = None,
+    task_id: Optional[str] = None,
     max_facts: int = 10,
     now: Optional[datetime] = None,
 ) -> str:
@@ -40,13 +42,18 @@ def build_context(
     """
     now = now or datetime.now(timezone.utc)
 
-    facts = store.search_facts_fts(query, limit=max_facts) if query else store.list_active_facts()[:max_facts]
+    facts = _select_facts(store, query=query, task_id=task_id, max_facts=max_facts)
 
     lines: list[str] = []
     lines.append("# Evidence-Gated Memory Context")
     if query:
         lines.append(f"_query: {query}_")
+    if task_id:
+        lines.append(f"_task_id: {task_id}_")
     lines.append("")
+
+    if task_id:
+        lines.extend(_task_map_block(store, task_id))
 
     if not facts:
         lines.append("_(no facts available — agent should gather evidence before drawing conclusions)_")
@@ -75,6 +82,8 @@ def build_context(
 
         lines.append(f"[{tag}] {fact.text}")
         lines.append(f"  claim_type: {fact.claim_type}  kind: {fact.kind.value}")
+        if fact.node_id:
+            lines.append(f"  node: {fact.node_id}")
 
         if not states:
             lines.append(f"  (no evidence resolved)")
@@ -89,7 +98,8 @@ def build_context(
                     marker = "  ⛔ EXPIRED"
                 lines.append(
                     f"  - ref={ev.id} type={ev.evidence_type} source={ev.source} "
-                    f"observed={age_str} [{_FRESHNESS_TAG[f]}]{marker}"
+                    f"observed={age_str} [{_FRESHNESS_TAG[f]}]"
+                    f"{' node=' + ev.node_id if ev.node_id else ''}{marker}"
                 )
         lines.append("")
 
@@ -98,6 +108,58 @@ def build_context(
         lines.append("⚠ One or more facts were BLOCKED due to expired evidence. Do not assert conclusions that depend on them without reverification.")
 
     return "\n".join(lines)
+
+
+def _task_map_block(store: SqliteStore, task_id: str) -> list[str]:
+    nodes = store.list_task_nodes(task_id=task_id)
+    edges = store.list_task_edges(task_id=task_id)
+    task = store.get_task(task_id)
+    current_state = (
+        task.current_state.value
+        if task
+        else derive_task_state(node.status for node in nodes).value
+    )
+    mermaid = render_mermaid(nodes, edges=edges)
+    return [
+        "<task_map>",
+        f"task_id: {task_id}",
+        "```mermaid",
+        mermaid,
+        "```",
+        "</task_map>",
+        "",
+        f"<current_state>{current_state}</current_state>",
+        "",
+    ]
+
+
+def _select_facts(
+    store: SqliteStore,
+    *,
+    query: Optional[str],
+    task_id: Optional[str],
+    max_facts: int,
+) -> list[Fact]:
+    """Return facts with task-linked facts boosted when task_id is supplied.
+
+    This is deliberately a small ranking layer, not a new retrieval backend:
+    task focus is a prompt-context signal. If facts are linked to the active
+    task's nodes, show them first and keep them when max_facts is tight; then
+    fill the remaining slots with the normal recency/FTS result.
+    """
+    search_limit = max_facts if not task_id else max(max_facts * 5, 50)
+    facts = store.search_facts_fts(query, limit=search_limit) if query else store.list_active_facts()
+    if not task_id:
+        return facts[:max_facts]
+
+    node_ids = {node.id for node in store.list_task_nodes(task_id=task_id)}
+    if not node_ids:
+        return facts[:max_facts]
+
+    focused = [fact for fact in facts if fact.node_id in node_ids]
+    focused_ids = {fact.id for fact in focused}
+    rest = [fact for fact in facts if fact.id not in focused_ids]
+    return (focused + rest)[:max_facts]
 
 
 def _parent_block_reason(store: SqliteStore, fact: Fact) -> Optional[str]:

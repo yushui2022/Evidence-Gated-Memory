@@ -61,3 +61,11 @@ gates:
       evidence_types: ["test_log"]
       freshness: fresh
     suggested_action: "run the tests and attach a fresh passing log before declaring done"
+
+state_gates:
+  - name: coding_done_requires_fresh_test_log
+    when: { to_status: done }
+    require:
+      evidence_types: ["test_log"]
+      freshness: fresh
+    suggested_action: "run the relevant tests and attach a fresh test_log before marking the coding task done"

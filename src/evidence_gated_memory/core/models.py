@@ -13,7 +13,7 @@ from __future__ import annotations
 import enum
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 from pydantic import BaseModel, Field
 
@@ -51,13 +51,22 @@ class TaskNodeStatus(str, enum.Enum):
 
 
 class TaskStatus(str, enum.Enum):
-    """Top-level workflow status. Aggregated from child node states."""
+    """Explicit top-level workflow lifecycle status."""
 
     OPEN = "open"
     IN_PROGRESS = "in_progress"
     BLOCKED = "blocked"
     DONE = "done"
     CANCELLED = "cancelled"
+
+
+class TaskState(str, enum.Enum):
+    """Soft, derived workflow state computed from child node statuses."""
+
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    BLOCKED = "blocked"
+    DONE = "done"
 
 
 class TaskEdgeKind(str, enum.Enum):
@@ -201,7 +210,8 @@ class Task(BaseModel):
 
     id: str                                            # the same string used as TaskNode.task_id
     title: str = ""
-    status: TaskStatus = TaskStatus.OPEN
+    status: TaskStatus = TaskStatus.OPEN               # explicit lifecycle status
+    current_state: TaskState = TaskState.OPEN          # derived from child TaskNodes
     anchors: dict[str, str] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)
@@ -255,6 +265,27 @@ class GateResult(BaseModel):
         return " | ".join(actions)
 
 
+class TransitionGateResult(BaseModel):
+    """Result of checking whether a TaskNode may transition to a target status."""
+
+    accepted: bool
+    node_id: str
+    from_status: TaskNodeStatus
+    to_status: TaskNodeStatus
+    violations: list[GateViolation] = Field(default_factory=list)
+
+    @property
+    def rejection_reason(self) -> str:
+        if self.accepted:
+            return ""
+        return "; ".join(v.reason for v in self.violations)
+
+    @property
+    def suggested_action(self) -> str:
+        actions = [v.suggested_action for v in self.violations if v.suggested_action]
+        return " | ".join(actions)
+
+
 class AssertResult(BaseModel):
     """Result of the one-shot `assert_fact` API: propose → gate → commit."""
 
@@ -270,3 +301,17 @@ class AssertResult(BaseModel):
     @property
     def suggested_action(self) -> str:
         return self.gate.suggested_action
+
+
+def derive_task_state(node_statuses: Iterable[TaskNodeStatus]) -> TaskState:
+    """Collapse child node statuses into the task's soft state."""
+    statuses = list(node_statuses)
+    if not statuses:
+        return TaskState.OPEN
+    if any(status == TaskNodeStatus.BLOCKED for status in statuses):
+        return TaskState.BLOCKED
+    if any(status == TaskNodeStatus.IN_PROGRESS for status in statuses):
+        return TaskState.IN_PROGRESS
+    if all(status in (TaskNodeStatus.DONE, TaskNodeStatus.SKIPPED) for status in statuses):
+        return TaskState.DONE
+    return TaskState.OPEN

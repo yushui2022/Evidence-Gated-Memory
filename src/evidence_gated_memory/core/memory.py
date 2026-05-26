@@ -18,7 +18,7 @@ from typing import Any, Optional, Union
 from evidence_gated_memory.core.context import build_context
 from evidence_gated_memory.core.entities import EntityFallback, ExtractedEntity, extract_entities
 from evidence_gated_memory.core.freshness import freshness_of, is_usable
-from evidence_gated_memory.core.gates import check_gate
+from evidence_gated_memory.core.gates import check_gate, check_state_transition_gate
 from evidence_gated_memory.core.mermaid import render_mermaid
 from evidence_gated_memory.core.models import (
     AssertResult,
@@ -35,6 +35,8 @@ from evidence_gated_memory.core.models import (
     TaskNode,
     TaskNodeStatus,
     TaskStatus,
+    TransitionGateResult,
+    derive_task_state,
 )
 from evidence_gated_memory.schemas.loader import DomainSchema, load_schema, load_schema_dict
 from evidence_gated_memory.storage.sqlite import SqliteStore
@@ -194,6 +196,42 @@ class EvidenceGatedMemory:
     def list_tasks(self, status: Optional[TaskStatus] = None) -> list[Task]:
         return self.store.list_tasks(status=status)
 
+    def refresh_task_state(
+        self,
+        task_id: str,
+        *,
+        reason: str = "task graph changed",
+    ) -> Task:
+        """Recompute a Task's derived soft state from its child nodes.
+
+        This is a snapshot refresh, not a gated state-transition API. The
+        production transition gate lands later in `transition_node()` (#31).
+        """
+        task = self.store.get_task(task_id)
+        if task is None:
+            raise KeyError(f"task not found: {task_id}")
+
+        nodes = self.store.list_task_nodes(task_id=task_id)
+        prev_state = task.current_state
+        next_state = derive_task_state(node.status for node in nodes)
+
+        task.current_state = next_state
+        task.updated_at = datetime.now(timezone.utc)
+        self.store.upsert_task(task)
+
+        if prev_state != next_state:
+            self.store.append_audit(
+                event_type="task_state_changed",
+                detail={
+                    "task_id": task.id,
+                    "from_state": prev_state.value,
+                    "to_state": next_state.value,
+                    "reason": reason,
+                    "node_status_counts": _task_node_status_counts(nodes),
+                },
+            )
+        return task
+
     def _ensure_task(self, task_id: str, *, anchors: Optional[dict[str, str]] = None) -> Task:
         """Back-compat: if a node is created against an unknown task_id,
         materialise the workflow row on the fly so the graph stays consistent."""
@@ -247,6 +285,7 @@ class EvidenceGatedMemory:
                 "parent_id": node.parent_id,
             },
         )
+        self.refresh_task_state(task_id, reason=f"task_node_created:{node.id}")
         return node
 
     def get_task_node(self, node_id: str) -> Optional[TaskNode]:
@@ -308,7 +347,51 @@ class EvidenceGatedMemory:
                 "new_suggested_action": node.suggested_action,
             },
         )
+        self.refresh_task_state(node.task_id, reason=f"task_node_status_changed:{node.id}")
         return node
+
+    def check_node_transition_gate(
+        self,
+        node_id: str,
+        to_status: TaskNodeStatus,
+        *,
+        evidence: Optional[list[Union[str, Evidence]]] = None,
+    ) -> TransitionGateResult:
+        """Check whether a node may move to `to_status` under schema gates.
+
+        Read-only: this writes a gate-check audit entry but does not update
+        the node. `transition_node()` (#31) will be the mutating business API.
+        """
+        node = self.store.get_task_node(node_id)
+        if node is None:
+            raise KeyError(f"task node not found: {node_id}")
+
+        explicit_refs = [
+            e.id if isinstance(e, Evidence) else e
+            for e in (evidence or [])
+        ]
+        support_refs = _dedupe(list(node.evidence_refs) + explicit_refs)
+        evs, missing_evidence_refs = self._resolve_evidence_refs(support_refs)
+        result = check_state_transition_gate(
+            node,
+            to_status,
+            evs,
+            self.schema,
+            missing_evidence_refs=missing_evidence_refs,
+        )
+        self.store.append_audit(
+            event_type="state_gate_check",
+            accepted=result.accepted,
+            detail={
+                "node_id": node.id,
+                "task_id": node.task_id,
+                "from_status": result.from_status.value,
+                "to_status": result.to_status.value,
+                "evidence_refs": support_refs,
+                "violations": [v.model_dump() for v in result.violations],
+            },
+        )
+        return result
 
     def attach_evidence_to_node(self, node_id: str, evidence_id: str) -> TaskNode:
         """Link an evidence ref to a task node.
@@ -627,8 +710,20 @@ class EvidenceGatedMemory:
 
     # ---------- L2: prompt context ----------
 
-    def build_context(self, query: Optional[str] = None, max_facts: int = 10) -> str:
-        return build_context(self.store, self.schema, query=query, max_facts=max_facts)
+    def build_context(
+        self,
+        query: Optional[str] = None,
+        max_facts: int = 10,
+        *,
+        task_id: Optional[str] = None,
+    ) -> str:
+        return build_context(
+            self.store,
+            self.schema,
+            query=query,
+            task_id=task_id,
+            max_facts=max_facts,
+        )
 
     # ---------- audit ----------
 
@@ -719,3 +814,10 @@ def _dedupe(values: list[str]) -> list[str]:
         seen.add(value)
         out.append(value)
     return out
+
+
+def _task_node_status_counts(nodes: list[TaskNode]) -> dict[str, int]:
+    counts = {status.value: 0 for status in TaskNodeStatus}
+    for node in nodes:
+        counts[node.status.value] += 1
+    return {status: count for status, count in counts.items() if count}

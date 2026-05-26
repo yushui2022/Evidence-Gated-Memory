@@ -74,3 +74,18 @@ gates:
       evidence_types: ["refund_policy"]
       freshness: stale
     suggested_action: "fetch the current refund_policy from policy_db"
+
+state_gates:
+  - name: eligibility_done_requires_order_and_policy
+    when: { node_type: eligibility_check, to_status: done }
+    require:
+      evidence_types: ["order_record", "refund_policy"]
+      freshness: stale
+    suggested_action: "fetch order_record from order_api and refund_policy from policy_db before marking eligibility done"
+
+  - name: refund_completion_done_requires_api_response
+    when: { node_type: refund_completion, to_status: done }
+    require:
+      evidence_types: ["refund_api_response"]
+      freshness: fresh
+    suggested_action: "call refund_api and attach a fresh refund_api_response before marking refund completion done"

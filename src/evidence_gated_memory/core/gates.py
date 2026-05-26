@@ -42,8 +42,11 @@ from evidence_gated_memory.core.models import (
     Freshness,
     GateResult,
     GateViolation,
+    TaskNode,
+    TaskNodeStatus,
+    TransitionGateResult,
 )
-from evidence_gated_memory.schemas.loader import DomainSchema
+from evidence_gated_memory.schemas.loader import DomainSchema, StateGateRule
 
 
 def check_gate(
@@ -189,12 +192,114 @@ def check_gate(
                 now=now,
                 required_freshness=rule.require_freshness,
                 suggested_action=rule.suggested_action or "re-fetch evidence from source system",
-                strict_reason=f"gate '{rule.name}' requires {rule.require_freshness} evidence for '{evidence_type}'",
+                strict_reason=(
+                    f"gate '{rule.name}' requires "
+                    f"{rule.require_freshness} evidence for '{evidence_type}'"
+                ),
             ))
 
     return GateResult(
         accepted=not violations,
         claim_id=claim.id,
+        violations=violations,
+    )
+
+
+def check_state_transition_gate(
+    node: TaskNode,
+    to_status: TaskNodeStatus,
+    evidence: list[Evidence],
+    schema: DomainSchema,
+    now: datetime | None = None,
+    missing_evidence_refs: list[str] | None = None,
+) -> TransitionGateResult:
+    """Check schema-declared gates for a TaskNode status transition.
+
+    This is intentionally read-only. It answers "is this transition allowed?"
+    but does not mutate the node; the mutating public API lands in
+    `transition_node()` (#31).
+    """
+    now = now or datetime.now(timezone.utc)
+    violations: list[GateViolation] = []
+    missing_evidence_refs = missing_evidence_refs or []
+
+    if missing_evidence_refs:
+        violations.append(GateViolation(
+            gate="missing_transition_evidence_refs",
+            reason=(
+                f"{len(missing_evidence_refs)} evidence ref(s) could not be resolved: "
+                f"{missing_evidence_refs}"
+            ),
+            suggested_action="attach only existing Evidence refs before changing task state",
+        ))
+
+    for e in evidence:
+        type_def = schema.evidence_type(e.evidence_type)
+        if type_def is None:
+            violations.append(GateViolation(
+                gate="unknown_transition_evidence_type",
+                reason=f"evidence_type '{e.evidence_type}' is not declared in the domain schema",
+                suggested_action="add this evidence_type to the domain schema or attach declared evidence",
+            ))
+            continue
+        if type_def.source_systems:
+            source_system = e.source_system or e.source
+            if source_system not in type_def.source_systems:
+                violations.append(GateViolation(
+                    gate="transition_source_system_not_allowed",
+                    reason=(
+                        f"evidence {e.id} type '{e.evidence_type}' came from source_system "
+                        f"'{source_system}', expected one of {type_def.source_systems}"
+                    ),
+                    suggested_action=f"fetch '{e.evidence_type}' from an allowed source system",
+                ))
+
+    llm_refs = [e.id for e in evidence if (e.source_system or "").lower() == "llm"]
+    if llm_refs:
+        violations.append(GateViolation(
+            gate="transition_llm_output_not_as_source",
+            reason=(
+                f"{len(llm_refs)} evidence ref(s) come from LLM output "
+                "and cannot ground state transitions"
+            ),
+            stale_refs=llm_refs,
+            suggested_action="ground this state transition in evidence from a real source system",
+        ))
+
+    attached_types = {e.evidence_type for e in evidence}
+    for rule in schema.state_gates:
+        if not _state_gate_matches(rule, node, to_status):
+            continue
+
+        rule_missing = sorted(set(rule.require_evidence_types) - attached_types)
+        if rule_missing:
+            violations.append(GateViolation(
+                gate=rule.name,
+                reason=f"transition gate '{rule.name}' requires evidence types {rule_missing}",
+                missing_evidence_types=rule_missing,
+                suggested_action=rule.suggested_action or _suggest_for_missing(rule_missing),
+            ))
+
+        for evidence_type in sorted(set(rule.require_evidence_types) & attached_types):
+            violations.extend(_freshness_violations_for_type(
+                gate=rule.name,
+                evidence_type=evidence_type,
+                evidence=evidence,
+                schema=schema,
+                now=now,
+                required_freshness=rule.require_freshness,
+                suggested_action=rule.suggested_action or "re-fetch evidence from source system",
+                strict_reason=(
+                    f"transition gate '{rule.name}' requires "
+                    f"{rule.require_freshness} evidence for '{evidence_type}'"
+                ),
+            ))
+
+    return TransitionGateResult(
+        accepted=not violations,
+        node_id=node.id,
+        from_status=node.status,
+        to_status=to_status,
         violations=violations,
     )
 
@@ -206,6 +311,20 @@ def _suggest_for_missing(missing_types: Iterable[str]) -> str:
     if len(types) == 1:
         return f"fetch evidence of type '{types[0]}' from the corresponding source system"
     return f"fetch evidence of types {types} from the corresponding source systems"
+
+
+def _state_gate_matches(
+    rule: StateGateRule,
+    node: TaskNode,
+    to_status: TaskNodeStatus,
+) -> bool:
+    if getattr(rule, "when_node_type", None) and rule.when_node_type != node.node_type:
+        return False
+    if getattr(rule, "when_from_status", None) and rule.when_from_status != node.status.value:
+        return False
+    if getattr(rule, "when_to_status", None) and rule.when_to_status != to_status.value:
+        return False
+    return True
 
 
 def _freshness_violations_for_type(

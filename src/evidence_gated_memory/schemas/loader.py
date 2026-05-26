@@ -83,6 +83,18 @@ class GateRule(BaseModel):
     suggested_action: Optional[str] = None
 
 
+class StateGateRule(BaseModel):
+    """Declarative gate rule for TaskNode status transitions."""
+
+    name: str
+    when_node_type: Optional[str] = None
+    when_from_status: Optional[str] = None
+    when_to_status: Optional[str] = None
+    require_evidence_types: list[str] = Field(default_factory=list)
+    require_freshness: str = "fresh"       # "fresh" | "stale" | "any"
+    suggested_action: Optional[str] = None
+
+
 class DomainSchema(BaseModel):
     name: str
     description: str = ""
@@ -90,6 +102,7 @@ class DomainSchema(BaseModel):
     evidence_types: list[EvidenceTypeDef] = Field(default_factory=list)
     claim_types: list[ClaimTypeDef] = Field(default_factory=list)
     gates: list[GateRule] = Field(default_factory=list)
+    state_gates: list[StateGateRule] = Field(default_factory=list)
 
     def evidence_type(self, name: str) -> Optional[EvidenceTypeDef]:
         for et in self.evidence_types:
@@ -145,5 +158,17 @@ def _from_raw(raw: dict[str, Any]) -> DomainSchema:
                 suggested_action=g.get("suggested_action"),
             )
             for g in raw.get("gates", [])
+        ],
+        state_gates=[
+            StateGateRule(
+                name=g["name"],
+                when_node_type=(g.get("when") or {}).get("node_type"),
+                when_from_status=(g.get("when") or {}).get("from_status"),
+                when_to_status=(g.get("when") or {}).get("to_status"),
+                require_evidence_types=(g.get("require") or {}).get("evidence_types", []),
+                require_freshness=(g.get("require") or {}).get("freshness", "fresh"),
+                suggested_action=g.get("suggested_action"),
+            )
+            for g in raw.get("state_gates", [])
         ],
     )

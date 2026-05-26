@@ -50,6 +50,7 @@ def _build_parser() -> argparse.ArgumentParser:
     context_p.add_argument("workspace")
     context_p.add_argument("--schema", required=True, help="Schema path, 'refund', or 'coding'.")
     context_p.add_argument("--query", default=None)
+    context_p.add_argument("--task-id", default=None, help="Include the Mermaid task map for this task.")
     context_p.add_argument("--max-facts", type=int, default=10)
     context_p.set_defaults(func=_cmd_context)
 
@@ -132,7 +133,7 @@ def _cmd_sweep(args: argparse.Namespace) -> int:
 def _cmd_context(args: argparse.Namespace) -> int:
     memory = EvidenceGatedMemory(args.workspace, _load_schema_arg(args.schema))
     try:
-        print(memory.build_context(query=args.query, max_facts=args.max_facts))
+        print(memory.build_context(query=args.query, max_facts=args.max_facts, task_id=args.task_id))
     finally:
         memory.close()
     return 0
