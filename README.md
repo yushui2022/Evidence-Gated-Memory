@@ -176,65 +176,116 @@ A derived fact whose observed parent has expired → must also expire.
 
 ## Quick start
 
+Install in editable mode while developing locally:
+
+```bash
+pip install -e ".[dev]"
+```
+
 ```python
-from evidence_gated_memory import EvidenceGatedMemory
+from evidence_gated_memory import EvidenceGatedMemory, TaskNodeStatus
 from evidence_gated_memory.schemas.builtin import REFUND
 
 memory = EvidenceGatedMemory(workspace=".egm", domain_schema=REFUND)
+try:
+    memory.record_event(role="user", content="Process refund for ORD-123")
 
-# 1. The user asks for a refund — recorded as an event and a task node.
-memory.record_event(role="user", content="Process refund for ORD-123")
+    node = memory.create_task_node(
+        task_id="refund:ORD-123",
+        node_type="eligibility_check",
+        title="Check refund eligibility for ORD-123",
+        anchors={"order_id": "ORD-123"},
+    )
 
-# 2. Tool results are written to refs/ and indexed into the task graph.
-order_ref = memory.record_evidence(
-    evidence_type="order_record",
-    source_system="order_api",
-    content=order_api_result,
-    metadata={"order_id": "ORD-123"},
+    order_ref = memory.record_evidence(
+        evidence_type="order_record",
+        source="order_api",
+        source_system="order_api",
+        content='{"order_id":"ORD-123","status":"PAID"}',
+        metadata={"order_id": "ORD-123"},
+    )
+
+    # The state gate rejects DONE because refund_policy is still missing.
+    blocked = memory.transition_node(node.id, TaskNodeStatus.DONE, evidence=[order_ref])
+    print(blocked.accepted)          # False
+    print(blocked.rejection_reason)  # missing refund_policy
+
+    policy_ref = memory.record_evidence(
+        evidence_type="refund_policy",
+        source="policy_db",
+        source_system="policy_db",
+        content="Full refund within 14 days of purchase.",
+    )
+
+    result = memory.assert_fact(
+        "Order ORD-123 is eligible for refund under the 14-day policy",
+        claim_type="refund_eligibility",
+        evidence=[order_ref, policy_ref],
+        metadata={"order_id": "ORD-123"},
+    )
+    if result.accepted and result.fact:
+        memory.attach_fact_to_node(node.id, result.fact.id)
+        memory.transition_node(node.id, TaskNodeStatus.DONE, evidence=[order_ref, policy_ref])
+
+    print(memory.build_context(query="ORD-123", task_id="refund:ORD-123"))
+finally:
+    memory.close()
+```
+
+With an open `EvidenceGatedMemory` instance, long-term semantic memory is manual and auditable today:
+
+```python
+msg = memory.record_conversation_message(
+    "user",
+    "For refund agents, never claim completion without refund_api_response.",
 )
-
-# 3. Asserting a fact must pass the gate.
-result = memory.assert_fact(
-    "Order ORD-123 is eligible for refund",
-    claim_type="refund_eligibility",
-    evidence=[order_ref],
+atom = memory.record_memory_atom(
+    "instruction",
+    "Refund completion requires refund_api_response evidence.",
+    source_messages=[msg],
 )
-
-if not result.accepted:
-    print(result.rejection_reason)   # "missing required evidence types: ['payment_record']"
-    print(result.suggested_action)   # "fetch payment_record for ORD-123 from payment_api"
+scene = memory.record_memory_scenario(
+    "Refund completion rules",
+    "Completion claims need fresh refund API evidence.",
+    atoms=[atom],
+)
+profile = memory.record_memory_persona(
+    "Refund-agent operator",
+    "Prefers evidence-gated completion and explicit audit trails.",
+    scenarios=[scene],
+)
 ```
 
 ---
 
-## Refund demo — the full loop
+## Refund demo — evidence-gated fact loop
 
-`examples/refund_agent/run.py` walks the complete hard-anchor loop:
+`examples/refund_agent/run.py` walks the deterministic fact-gating loop:
 
 ```
 用户要求退款 ORD-123
-        │  record_event → 任务图新建 refund 节点（anchor: order_id=ORD-123）
-        ▼
-工具返回订单数据 → 写入 refs/ → offload 索引 → 挂到任务节点
         ▼
 assert refund_eligibility
-        │  gate: 缺 payment_record
+        │  gate: 没有 evidence_refs
         ▼
-[BLOCKED] eligibility 节点
-   reason: missing payment_record
-   suggested_action: call payment_api.get_payment(order_id="ORD-123")
+[REJECTED] missing order_record + refund_policy
         ▼
-补 payment_record 证据 → 重新 assert → 通过 → 写入 Fact Layer，节点状态流转
+工具返回 order_record + refund_policy → 写入 refs/*.md
+        ▼
+重新 assert refund_eligibility → 通过 → 写入 Fact Layer
         ▼
 assert refund_completed
-        │  gate: 缺 refund_api_response（state transition 门控）
+        │  gate: 缺 refund_api_response
         ▼
-[BLOCKED] completed 节点
-   reason: refund_completed requires fresh refund_api_response
+[REJECTED] refund_completed requires fresh refund_api_response
+        ▼
+补 refund_api_response 证据 → 重新 assert → 通过
         ▼
 build_context()
         ▼
-输出 = Mermaid 任务图 + gated facts + refs 指针（带 fresh/stale/expired 标注）
+输出 = gated facts + refs 指针（带 fresh/stale/expired 标注）
+        ▼
+revoke_evidence(order_ref) → derived facts cascade-invalidate
 ```
 
 Run it without any API key:
@@ -254,31 +305,31 @@ DEEPSEEK_API_KEY=... python examples/deepseek_refund_agent/run.py
 
 ## What context looks like
 
-`build_context()` returns a compact, provenance-labeled prompt — a task map plus gated facts plus drill-down pointers:
+`build_context()` returns a compact, provenance-labeled prompt. Pass `task_id` when you want the current Mermaid task map included; pass `query` when you want fact recall narrowed by text/anchor.
 
-```
+````
+# Evidence-Gated Memory Context
+_query: ORD-123_
+_task_id: refund:ORD-123_
+
 <task_map>
+task_id: refund:ORD-123
 ```mermaid
 flowchart TD
-    N1["Refund ORD-123"]:::done --> N2["Check eligibility"]:::done
-    N2 --> N3["Complete refund"]:::blocked
+    node_abcd["Check refund eligibility for ORD-123<br/>type: eligibility_check<br/>status: done"]
 ```
 </task_map>
 
-<current_state>blocked</current_state>
+<current_state>done</current_state>
 
-[FACT] Order ORD-123 status is PAID
-  source: order_api  observed: 2026-05-26T10:00  freshness: fresh
-  node: N2  ref: refs/ref_0b51.md
+[FACT] Order ORD-123 is eligible for refund under the 14-day policy
+  claim_type: refund_eligibility  kind: observed
+  node: node_abcd
+  - ref=ref_123 type=order_record source=order_api observed=0.0h ago [fresh] node=node_abcd
+  - ref=ref_456 type=refund_policy source=policy_db observed=0.0h ago [fresh] node=node_abcd
+````
 
-[BLOCKED] Refund REF-456 is completed
-  gate: state_transition_requires_evidence
-  reason: refund_completed requires fresh refund_api_response
-  action: call refund_api.get_refund(refund_id="REF-456")
-  audit: audit_017
-```
-
-The agent reads the high-level map; when it needs to verify, it drills down by `node_id` / `result_ref` to the raw `refs`.
+The agent reads the high-level map; when it needs to verify, it drills down by `node_id` and `ref` to structured rows and raw `refs/*.md`. Gate rejections are returned by `assert_fact()` / `transition_node()` and recorded in the audit log; `build_context()` is the prompt snapshot, not the rejection API.
 
 ---
 
@@ -288,7 +339,7 @@ The agent reads the high-level map; when it needs to verify, it drills down by `
 egm schema validate refund
 egm inspect .egm --schema refund
 egm context .egm --schema refund --query ORD-123
-egm graph .egm --schema refund            # render the current Mermaid task graph
+egm context .egm --schema refund --task-id refund:ORD-123
 egm audit .egm --limit 20
 egm sweep .egm --schema refund            # expire stale evidence, cascade-invalidate
 egm ref .egm ref_abc123                   # drill down to raw evidence
@@ -381,7 +432,7 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 | 15 | ⬜ | Rewrite derived-fact semantics | needs design pass first |
 | 16 | 🟡 | Expired semantics: critical-field plan C | half-implemented, needs decision |
 | 17 | ✅ | `commit_fact` must require a `GateResult` | shipped |
-| 18 | ⬜ | README ↔ API alignment | do **after** M1 lands or it'll re-rot |
+| 18 | ✅ | README ↔ API alignment | shipped |
 | 19 | 🟡 | Regression tests | grows alongside every task |
 
 #### M1 — short-term graph memory (current focus)
@@ -432,7 +483,7 @@ The principle we converged on is **"build trust at the base before growing up"**
 ✅ #29  long-term semantic pyramid foundation
 ```
 
-M1, M2 foundation, and M3 are now closed. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The remaining v0.1 hardening items are now #15, #16, #18, and the ongoing regression-test bucket #19.
+M1, M2 foundation, and M3 are now closed. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The remaining v0.1 hardening items are now #15, #16, and the ongoing regression-test bucket #19.
 
 ### How to resume tomorrow
 
@@ -441,7 +492,7 @@ M1, M2 foundation, and M3 are now closed. Automatic LLM distillation should be t
    python -m pytest          # expect 120 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Pick the next small hardening task.** Best candidates: #18 README ↔ API alignment, #15 derived-fact semantics, or finishing #16 expired semantics.
+3. **Pick the next hardening task.** Best candidates: #15 derived-fact semantics, or finishing #16 expired semantics.
 4. Keep long-term semantic memory separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
 
 ### Latest #29 slice
@@ -469,6 +520,11 @@ This slice intentionally completes the manual long-term semantic pyramid foundat
   - unknown `claim_type` is rejected by `propose_claim()` / `assert_fact()` before a claim row is stored
 - Gate-level unknown-type checks remain in place as defense in depth for old data and lower-level calls.
 - The status board also marks #14 and #17 done because both are already implemented and covered by tests.
+- #18 aligns README examples with the current API surface:
+  - `record_evidence()` examples include required `source`
+  - quick start shows `transition_node()` and `build_context(task_id=...)`
+  - demo docs no longer claim the deterministic refund example creates TaskGraph/offload rows
+  - the CLI section no longer lists the nonexistent `egm graph` command
 
 ### Key design decisions worth not re-litigating
 
