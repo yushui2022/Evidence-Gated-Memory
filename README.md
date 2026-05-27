@@ -6,7 +6,7 @@
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="PyPI" src="https://img.shields.io/pypi/v/evidence-gated-memory?color=0B1220&label=pypi"></a>
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="Python" src="https://img.shields.io/pypi/pyversions/evidence-gated-memory?color=0B1220"></a>
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-0B1220"></a>
-  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-131%20passing-0F9F6E"></a>
+  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-132%20passing-0F9F6E"></a>
   <a href="#benchmarks"><img alt="Status" src="https://img.shields.io/badge/status-alpha-E7B549"></a>
 </p>
 
@@ -371,58 +371,62 @@ egm ref .egm ref_abc123                     # drill down to raw evidence
 
 ## Benchmarks
 
-> EGM's benchmark posture is honest by construction: we report what we run, we don't report what we haven't.
+> We report what we run. We don't report what we haven't.
 
-### Benchmark map
+EGM's benchmark story has two layers that are ready to show, and one that is in progress:
 
-| Group | Suite | What it measures | Status |
-|---|---|---|---|
-| **τ-bench** (Anthropic, customer-service agents) | `tau-bench/retail`, `tau-bench/airline` | Tool-using agent on multi-turn business tasks. EGM plugs in as the agent's memory layer. | 🚧 in progress |
-| **τ²-bench** (Anthropic follow-up) | `tau2-bench` | Harder multi-turn tasks with stricter evaluators. | 🚧 in progress |
-| **Repo-local probes** | `benchmarks/run_local.py` | Deterministic, CI-friendly probes of EGM's product surface. | ✅ shipped |
+### 1. Correctness verification (repo-local, deterministic)
 
-### Repo-local probes (deterministic, CI-friendly)
-
-These are not leaderboard submissions; they are probes that map well-known benchmark shapes onto EGM's hard-anchor, evidence-gated surface.
+These are not benchmarks in the leaderboard sense. They are **deterministic probes that verify EGM's core promises hold** — every gate, every rejection, every drill-down path. They run in CI on every push.
 
 ```bash
 python benchmarks/run_local.py             # human-readable
-python benchmarks/run_local.py --json      # machine-readable for CI
+python benchmarks/run_local.py --json      # machine-readable
 python -m pytest tests/test_benchmarks.py -q
 ```
 
-| Probe | What it checks |
-|---|---|
-| `longmemeval_s_hard_anchor` | hard-anchor recall, evidence-source coverage, unsupported-query abstention |
-| `locomo_style_semantic_pyramid` | manual L0/L1/L2/L3 recall with raw L0 exclusion |
-| `beam_lite_hard_anchor_pressure` | bounded context + drill-down source coverage under synthetic pressure |
-| `false_done_gate_benchmark` | false-completion claims **must** be rejected with actionable feedback until fresh evidence is attached |
+| Probe | What it verifies | Result |
+|---|---|---|
+| Hard-anchor recall + evidence coverage | Every stored fact is recallable by its business ID; every evidence ref appears in context | **1.00** |
+| L0→L3 semantic pyramid | Manually promoted atoms/scenarios/personas are recallable; raw L0 stays out of prompt | **1.00** |
+| Bounded context under pressure | With 24 concurrent workflows, the target workflow's facts, task map, and refs all appear without bleed | **1.00** |
+| False-done gate | A claim without evidence is **blocked** with an actionable reason; the same claim with fresh evidence is **accepted** | **1.00** |
 
-See [benchmarks/README.md](benchmarks/README.md) and the latest report at [reports/benchmark_report.md](reports/benchmark_report.md).
+These scores are tautological by design: they test whether EGM does what it claims to do. A score below 1.00 on any of these **is a regression bug**. They are correctness guards, not competitive metrics.
 
-### Optional official-data runners
+### 2. Retrieval proxy over MemoryAgentBench (ICLR 2026)
 
-For public-facing retrieval reports against official benchmark data:
+We run EGM's local FTS retrieval against official [MemoryAgentBench](https://github.com/HUST-AI-HYZ/MemoryAgentBench) data as a **retrieval-only proxy**. This is not a leaderboard submission — it measures how well EGM's current retrieval surface maps onto a published benchmark.
+
+| MAB split | Samples | Questions | Coverage@5 | MRR |
+|---|---|---|---|---|
+| Conflict Resolution | 8 | 800 | **0.67** | **0.47** |
+| Accurate Retrieval | 3 | 300 | **0.48** | **0.40** |
+
+Two splits that the retrieval-only proxy does **not** fit:
+
+- **Test-Time Learning** — requires incremental knowledge updates across sessions; retrieval-only is the wrong instrument.
+- **Long-Range Understanding** — requires multi-hop summarization; EGM does not generate answers, it retrieves evidence.
+
+The Conflict Resolution result is the most representative: 800 questions over evidence-backed updates and stale-information conflicts — exactly the surface EGM is built for.
 
 ```bash
-python benchmarks/official/longmemeval_s.py path/to/longmemeval_s.json --top-k 5 --output reports/longmemeval_s_egm.json
-python benchmarks/official/locomo.py        path/to/locomo.json        --top-k 5 --output reports/locomo_egm.json
+python benchmarks/official/memory_agent_bench.py path/to/Conflict_Resolution.parquet --top-k 5
 ```
 
-These produce Recall@K / MRR over official evidence fields. They are **not** official leaderboard submissions unless paired with the benchmark's full generative-QA and judging protocol.
+### 3. Agent benchmark integration (tau-bench / τ²-bench)
 
-### Honest reading of the signal
+The harness runs and model routing have been validated (DeepSeek + LiteLLM, retail and mock domains). **EGM has not yet been integrated as the agent's memory layer for an A/B comparison.** This is the next major benchmark milestone — running the same tau/tau2 tasks with and without EGM, measuring pass rate, false-done rate, and evidence coverage. When those numbers exist they will be reported here.
 
-EGM is strongest on **hard-anchor, strong-process, strong-evidence** enterprise workflows. It deliberately trades open-ended persona-style recall for provenance and process discipline. Historical signal from the predecessor `agent_memory_core`:
+### What this adds up to
 
-| Benchmark | Metric | Result |
-|---|---|---|
-| LongMemEval-S | Evidence Source Coverage | **0.87** |
-| LongMemEval-S | False Fact Rate | **0.00** |
-| BEAM-lite (100K tok / 50 cases) | recall under pressure | stable on hard-anchor cases |
-| LoCoMo10 | answer-term recall | weak — known limitation on open-dialogue relationship recall |
+EGM is strongest on **hard-anchor, strong-evidence, conflict-dense** enterprise workflows. It deliberately trades open-ended persona recall for provenance and gate discipline:
 
-τ-bench / τ²-bench numbers will land here when the integration is complete.
+- **Strong** on evidence-gated retrieval, actionable rejection, bounded task context, blocking unsupported conclusions
+- **Weak** on open-ended long-range summarization and relationship-heavy dialogue recall
+- **Not yet measured** on end-to-end agent task success (the tau/tau2 A/B gap)
+
+See [benchmarks/README.md](benchmarks/README.md) and [reports/benchmark_report.md](reports/benchmark_report.md).
 
 ---
 
