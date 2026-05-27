@@ -29,7 +29,33 @@
 
 ## TL;DR
 
-**The goal is not to remember more text. The goal is to keep a compact task map while preserving a path back to the original evidence.**
+**The goal is not to remember more text. The goal is to replace flat summary history with a maintained, evidence-gated task structure.**
+
+EGM is built around one observation: enterprise agents fail not because they forget what was said, but because they turn missing, stale, or untrusted tool results into confident conclusions. A refund agent saying "done" without a `refund_api_response`, a coding agent claiming "tests pass" without a `test_log` — these failures are invisible in a flat chat history, but catastrophic in production.
+
+Three design decisions make EGM different:
+
+**1. Soft-state freshness gates, not binary valid/invalid.**
+
+Every evidence type declares two TTLs: `stale_after` and `expired_after`. Evidence lives in three states — FRESH, STALE, EXPIRED — and each claim type independently decides which threshold it requires. `refund_eligibility` accepts stale evidence (the policy hasn't changed); `refund_completed` requires fresh evidence (the API response from 30 minutes ago could be wrong). The same `order_record` can be stale-but-usable for one claim and expired-and-blocking for another. This is not a hardcoded expiry — it's declared per evidence type in the domain schema, and the gate enforces it deterministically.
+
+**2. Task structure, not summary history.**
+
+Most agent memory systems append every interaction to a linear history and periodically summarize it. EGM replaces that pattern with a **short-term graph memory**: `refs/*.md` preserves raw tool results (never summarized away), an offload JSONL index links each result to its task node, and a `TaskGraph` maintains structured nodes with status, edges, and business-anchor bindings (`order_id`, `ticket_id`, `task_id`). The agent reads a Mermaid task map — not a wall of text. When it needs to verify, it drills down by `node_id` or `ref` to the exact API response. The task structure is maintained, not periodically collapsed into a lossy summary.
+
+**3. Gates are deterministic rules driven by business schemas, not LLM judgment.**
+
+Every gate check is a deterministic function: required evidence types present → source systems allowlisted → freshness thresholds met → parent facts still valid. The business rules live in a YAML schema (`refund.yaml`, `coding.yaml` — you write your own), not in a prompt. When a fact is rejected, the rejection is **actionable**: it names exactly which evidence type is missing, which system to call, and why. The LLM never decides what counts as evidence; the schema does.
+
+**Long-term memory is an auditable promotion pyramid (L0→L3), not a vector dump.**
+
+Raw L0 conversations stay out of the prompt by default. Only manually promoted L1 atoms, L2 scenarios, and L3 personas enter `build_context()` — each carrying source provenance back to the original L0 message. Automatic LLM distillation is intentionally deferred: curated memory is auditable; auto-summarized memory is not.
+
+**Where EGM excels.**
+
+Hard-anchor enterprise workflows with strong process, strong evidence, and strong state constraints: customer-support refunds, ticket handling, compliance review, finance approval, code repair, and test-verification. These are domains where the cost of a wrong "done" dwarfs the cost of being slow, and where every conclusion must be traceable to a specific API response or tool result.
+
+EGM is not a general chatbot memory or persona-memory system. It is a **domain-gated, evidence-first task memory** — and it is best-in-class for the enterprise workflows it was built for.
 
 ---
 
@@ -139,7 +165,28 @@ from evidence_gated_memory.schemas.builtin import REFUND
 
 memory = EvidenceGatedMemory(workspace=".egm", domain_schema=REFUND)
 
-# 1. Record raw evidence — content is written to refs/<id>.md, indexed in SQLite.
+# 1. Create a task node — this is the short-term graph memory entry point.
+#    Instead of a flat summary history, the agent maintains a structured
+#    task graph anchored to business IDs (order_id, ticket_id, task_id).
+node = memory.create_task_node(
+    "refund:ORD-123",
+    "eligibility_check",
+    "Check refund eligibility for ORD-123",
+    anchors={"order_id": "ORD-123"},
+)
+
+# 2. Try to assert a fact WITHOUT evidence → REJECTED with actionable feedback.
+result = memory.assert_fact(
+    "ORD-123 is eligible for refund",
+    claim_type="refund_eligibility",
+    evidence=[],  # no evidence → gate fires
+)
+
+print(result.accepted)                     # False
+print(result.gate.rejection_reason)        # "missing required evidence types: ['order_record', 'refund_policy']"
+print(result.gate.suggested_action)        # "fetch order_record from order_api, fetch refund_policy from policy_db"
+
+# 3. Record evidence → re-assert → ACCEPTED. Evidence lands in refs/*.md, indexed.
 order = memory.record_evidence(
     evidence_type="order_record",
     source="order_api", source_system="order_api",
@@ -151,23 +198,26 @@ policy = memory.record_evidence(
     content="Full refund within 14 days of purchase.",
 )
 
-# 2. Assert a fact — it goes through the gate before it can be written.
 result = memory.assert_fact(
     "ORD-123 is eligible for refund under the 14-day policy",
     claim_type="refund_eligibility",
     evidence=[order, policy],
 )
+print(result.accepted)                     # True
+print(result.fact.id)                      # "fact_abc123" — gated fact, ready for prompt context
 
-if not result.accepted:
-    print(result.gate.rejection_reason)   # what's missing
-    print(result.gate.suggested_action)   # what to do next
-else:
-    print(result.fact.id)                 # gated fact, ready for prompt context
+# 4. The task graph is maintained, not summarized away.
+#    build_context() produces a Mermaid task map + gated facts + evidence refs.
+ctx = memory.build_context(query="ORD-123", task_id="refund:ORD-123")
+# <task_map> flowchart TD ... </task_map>
+# [FACT] ORD-123 is eligible ... ref=ref_abc type=order_record [fresh]
 
 memory.close()
 ```
 
-That's the loop. **No evidence, no fact.** Stale or untrusted evidence is rejected with an actionable message, not silently accepted.
+**The loop.** No evidence → rejection with what's missing and what to call. Evidence attached → fact passes the gate. Every tool result is preserved as `refs/<id>.md`, every fact carries provenance, and the task graph stays structured — not a flat, growing chat history.
+
+Enterprise agents don't need to remember more text. They need to maintain a **structured task map** and preserve a **drillable path back to original evidence**. That's the trade EGM makes.
 
 ---
 
