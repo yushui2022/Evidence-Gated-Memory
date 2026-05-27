@@ -42,3 +42,19 @@ The benchmark suite intentionally uses no external model or hosted dataset. That
 keeps it fast enough for pull requests while still checking the behavior that
 matters for EGM's target market: hard anchors, source coverage, bounded context,
 gate rejection, and false-completion resistance.
+
+## Official Dataset Runners
+
+For public-facing reports, use the optional runners in `benchmarks/official/`.
+They load real benchmark files but are not included in the default test suite at
+full scale:
+
+```bash
+python benchmarks/official/longmemeval_s.py path/to/longmemeval_s.json --top-k 5 --output reports/longmemeval_s_egm.json
+python benchmarks/official/locomo.py path/to/locomo.json --top-k 5 --output reports/locomo_egm.json
+```
+
+These runners compute retrieval-only Recall@K / MRR over official evidence
+fields. They are still not leaderboard submissions because they do not generate
+answers or run the official judge pipeline. See
+`benchmarks/official/README.md` before using the numbers in public material.

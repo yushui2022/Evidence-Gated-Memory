@@ -412,6 +412,17 @@ Current local probes:
 
 See [benchmarks/README.md](benchmarks/README.md) for scope and interpretation.
 
+For public-facing benchmark reports, use the optional official-data runners:
+
+```bash
+python benchmarks/official/longmemeval_s.py path/to/longmemeval_s.json --top-k 5 --output reports/longmemeval_s_egm.json
+python benchmarks/official/locomo.py path/to/locomo.json --top-k 5 --output reports/locomo_egm.json
+```
+
+These produce retrieval-only Recall@K / MRR reports over official evidence
+fields. They are not official leaderboard submissions unless you also follow the
+benchmark's full generative QA and judging protocol.
+
 Historical signal from the predecessor `agent_memory_core` over continuous long-horizon sessions:
 
 | Benchmark | Signal | Result |
