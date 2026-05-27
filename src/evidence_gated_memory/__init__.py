@@ -27,7 +27,7 @@ from evidence_gated_memory.core.models import (
     TransitionResult,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "EvidenceGatedMemory",
