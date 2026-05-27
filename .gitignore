@@ -18,3 +18,5 @@ examples/*/workspace/
 .DS_Store
 .idea/
 .vscode/
+reports/memory_agent_bench_*_full.json
+reports/memory_agent_bench_*_medium.json
