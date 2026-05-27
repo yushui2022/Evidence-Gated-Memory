@@ -29,20 +29,6 @@
 
 ## TL;DR
 
-```
-┌─────────────────────────┐   ┌─────────────────────────┐   ┌─────────────────────────┐
-│  Short-term task graph  │   │   Evidence-gated facts  │   │  Long-term L0→L3 memory │
-│                         │   │                         │   │                         │
-│  TaskNode + TaskEdge    │   │  No evidence → no fact  │   │  Conversation → Atom    │
-│  Mermaid projection     │   │  Stale → block/warn     │   │     → Scenario → Persona│
-│  refs/ raw drill-down   │   │  Rejection is actionable│   │  Manual, auditable      │
-└─────────────────────────┘   └─────────────────────────┘   └─────────────────────────┘
-                  ▲                       ▲                       ▲
-                  └───────────────────────┼───────────────────────┘
-                                          │
-                         build_context() — one compact, drillable prompt
-```
-
 **The goal is not to remember more text. The goal is to keep a compact task map while preserving a path back to the original evidence.**
 
 ---
@@ -51,37 +37,37 @@
 
 ```mermaid
 flowchart TD
-    subgraph INPUT["Agent 运行输入"]
-        A["Agent 对话<br/>用户请求 / Agent 回复"]
-        T["工具调用与业务系统返回<br/>API 响应 / 搜索结果 / 测试日志 / 文件内容"]
+    subgraph INPUT["Agent runtime input"]
+        A["Agent dialogue<br/>user requests / agent replies"]
+        T["Tool calls and business systems<br/>API responses / search results / test logs / file content"]
     end
 
-    subgraph SHORT["短期图记忆：当前任务的可折叠上下文"]
-        R["refs/*.md 原始证据层<br/>完整工具结果 / API 返回 / 日志 / 文件片段"]
-        O["offload JSONL 摘要索引层<br/>tool_call_id / node_id / result_ref / summary / score"]
-        G["TaskGraph 任务图<br/>任务节点 / 边 / 状态 / 依赖 / hard anchor"]
-        M["Mermaid 任务画布<br/>current_task_context<br/>给 Agent 的高层任务地图"]
+    subgraph SHORT["Short-term graph memory: foldable context for the current task"]
+        R["refs/*.md raw evidence layer<br/>full tool results / API returns / logs / file fragments"]
+        O["offload JSONL summary index<br/>tool_call_id / node_id / result_ref / summary / score"]
+        G["TaskGraph<br/>task nodes / edges / status / dependencies / hard anchors"]
+        M["Mermaid task canvas<br/>current_task_context<br/>high-level task map for the agent"]
     end
 
-    subgraph LONG["长期语义记忆：跨会话背景"]
-        L0["L0 Conversation<br/>原始 user / assistant 对话"]
-        L1["L1 Atom<br/>persona / episodic / instruction 原子记忆"]
-        L2["L2 Scenario<br/>场景块 / 项目档案 / 历史决策"]
-        L3["L3 Persona<br/>用户画像 / 长期偏好 / 稳定背景"]
+    subgraph LONG["Long-term semantic memory: cross-session background"]
+        L0["L0 Conversation<br/>raw user / assistant dialogue"]
+        L1["L1 Atom<br/>persona / episodic / instruction atoms"]
+        L2["L2 Scenario<br/>scenario blocks / project files / historical decisions"]
+        L3["L3 Persona<br/>user profile / long-term preferences / stable background"]
     end
 
-    subgraph EGM["EGM 证据门控层：让图结构和事实可信"]
-        S["Domain Schema<br/>业务规则：实体 / 证据类型 / TTL / 状态机 / gate 规则"]
+    subgraph EGM["EGM evidence-gating layer: making graph state and facts trustworthy"]
+        S["Domain Schema<br/>business rules: entities / evidence types / TTLs / state machine / gate rules"]
         E["Entity Anchor Index<br/>metadata → connector → regex → LLM fallback<br/>order_id / ticket_id / refund_id / task_id"]
         F["Fact Layer<br/>L1a observed facts<br/>L1b derived facts"]
-        Q["Quality Gates<br/>证据要求 / source allowlist / freshness / 状态转移门控"]
-        X["Actionable Rejection<br/>缺什么证据 / 为什么拒绝 / 下一步该调什么工具"]
-        AU["Audit & Replay<br/>证据链 / 拒绝记录 / 状态变更 / 可恢复历史"]
+        Q["Quality Gates<br/>evidence requirements / source allowlists / freshness / state-transition gates"]
+        X["Actionable Rejection<br/>missing evidence / rejection reason / next tool to call"]
+        AU["Audit & Replay<br/>evidence chains / rejection records / state changes / recoverable history"]
     end
 
-    subgraph PROMPT["Prompt 组装：少 token，但可下钻"]
-        C["Context Builder<br/>选择当前最相关的图、事实、记忆和证据指针"]
-        P["Agent Prompt<br/>L3 Persona + L2 Scene Navigation + L1 Relevant Memories<br/>+ Mermaid TaskGraph + Gated Facts + refs 指针"]
+    subgraph PROMPT["Prompt assembly: compact tokens, drillable evidence"]
+        C["Context Builder<br/>selects the most relevant graph, facts, memory, and evidence pointers"]
+        P["Agent Prompt<br/>L3 Persona + L2 Scene Navigation + L1 Relevant Memories<br/>+ Mermaid TaskGraph + Gated Facts + refs pointers"]
     end
 
     A --> L0
@@ -111,9 +97,9 @@ flowchart TD
     F --> Q
     G --> Q
 
-    Q -->|"通过：事实可写入"| F
-    Q -->|"通过：任务状态可流转"| G
-    Q -->|"拒绝：证据不足 / 过期 / 来源不可信"| X
+    Q -->|"pass: fact writable"| F
+    Q -->|"pass: task state can transition"| G
+    Q -->|"reject: missing, expired, or untrusted evidence"| X
     X --> AU
     Q --> AU
     F --> AU
@@ -125,11 +111,19 @@ flowchart TD
     M --> C
     G --> C
     F --> C
-    R -. "需要查证时按 node_id / result_ref 下钻" .-> C
+    R -. "drill down by node_id / result_ref when verification is needed" .-> C
 
     C --> P
     P --> A
 ```
+
+### Architecture posture and fit
+
+EGM is designed for **hard-anchor enterprise agents**: tasks are not organized around open-ended conversation, but around stable business IDs and auditable workflows such as `order_id`, `ticket_id`, `refund_id`, `case_id`, and `task_id`. The core risk in these agents is not failing to recall a past sentence; it is turning missing, stale, or untrusted evidence into a completed conclusion.
+
+Architecturally, EGM separates the active task into three concerns: the short-term `TaskGraph` keeps the workflow map, `refs/*.md` preserves drillable raw evidence, and the `Fact Layer` only accepts claims that pass schema-defined gates. Long-term memory remains an auditable L0/L1/L2/L3 pyramid: curated high-level memories enter the prompt by default, while raw L0 dialogue remains available for trace-back when needed.
+
+In practice, EGM fits customer-support refunds, ticket handling, compliance review, finance approval, code repair, and test-verification workflows: domains with **strong process, strong evidence, and strong state constraints**. It is not trying to be a general chatbot memory or persona-memory system; it is built to make the agent obtain fresh, trusted, replayable evidence before saying "refund approved", "task complete", "tests passed", or "case closed".
 
 ---
 
@@ -247,6 +241,46 @@ Components:
 - **Quality Gates** — enforce required evidence, source allowlists, freshness, and state-transition rules.
 - **Actionable Rejection** — never just `False`. Returns what's missing, why, which tool to call next, and the `audit_id`.
 - **Audit & Replay** — full evidence chain, rejection records, state changes. History recoverable after a context wipe.
+
+Minimal schema shape:
+
+```yaml
+name: refund
+
+entities:
+  - name: order
+    patterns: ["ORD-[0-9]+"]
+    metadata_fields: ["order_id"]
+
+evidence_types:
+  order_record:
+    stale_after: PT30M
+    expired_after: PT24H
+    source_systems: ["order_api"]
+  refund_policy:
+    stale_after: P7D
+    expired_after: P30D
+    source_systems: ["policy_db"]
+  refund_api_response:
+    stale_after: PT2M
+    expired_after: PT15M
+    source_systems: ["refund_api"]
+
+claim_types:
+  refund_eligibility:
+    required_evidence: ["order_record", "refund_policy"]
+  refund_completed:
+    required_evidence: ["refund_api_response"]
+    requires_fresh_evidence: true
+
+state_gates:
+  - name: refund_completion_done_requires_api_response
+    when: { node_type: refund_completion, to_status: done }
+    require:
+      evidence_types: ["refund_api_response"]
+      freshness: fresh
+    suggested_action: "call refund_api and attach a fresh refund_api_response before marking refund completion done"
+```
 
 Full architecture document: [docs/architecture.md](docs/architecture.md).
 

@@ -1,0 +1,363 @@
+{
+  "benchmark": "memory_agent_bench",
+  "split_file": "D:\\bench_repos\\MemoryAgentBench_modelscope\\data\\Test_Time_Learning-00000-of-00001.parquet",
+  "task": "retrieval_proxy_answer_coverage_at_k",
+  "retriever": "egm_memory_atoms_fts",
+  "top_k": 5,
+  "samples": 1,
+  "evaluated_questions": 20,
+  "total_chunks": 2573,
+  "answer_coverage_at_k": 0.0,
+  "answer_mrr": 0.0,
+  "details": [
+    {
+      "sample_idx": 0,
+      "question_idx": 0,
+      "question": "\nUser: Hello How are you? What is your favorite movie?\nSystem: Hello, I'm good The Big Lebowski\nUser: The Big Lebowski was such a great film. Hilarious Have you checked out Kingpin (1996) with Woody Harrelson or Dumb and Dumber (1994) ? The",
+      "gold_answers": [
+        "7008"
+      ],
+      "retrieved_chunk_ids": [
+        806,
+        1193,
+        1660,
+        176,
+        2045
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 1,
+      "question": "\nUser: Hi! What sort of movies do you like?\nSystem: I really enjoy drama/biography. For example I enjoyed Phantom Thread (2017)\nUser: Oh, that's a movie I haven't seen. If you like Drama, I really enjoyed Allied (2016) recently.\nSystem: I t",
+      "gold_answers": [
+        "4611"
+      ],
+      "retrieved_chunk_ids": [
+        6,
+        2376,
+        1233,
+        1700,
+        271
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 2,
+      "question": "\nUser: Hi\nSystem: Hello I love Deadpool (2016) can you recommend some movies like that one\nUser: Me too, I love superhero movies My fovorite is Batman Returns (1992)\nSystem: we are a like :D Its good!, but i have seen it maybe a lesser know",
+      "gold_answers": [
+        "23561",
+        "18170"
+      ],
+      "retrieved_chunk_ids": [
+        582,
+        1372,
+        1559,
+        1143,
+        202
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 3,
+      "question": "\nUser: Hello there\nSystem: Hello!\nUser: How is everything\nSystem: everything is fine here thanks for asking i just have one problem\nUser: Anytime ! What type of movie do you prefer watching What’s your problem ?!\nSystem: i need a good crime",
+      "gold_answers": [
+        "14688"
+      ],
+      "retrieved_chunk_ids": [
+        730,
+        62,
+        1108,
+        323,
+        2173
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 4,
+      "question": "\nUser: Hello What movie have you seen recently?\nSystem: I have seen recently Action movies like Get Out (2017) and Black Panther (2018)\nUser: How did you like them\nSystem: Of course, i loved them\nUser: That's good anything new out that you ",
+      "gold_answers": [
+        "14740"
+      ],
+      "retrieved_chunk_ids": [
+        2429,
+        245,
+        2253,
+        1948,
+        207
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 5,
+      "question": "\nUser: Hello, what type of movies are you interested in?\nSystem: movies for kids\nUser: Coco (2017) Is a great movie Something for you and the children\nSystem: for watch with my kids how Finding Nemo (2003)\nUser: Fantasia (1940) is also grea",
+      "gold_answers": [
+        "509"
+      ],
+      "retrieved_chunk_ids": [
+        375,
+        2239,
+        9,
+        2134,
+        1749
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 6,
+      "question": "\nUser: Hello, how are you?\nSystem: Hi, I'm fine thank you. I'm kind of bored and need an upbeat movie to keep me entertained. You know of any good musicals?\nUser: Got any ideas for a funny movie?\nSystem: I love Anchorman: The Legend of Ron ",
+      "gold_answers": [
+        "23379"
+      ],
+      "retrieved_chunk_ids": [
+        2269,
+        1723,
+        1927,
+        1965,
+        1182
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 7,
+      "question": "\nUser: Hi! How’s it going !\nSystem: Hi How are you?\nUser: I’m doing great! And yourself ?\nSystem: Good! Enjoying the sun!\nUser: Ahhh I wish it was sun here lol!!\nSystem: Im open to any movie\nUser: What was the latest movie you seen?\nSystem:",
+      "gold_answers": [
+        "21999"
+      ],
+      "retrieved_chunk_ids": [
+        2004,
+        2523,
+        2547,
+        980,
+        2539
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 8,
+      "question": "\nUser: Good Afternoon\nSystem: Hello whats your favorite movie?\nUser: Batman (1989) . what's yours?\nSystem: A batman fan I see. I don't have one Whats new that you have seen?\nUser: Deadpool 2 (2018) The Avengers (2012)\nSystem: Yes awesome mo",
+      "gold_answers": [
+        "19537"
+      ],
+      "retrieved_chunk_ids": [
+        476,
+        928,
+        1516,
+        1588,
+        1171
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 9,
+      "question": "\nUser: Hello What is your favorite movie?\nSystem: Hi Ya! My favorite movie is Fargo (1996)\nUser: Good call\nSystem: I also enjoy Pulp Fiction (1994)\nSystem: ",
+      "gold_answers": [
+        "22364",
+        "7543"
+      ],
+      "retrieved_chunk_ids": [
+        1501,
+        1370,
+        1401,
+        1708,
+        1973
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 10,
+      "question": "\nUser: Hello\nSystem: Hi. Ocean's 8 (2018) comes out tomorrow.\nUser: I know I just might check it out I only saw the first one but I am interested in what an all female cast will bring to it\nSystem: ",
+      "gold_answers": [
+        "2336",
+        "8089"
+      ],
+      "retrieved_chunk_ids": [
+        2200,
+        360,
+        2104,
+        2201,
+        431
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 11,
+      "question": "\nUser: Hello, what kinds of movies do you like?\nSystem: i'm open to any suggestion What would you recommend?\nUser: For family movies Finding Dory (2016) or Trolls (2016) ?\nSystem: I could try them I liked Man of Steel (2013)\nUser: Have you ",
+      "gold_answers": [
+        "19875"
+      ],
+      "retrieved_chunk_ids": [
+        1748,
+        1580,
+        1257,
+        2150,
+        2477
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 12,
+      "question": "\nUser: Hello there! How are you?\nSystem: Hi! What type of movie do you enjoy/\nUser: I enjoy watching comedy and action movies\nSystem: Deadpool 2 (2018) is a new one I loved.\nUser: Like Click (2010) by Adan Sandler and Black Panther (2018) I",
+      "gold_answers": [
+        "26902"
+      ],
+      "retrieved_chunk_ids": [
+        1331,
+        1463,
+        2223,
+        1920,
+        2429
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 13,
+      "question": "\nUser: Hi!\nSystem: Hi there\nUser: How are you\nSystem: How are you?\nUser: Movies ?!\nSystem: I'm awesome and you?\nUser: I’m great!\nSystem: Of course!!\nUser: Thanks for asking ?! I like comedy and action Black Panther (2018) was great\nSystem: ",
+      "gold_answers": [
+        "20875",
+        "16315"
+      ],
+      "retrieved_chunk_ids": [
+        2261,
+        2291,
+        2087,
+        2223,
+        2068
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 14,
+      "question": "\nUser: Hello How are you?\nSystem: Hello! I'm good. Do you know of any movies similar to Mean Girls (2004) that I might like? I'm not so much into teenage movies unless they are smart. Like, Election (2005) , for example.\nUser: That's a good",
+      "gold_answers": [
+        "17261"
+      ],
+      "retrieved_chunk_ids": [
+        610,
+        375,
+        2119,
+        2522,
+        2229
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 15,
+      "question": "\nUser: Hi! How are you I like action and comedy any recommendations\nSystem: Hi, i am looking for good romantic movie I don't like action and comedy\nUser: A good romantic is. Classic Pretty Woman (1990) Also August Rush (2007)\nSystem: I love",
+      "gold_answers": [
+        "27528",
+        "13371"
+      ],
+      "retrieved_chunk_ids": [
+        316,
+        1393,
+        104,
+        1022,
+        22
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 16,
+      "question": "\nUser: hi\nSystem: Hello I need a good comedy my friends are coming for the night Do you know some good ones?\nUser: Game Night (2018) is fun\nSystem: The Hangover (2010) Was great\nSystem: ",
+      "gold_answers": [
+        "7201",
+        "18433",
+        "16719"
+      ],
+      "retrieved_chunk_ids": [
+        1952,
+        2306,
+        166,
+        1768,
+        207
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 17,
+      "question": "\nUser: Hi how are you?\nSystem: Hello Im good and you?\nUser: I'm great- thanks! What kind of movies do you like?\nSystem: I like Rachel McAdams. Do you know any good ones with her in them?\nUser: Yes! She's a great actress! A new one is Game N",
+      "gold_answers": [
+        "31060"
+      ],
+      "retrieved_chunk_ids": [
+        1950,
+        778,
+        1212,
+        885,
+        1054
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 18,
+      "question": "\nUser: how are you?\nSystem: Hey there, can I recommend a movie for you? I'm doing well.\nUser: I like action and war movies\nSystem: Hmmm. Have you seen Black Hawk Down (2002) ?\nUser: I have, excellent movie\nSystem: Another good one is Inglou",
+      "gold_answers": [
+        "16099"
+      ],
+      "retrieved_chunk_ids": [
+        74,
+        1176,
+        731,
+        65,
+        270
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 19,
+      "question": "\nUser: Hello there!\nSystem: Hi.\nUser: Tell me what kind of movies would you like to watch?\nSystem: I like all types of movies. Especially comedy nd family\nUser: I can recommend you Get Out (2017)\nSystem: Have not seen that one yet.\nUser: Ha",
+      "gold_answers": [
+        "22755",
+        "24244"
+      ],
+      "retrieved_chunk_ids": [
+        2253,
+        2429,
+        245,
+        1948,
+        1899
+      ],
+      "hit": false,
+      "rank": null
+    }
+  ],
+  "note": "Retrieval-only proxy over official MemoryAgentBench data; not an official leaderboard score."
+}

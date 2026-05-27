@@ -1,0 +1,355 @@
+{
+  "benchmark": "memory_agent_bench",
+  "split_file": "D:\\bench_repos\\MemoryAgentBench_modelscope\\data\\Conflict_Resolution-00000-of-00001.parquet",
+  "task": "retrieval_proxy_answer_coverage_at_k",
+  "retriever": "egm_memory_atoms_fts",
+  "top_k": 5,
+  "samples": 1,
+  "evaluated_questions": 20,
+  "total_chunks": 17,
+  "answer_coverage_at_k": 0.8,
+  "answer_mrr": 0.42416666666666664,
+  "details": [
+    {
+      "sample_idx": 0,
+      "question_idx": 0,
+      "question": "What is the country of citizenship of the spouse of the author of Our Mutual Friend?",
+      "gold_answers": [
+        "Belgium"
+      ],
+      "retrieved_chunk_ids": [
+        3,
+        5,
+        12,
+        2,
+        9
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 1,
+      "question": "In which location did the spouse of Igor of Kiev pass away?",
+      "gold_answers": [
+        "Rodez"
+      ],
+      "retrieved_chunk_ids": [
+        6,
+        16,
+        4,
+        13,
+        5
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 2,
+      "question": "Which country is the birthplace of the sport associated with Steve Sax?",
+      "gold_answers": [
+        "Italy"
+      ],
+      "retrieved_chunk_ids": [
+        14,
+        1,
+        6,
+        12,
+        7
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 3,
+      "question": "Which city serves as the capital of the country of origin for the sport of the Tunisia national football team?",
+      "gold_answers": [
+        "Russellville"
+      ],
+      "retrieved_chunk_ids": [
+        14,
+        8,
+        15,
+        12,
+        9
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 4,
+      "question": "What is the sport that Blair Walsh plays in which he is known for his position on the team?",
+      "gold_answers": [
+        "rugby"
+      ],
+      "retrieved_chunk_ids": [
+        15,
+        14,
+        11,
+        6,
+        1
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 5,
+      "question": "What is the name of the educational institution where the partner of Nicolae Ceaușescu was educated?",
+      "gold_answers": [
+        "Baldwin Wallace University"
+      ],
+      "retrieved_chunk_ids": [
+        2,
+        1,
+        13,
+        11,
+        5
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 6,
+      "question": "Which country does the current CEO of Twitter hold citizenship of?",
+      "gold_answers": [
+        "France"
+      ],
+      "retrieved_chunk_ids": [
+        9,
+        3,
+        5,
+        12,
+        13
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 7,
+      "question": "On which continent was the place of birth of Thomas Arne located?",
+      "gold_answers": [
+        "Oceania"
+      ],
+      "retrieved_chunk_ids": [
+        2,
+        12,
+        13,
+        16,
+        15
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 8,
+      "question": "To which continent does the country of citizenship of Colin Irwin pertain?",
+      "gold_answers": [
+        "North America"
+      ],
+      "retrieved_chunk_ids": [
+        15,
+        1,
+        2,
+        5,
+        14
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 9,
+      "question": "What is the location of work of the founder of the religion to which John Walsh belongs?",
+      "gold_answers": [
+        "Berlin"
+      ],
+      "retrieved_chunk_ids": [
+        14,
+        15,
+        9,
+        12,
+        10
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 10,
+      "question": "What is the religious affiliation of the person who founded the Transcendental Meditation movement?",
+      "gold_answers": [
+        "atheism"
+      ],
+      "retrieved_chunk_ids": [
+        5,
+        12,
+        1,
+        0,
+        7
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 11,
+      "question": "What was the religion of the person with the citizenship of the country to which Edmund Burke belonged?",
+      "gold_answers": [
+        "Zoroastrianism"
+      ],
+      "retrieved_chunk_ids": [
+        6,
+        5,
+        2,
+        14,
+        9
+      ],
+      "hit": true,
+      "rank": 5
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 12,
+      "question": "What is the capital city of the country where the sport associated with John Harkes has its origin?",
+      "gold_answers": [
+        "Duluth"
+      ],
+      "retrieved_chunk_ids": [
+        10,
+        7,
+        12,
+        3,
+        14
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 13,
+      "question": "Which faith is the partner of Laura Bush associated with?",
+      "gold_answers": [
+        "Anglicanism"
+      ],
+      "retrieved_chunk_ids": [
+        2,
+        4,
+        9,
+        3,
+        11
+      ],
+      "hit": true,
+      "rank": 4
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 14,
+      "question": "What was the name of the head of state in the country where Andrew Carnegie was a citizen?",
+      "gold_answers": [
+        "Emmerson Mnangagwa"
+      ],
+      "retrieved_chunk_ids": [
+        12,
+        13,
+        11,
+        4,
+        8
+      ],
+      "hit": true,
+      "rank": 5
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 15,
+      "question": "From which capital city did the Surrey Senior Cup, a sports competition, originate?",
+      "gold_answers": [
+        "Russellville"
+      ],
+      "retrieved_chunk_ids": [
+        11,
+        10,
+        6,
+        0,
+        13
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 16,
+      "question": "From which country does the sport, with which Carlos Gómez is associated, come from?",
+      "gold_answers": [
+        "Soviet Union"
+      ],
+      "retrieved_chunk_ids": [
+        14,
+        2,
+        12,
+        7,
+        1
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 17,
+      "question": "In which city is the capital of the country where Madame du Barry held a citizenship?",
+      "gold_answers": [
+        "London"
+      ],
+      "retrieved_chunk_ids": [
+        1,
+        0,
+        4,
+        12,
+        6
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 18,
+      "question": "What is the job title of the chairperson of the political organization Fatah?",
+      "gold_answers": [
+        "soldier"
+      ],
+      "retrieved_chunk_ids": [
+        14,
+        8,
+        0,
+        15,
+        7
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 19,
+      "question": "Which city is the capital of the country where the performer of \"Free as a Bird\"'s director/manager comes from?",
+      "gold_answers": [
+        "Duluth"
+      ],
+      "retrieved_chunk_ids": [
+        12,
+        7,
+        5,
+        10,
+        6
+      ],
+      "hit": true,
+      "rank": 2
+    }
+  ],
+  "note": "Retrieval-only proxy over official MemoryAgentBench data; not an official leaderboard score."
+}

@@ -101,6 +101,26 @@ def test_search_memory_atoms_finds_relevant_text(memory: EvidenceGatedMemory) ->
     assert [atom.id for atom in results] == [target.id]
 
 
+def test_search_memory_atoms_relaxes_long_natural_language_queries(
+    memory: EvidenceGatedMemory,
+) -> None:
+    target = memory.record_memory_atom(
+        "episodic",
+        "Belgium is the citizenship country for the spouse of the target author.",
+    )
+    memory.record_memory_atom(
+        "episodic",
+        "Refund policy work uses hard anchors like order_id ORD-123.",
+    )
+
+    results = memory.search_memory_atoms(
+        "What country is the citizenship of the spouse of the author?",
+        limit=5,
+    )
+
+    assert results[0].id == target.id
+
+
 def test_memory_atom_record_writes_audit(memory: EvidenceGatedMemory) -> None:
     message = memory.record_conversation_message(
         "user",

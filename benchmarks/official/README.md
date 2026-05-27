@@ -9,6 +9,8 @@ The current runners evaluate retrieval sub-tasks:
 - LongMemEval-S style: retrieve an answer-supporting session into top-k memory
   atoms.
 - LoCoMo style: retrieve an evidence dialogue turn into top-k memory atoms.
+- MemoryAgentBench style: retrieve answer-supporting context chunks into top-k
+  memory atoms and check answer-string coverage.
 
 They do **not** compute full generative QA leaderboard scores. Treat them as
 reproducible evidence-retrieval reports for EGM, not as official benchmark
@@ -72,3 +74,28 @@ If these reports are used publicly, state the task precisely:
 > EGM retrieval-only Recall@K over LongMemEval-S / LoCoMo evidence fields.
 
 Do not call these official LongMemEval or LoCoMo leaderboard scores.
+
+## MemoryAgentBench
+
+Reference: https://openreview.net/forum?id=DT7JyQC3MR
+
+Prepare an official MemoryAgentBench parquet split, then run:
+
+```bash
+python benchmarks/official/memory_agent_bench.py path/to/Conflict_Resolution.parquet --top-k 5 --output reports/memory_agent_bench_conflict.json
+```
+
+For a quick smoke run:
+
+```bash
+python benchmarks/official/memory_agent_bench.py path/to/Conflict_Resolution.parquet --top-k 5 --limit-samples 1 --limit-questions 20
+```
+
+This runner is intentionally narrow:
+
+- It chunks `context` into EGM memory atoms.
+- It retrieves top-k atoms for each question.
+- It counts a hit when any gold answer string appears in retrieved text.
+
+It is a retrieval-only proxy over official data, not an official
+MemoryAgentBench submission.

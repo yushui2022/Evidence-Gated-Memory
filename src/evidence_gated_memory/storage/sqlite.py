@@ -408,6 +408,20 @@ class SqliteStore:
                     return [_row_to_memory_atom(r) for r in rows]
             except sqlite3.OperationalError:
                 pass
+            relaxed = _sanitize_fts_query(query, joiner="OR")
+            if relaxed != safe:
+                try:
+                    rows = self.conn.execute(
+                        "SELECT memory_atoms.* FROM memory_atoms "
+                        "JOIN memory_atoms_fts ON memory_atoms.id = memory_atoms_fts.id "
+                        "WHERE memory_atoms_fts MATCH ? "
+                        "ORDER BY rank LIMIT ?",
+                        (relaxed, limit),
+                    ).fetchall()
+                    if rows:
+                        return [_row_to_memory_atom(r) for r in rows]
+                except sqlite3.OperationalError:
+                    pass
 
         like = f"%{query}%"
         rows = self.conn.execute(
@@ -888,17 +902,21 @@ _FTS_OPERATORS = {"AND", "OR", "NOT", "NEAR"}
 _FTS_TOKEN_RE = re.compile(r"\w+")
 
 
-def _sanitize_fts_query(query: str) -> str:
+def _sanitize_fts_query(query: str, *, joiner: str = "AND") -> str:
     """Turn arbitrary user input into a safe FTS5 MATCH expression.
 
     Strategy: extract alphanumeric tokens (incl. CJK), drop operator keywords,
     quote each token. Empty result -> caller falls back to LIKE."""
     if not query:
         return ""
+    if joiner not in {"AND", "OR"}:
+        raise ValueError("joiner must be AND or OR")
     tokens = [t for t in _FTS_TOKEN_RE.findall(query) if t.upper() not in _FTS_OPERATORS]
     if not tokens:
         return ""
-    return " ".join(f'"{t}"' for t in tokens)
+    if joiner == "AND":
+        return " ".join(f'"{t}"' for t in tokens)
+    return " OR ".join(f'"{t}"' for t in tokens)
 
 
 def _row_to_conversation_message(row: sqlite3.Row) -> ConversationMessage:

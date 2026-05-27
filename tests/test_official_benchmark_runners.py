@@ -6,6 +6,7 @@ import json
 
 from benchmarks.official.locomo import evaluate_locomo
 from benchmarks.official.longmemeval_s import evaluate_longmemeval_s
+from benchmarks.official.memory_agent_bench import evaluate_memory_agent_bench
 
 
 def test_longmemeval_s_runner_on_tiny_fixture(tmp_path) -> None:
@@ -58,3 +59,38 @@ def test_locomo_runner_on_tiny_fixture(tmp_path) -> None:
     assert result["evaluated_questions"] == 1
     assert result["recall_at_k"] == 1.0
     assert result["mrr"] == 1.0
+
+
+def test_memory_agent_bench_runner_on_tiny_fixture(tmp_path, monkeypatch) -> None:
+    import pandas as pd
+
+    df = pd.DataFrame(
+        [
+            {
+                "context": "Alpha fact. Belgium is the citizenship country for the spouse.",
+                "questions": ["What is the country of citizenship of the spouse?"],
+                "answers": [["Belgium"]],
+                "metadata": {"source": "tiny_fixture"},
+            }
+        ]
+    )
+
+    monkeypatch.setattr(
+        "benchmarks.official.memory_agent_bench._read_parquet",
+        lambda path: df,
+    )
+
+    result = evaluate_memory_agent_bench(
+        tmp_path / "fixture.parquet",
+        workspace_root=tmp_path / "mab_ws",
+        top_k=1,
+        limit_samples=1,
+        limit_questions=1,
+        chunk_chars=200,
+        chunk_overlap=0,
+    )
+
+    assert result["samples"] == 1
+    assert result["evaluated_questions"] == 1
+    assert result["answer_coverage_at_k"] == 1.0
+    assert result["answer_mrr"] == 1.0

@@ -1,0 +1,46 @@
+{
+  "suite": "egm-industry-benchmark-smoke",
+  "date": "2026-05-27",
+  "note": "Small-batch external benchmark attempts. Blocked runs are not EGM quality scores.",
+  "benchmarks": {
+    "tau_bench": {
+      "status": "blocked",
+      "attempted_tasks": 1,
+      "environment": "retail",
+      "trials": 1,
+      "valid_score": null,
+      "artifact_dir": "F:/egm_bench_reports/tau_bench_retail_smoke",
+      "error": "LiteLLM/Anthropic 502 Bad Gateway before task scoring",
+      "root_cause": "local Anthropic proxy accepts direct requests-style POSTs but returns 502 to the httpx/LiteLLM client stack used by tau-bench",
+      "interpretation": "No tau-bench pass rate can be claimed from this run."
+    },
+    "tau2_bench": {
+      "status": "blocked",
+      "attempted_tasks": 1,
+      "domain": "mock",
+      "task_set": "mock",
+      "trials": 1,
+      "evaluated_tasks": 0,
+      "valid_score": null,
+      "termination_reason": "infrastructure_error",
+      "failed_after_attempts": 4,
+      "artifact_path": "F:/bench_repos/tau2-bench/data/simulations/egm_tau2_mock_solo_smoke/results.json",
+      "error": "DummyUser.__init__() got an unexpected keyword argument 'tools'",
+      "root_cause": "minimal tau2 dummy_user path is broken in this setup; even before that, the local Anthropic proxy is not compatible with the httpx/LiteLLM client stack",
+      "interpretation": "No tau2 reward can be claimed from this run."
+    },
+    "ragas_style": {
+      "status": "measured",
+      "official_package_run": false,
+      "valid_score": {
+        "source_coverage": 1.0,
+        "context_bound": 1.0
+      },
+      "cases": {
+        "hard_anchor_source_cases": 12,
+        "pressure_cases": 24
+      },
+      "interpretation": "Measured as a local RAGAS-style grounding/context-quality metric family, not an official leaderboard score."
+    }
+  }
+}
