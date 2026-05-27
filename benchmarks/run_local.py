@@ -17,6 +17,7 @@ if str(SRC) not in sys.path:
 
 from benchmarks.local_benchmarks import run_all_benchmarks  # noqa: E402
 from benchmarks.adversarial_probes import run_all_adversarial  # noqa: E402
+from benchmarks.scenario_probes import run_all_scenarios  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -29,18 +30,32 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--json", action="store_true", help="Print raw JSON output.")
     parser.add_argument("--adversarial-only", action="store_true", help="Run only adversarial probes.")
+    parser.add_argument("--scenarios-only", action="store_true", help="Run only scenario probes.")
     args = parser.parse_args(argv)
 
     all_passed = True
 
-    if not args.adversarial_only:
-        result = run_all_benchmarks(args.workspace_root)
-        _print_result(result, args.json)
-        all_passed = all_passed and result["passed"]
+    if args.adversarial_only:
+        adv = run_all_adversarial(args.workspace_root)
+        _print_result(adv, args.json)
+        return 0 if adv["passed"] else 1
+
+    if args.scenarios_only:
+        sc = run_all_scenarios(args.workspace_root)
+        _print_result(sc, args.json)
+        return 0 if sc["passed"] else 1
+
+    result = run_all_benchmarks(args.workspace_root)
+    _print_result(result, args.json)
+    all_passed = all_passed and result["passed"]
 
     adv = run_all_adversarial(args.workspace_root)
     _print_result(adv, args.json)
     all_passed = all_passed and adv["passed"]
+
+    sc = run_all_scenarios(args.workspace_root)
+    _print_result(sc, args.json)
+    all_passed = all_passed and sc["passed"]
 
     return 0 if all_passed else 1
 
@@ -52,7 +67,7 @@ def _print_result(result: dict, as_json: bool) -> None:
     print(f"\nsuite: {result['suite']}")
     print(f"passed: {result['passed']}")
     print(f"duration_ms: {result['duration_ms']}")
-    items = result.get("benchmarks") or result.get("probes") or []
+    items = result.get("benchmarks") or result.get("probes") or result.get("scenarios") or []
     for item in items:
         status = "PASS" if item["passed"] else "FAIL"
         print(f"\n[{status}] {item['name']}")

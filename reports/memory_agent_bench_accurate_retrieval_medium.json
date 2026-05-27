@@ -1,0 +1,5288 @@
+{
+  "benchmark": "memory_agent_bench",
+  "split_file": "D:\\bench_repos\\MemoryAgentBench_modelscope\\data\\Accurate_Retrieval-00000-of-00001.parquet",
+  "task": "retrieval_proxy_answer_coverage_at_k",
+  "retriever": "egm_memory_atoms_fts",
+  "top_k": 5,
+  "samples": 3,
+  "evaluated_questions": 300,
+  "total_chunks": 3236,
+  "answer_coverage_at_k": 0.48,
+  "answer_mrr": 0.4036666666666666,
+  "details": [
+    {
+      "sample_idx": 0,
+      "question_idx": 0,
+      "question": "In what country is Normandy located?",
+      "gold_answers": [
+        "France",
+        "France",
+        "France",
+        "France"
+      ],
+      "retrieved_chunk_ids": [
+        484,
+        229,
+        298,
+        610,
+        133
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 1,
+      "question": "When were the Normans in Normandy?",
+      "gold_answers": [
+        "10th and 11th centuries",
+        "in the 10th and 11th centuries",
+        "10th and 11th centuries",
+        "10th and 11th centuries"
+      ],
+      "retrieved_chunk_ids": [
+        484
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 2,
+      "question": "From which countries did the Norse originate?",
+      "gold_answers": [
+        "Denmark, Iceland and Norway",
+        "Denmark, Iceland and Norway",
+        "Denmark, Iceland and Norway",
+        "Denmark, Iceland and Norway"
+      ],
+      "retrieved_chunk_ids": [
+        114,
+        405,
+        242,
+        131,
+        243
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 3,
+      "question": "Who was the Norse leader?",
+      "gold_answers": [
+        "Rollo",
+        "Rollo",
+        "Rollo",
+        "Rollo"
+      ],
+      "retrieved_chunk_ids": [
+        288,
+        242,
+        405,
+        114,
+        115
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 4,
+      "question": "What century did the Normans first gain their separate identity?",
+      "gold_answers": [
+        "10th century",
+        "the first half of the 10th century",
+        "10th",
+        "10th"
+      ],
+      "retrieved_chunk_ids": [
+        288,
+        131,
+        609,
+        148,
+        272
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 5,
+      "question": "Who was the duke in the battle of Hastings?",
+      "gold_answers": [
+        "William the Conqueror",
+        "William the Conqueror",
+        "William the Conqueror"
+      ],
+      "retrieved_chunk_ids": [
+        609,
+        562,
+        154,
+        146,
+        334
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 6,
+      "question": "Who ruled the duchy of Normandy",
+      "gold_answers": [
+        "Richard I",
+        "Richard I",
+        "Richard I"
+      ],
+      "retrieved_chunk_ids": [
+        519,
+        610,
+        609,
+        484,
+        221
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 7,
+      "question": "What religion were the Normans",
+      "gold_answers": [
+        "Catholic",
+        "Catholic orthodoxy",
+        "Catholic"
+      ],
+      "retrieved_chunk_ids": [
+        68,
+        474,
+        259,
+        283,
+        433
+      ],
+      "hit": true,
+      "rank": 4
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 8,
+      "question": "What is the original meaning of the word Norman?",
+      "gold_answers": [
+        "Viking",
+        "Norseman, Viking",
+        "Norseman, Viking"
+      ],
+      "retrieved_chunk_ids": [
+        113,
+        474,
+        287,
+        194,
+        122
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 9,
+      "question": "When was the Latin version of the word Norman first recorded?",
+      "gold_answers": [
+        "9th century",
+        "9th century",
+        "9th century"
+      ],
+      "retrieved_chunk_ids": [
+        114,
+        122,
+        498,
+        382,
+        432
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 10,
+      "question": "When was the Duchy of Normandy founded?",
+      "gold_answers": [
+        "911",
+        "911",
+        "911"
+      ],
+      "retrieved_chunk_ids": [
+        610,
+        609,
+        519,
+        484,
+        493
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 11,
+      "question": "Who did Rollo sign the treaty of Saint-Clair-sur-Epte with?",
+      "gold_answers": [
+        "King Charles III",
+        "King Charles III",
+        "King Charles III"
+      ],
+      "retrieved_chunk_ids": [
+        519,
+        405,
+        65,
+        79,
+        592
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 12,
+      "question": "What river originally bounded the Duchy",
+      "gold_answers": [
+        "Seine",
+        "Epte",
+        "Seine"
+      ],
+      "retrieved_chunk_ids": [
+        519,
+        141,
+        18,
+        439,
+        527
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 13,
+      "question": "Who upon arriving gave the original viking settlers a common identity?",
+      "gold_answers": [
+        "Rollo",
+        "Rollo",
+        "Rollo"
+      ],
+      "retrieved_chunk_ids": [
+        405,
+        131,
+        27,
+        484,
+        288
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 14,
+      "question": "What was the Norman religion?",
+      "gold_answers": [
+        "Catholicism",
+        "Catholicism",
+        "Catholicism"
+      ],
+      "retrieved_chunk_ids": [
+        68
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 15,
+      "question": "What part of France were the Normans located?",
+      "gold_answers": [
+        "north",
+        "the north",
+        "north"
+      ],
+      "retrieved_chunk_ids": [
+        298,
+        562,
+        484,
+        451,
+        53
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 16,
+      "question": "What was one of the Norman's major exports?",
+      "gold_answers": [
+        "fighting horsemen",
+        "fighting horsemen",
+        "fighting horsemen"
+      ],
+      "retrieved_chunk_ids": [
+        26,
+        319,
+        85,
+        156,
+        68
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 17,
+      "question": "Who was the Normans' main enemy in Italy, the Byzantine Empire and Armenia?",
+      "gold_answers": [
+        "Seljuk Turks",
+        "the Pechenegs, the Bulgars, and especially the Seljuk Turks",
+        "the Seljuk Turks"
+      ],
+      "retrieved_chunk_ids": [
+        454,
+        583,
+        455,
+        98,
+        332
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 18,
+      "question": "When did Herve serve as a Byzantine general?",
+      "gold_answers": [
+        "1050s",
+        "in the 1050s",
+        "in the 1050s"
+      ],
+      "retrieved_chunk_ids": [
+        85,
+        454,
+        317,
+        67,
+        59
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 19,
+      "question": "When did Robert Crispin go up against the Turks?",
+      "gold_answers": [
+        "1060s",
+        "In the 1060s",
+        "In the 1060s"
+      ],
+      "retrieved_chunk_ids": [
+        86,
+        85,
+        535,
+        75,
+        454
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 20,
+      "question": "Who ruined Roussel de Bailleul's plans for an independent state?",
+      "gold_answers": [
+        "Alexius Komnenos",
+        "Alexius Komnenos",
+        "Alexius Komnenos"
+      ],
+      "retrieved_chunk_ids": [
+        86,
+        85,
+        554,
+        523,
+        485
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 21,
+      "question": "What was the name of the Norman castle?",
+      "gold_answers": [
+        "Afranji",
+        "Afranji",
+        "Afranji"
+      ],
+      "retrieved_chunk_ids": [
+        299,
+        194,
+        597,
+        306,
+        305
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 22,
+      "question": "Who was the leader when the Franks entered the Euphrates valley?",
+      "gold_answers": [
+        "Oursel",
+        "Oursel",
+        "Oursel"
+      ],
+      "retrieved_chunk_ids": [
+        194,
+        198,
+        347,
+        451,
+        217
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 23,
+      "question": "Who did the Normans team up with in Anatolia?",
+      "gold_answers": [
+        "Turkish forces",
+        "Turkish forces",
+        "Turkish forces"
+      ],
+      "retrieved_chunk_ids": [
+        194,
+        474,
+        288,
+        512,
+        92
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 24,
+      "question": "What were the origins of the Raouliii family?",
+      "gold_answers": [
+        "Norman mercenary",
+        "an Italo-Norman named Raoul",
+        "descended from an Italo-Norman named Raoul"
+      ],
+      "retrieved_chunk_ids": [
+        218,
+        154,
+        136,
+        263,
+        460
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 25,
+      "question": "What was the name of the count of Apulia",
+      "gold_answers": [
+        "Robert Guiscard",
+        "Robert Guiscard",
+        "Robert Guiscard"
+      ],
+      "retrieved_chunk_ids": [
+        271,
+        121,
+        439,
+        524,
+        523
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 26,
+      "question": "When did Dyrrachium  fall to the Normans?",
+      "gold_answers": [
+        "1082",
+        "February 1082",
+        "February 1082"
+      ],
+      "retrieved_chunk_ids": [
+        271,
+        272,
+        105,
+        317,
+        609
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 27,
+      "question": "How many men were in Robert's army?",
+      "gold_answers": [
+        "30,000",
+        "30,000",
+        "30,000"
+      ],
+      "retrieved_chunk_ids": [
+        271,
+        440,
+        70,
+        599,
+        5
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 28,
+      "question": "Where did the Normans and Byzantines sign the peace treaty?",
+      "gold_answers": [
+        "Deabolis",
+        "Deabolis",
+        "Deabolis"
+      ],
+      "retrieved_chunk_ids": [
+        105,
+        609,
+        271,
+        455,
+        454
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 29,
+      "question": "Who was Robert's son?",
+      "gold_answers": [
+        "Bohemond",
+        "Bohemond",
+        "Bohemond"
+      ],
+      "retrieved_chunk_ids": [
+        105,
+        61,
+        500,
+        352,
+        70
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 30,
+      "question": "What river was Petrela located by?",
+      "gold_answers": [
+        "Deabolis",
+        "the river Deabolis",
+        "Deabolis"
+      ],
+      "retrieved_chunk_ids": [
+        105,
+        298,
+        576,
+        352,
+        196
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 31,
+      "question": "When did the Normans attack Dyrrachium?",
+      "gold_answers": [
+        "1185",
+        "in 1185",
+        "1185"
+      ],
+      "retrieved_chunk_ids": [
+        271,
+        272,
+        317,
+        105,
+        445
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 32,
+      "question": "What was the naval base called?",
+      "gold_answers": [
+        "Dyrrachium",
+        "Dyrrachium",
+        "Dyrrachium"
+      ],
+      "retrieved_chunk_ids": [
+        39,
+        240,
+        54,
+        259,
+        439
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 33,
+      "question": "Where was Dyrrachium located?",
+      "gold_answers": [
+        "the Adriatic",
+        "the Adriatic",
+        "Adriatic"
+      ],
+      "retrieved_chunk_ids": [
+        271,
+        272,
+        317,
+        105,
+        152
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 34,
+      "question": "Who did Emma Marry?",
+      "gold_answers": [
+        "King Ethelred II",
+        "Ethelred II",
+        "King Ethelred II"
+      ],
+      "retrieved_chunk_ids": [
+        484,
+        266,
+        511,
+        465,
+        613
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 35,
+      "question": "Who was Emma's brother?",
+      "gold_answers": [
+        "Duke Richard II",
+        "Duke Richard II",
+        "Duke Richard II"
+      ],
+      "retrieved_chunk_ids": [
+        484,
+        597,
+        232,
+        316,
+        146
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 36,
+      "question": "To where did Ethelred flee?",
+      "gold_answers": [
+        "Normandy",
+        "Normandy",
+        "Normandy"
+      ],
+      "retrieved_chunk_ids": [
+        484,
+        465,
+        2,
+        503,
+        3
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 37,
+      "question": "Who kicked Ethelred out?",
+      "gold_answers": [
+        "Sweyn Forkbeard",
+        "Sweyn Forkbeard",
+        "Sweyn Forkbeard"
+      ],
+      "retrieved_chunk_ids": [
+        484,
+        103,
+        98,
+        413,
+        522
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 38,
+      "question": "Who was Edward the Confessor's half-brother?",
+      "gold_answers": [
+        "Harthacnut",
+        "Harthacnut",
+        "Harthacnut"
+      ],
+      "retrieved_chunk_ids": [
+        231,
+        232,
+        597,
+        474,
+        497
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 39,
+      "question": "When did Edward return?",
+      "gold_answers": [
+        "1041",
+        "in 1041",
+        "1041"
+      ],
+      "retrieved_chunk_ids": [
+        42,
+        294,
+        328,
+        400,
+        285
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 40,
+      "question": "Who did Edward make archbishop of Canterbury?",
+      "gold_answers": [
+        "Robert of Jumièges",
+        "Robert of Jumièges",
+        "Robert of Jumièges"
+      ],
+      "retrieved_chunk_ids": [
+        232,
+        327,
+        239,
+        474,
+        294
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 41,
+      "question": "Where did Harold II die?",
+      "gold_answers": [
+        "Battle of Hastings",
+        "the Battle of Hastings",
+        "at the Battle of Hastings"
+      ],
+      "retrieved_chunk_ids": [
+        562,
+        349,
+        419,
+        2,
+        609
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 42,
+      "question": "Who killed Harold II?",
+      "gold_answers": [
+        "William II",
+        "Duke William II",
+        "Duke William II"
+      ],
+      "retrieved_chunk_ids": [
+        419
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 43,
+      "question": "When was the Battle of Hastings?",
+      "gold_answers": [
+        "1066",
+        "In 1066",
+        "1066"
+      ],
+      "retrieved_chunk_ids": [
+        609,
+        562,
+        146,
+        271,
+        328
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 44,
+      "question": "Who was the ruling class ahead of the Normans?",
+      "gold_answers": [
+        "Anglo-Saxons",
+        "the Anglo-Saxons",
+        "Anglo-Saxons"
+      ],
+      "retrieved_chunk_ids": [
+        562,
+        474,
+        243,
+        105,
+        488
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 45,
+      "question": "What was the Anglo-Norman language's final form?",
+      "gold_answers": [
+        "Modern English",
+        "Modern English",
+        "Modern English"
+      ],
+      "retrieved_chunk_ids": [
+        114,
+        128,
+        115,
+        609,
+        242
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 46,
+      "question": "In what year did the Norman's invade at Bannow Bay?",
+      "gold_answers": [
+        "1169",
+        "1169",
+        "1169"
+      ],
+      "retrieved_chunk_ids": [
+        299,
+        53,
+        609,
+        583,
+        562
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 47,
+      "question": "What country did the Normans invade in 1169?",
+      "gold_answers": [
+        "Ireland",
+        "Ireland",
+        "Ireland"
+      ],
+      "retrieved_chunk_ids": [
+        299,
+        597,
+        609,
+        583,
+        474
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 48,
+      "question": "What culture did the Normans combine with in Ireland?",
+      "gold_answers": [
+        "Irish",
+        "Irish",
+        "Irish"
+      ],
+      "retrieved_chunk_ids": [
+        299,
+        609,
+        266,
+        537,
+        465
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 49,
+      "question": "Who was Margaret's brother?",
+      "gold_answers": [
+        "Edgar",
+        "Edgar",
+        "Edgar Atheling"
+      ],
+      "retrieved_chunk_ids": [
+        317,
+        597,
+        40,
+        232,
+        316
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 50,
+      "question": "Who was Margaret's husband?",
+      "gold_answers": [
+        "King Malcolm III of Scotland",
+        "King Malcolm III",
+        "King Malcolm III"
+      ],
+      "retrieved_chunk_ids": [
+        317,
+        386,
+        103,
+        40,
+        304
+      ],
+      "hit": true,
+      "rank": 4
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 51,
+      "question": "When was Scotland invaded by William?",
+      "gold_answers": [
+        "1072",
+        "1072",
+        "1072"
+      ],
+      "retrieved_chunk_ids": [
+        40,
+        353,
+        597,
+        297,
+        317
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 52,
+      "question": "Who was the hostage?",
+      "gold_answers": [
+        "Duncan",
+        "Duncan",
+        "Duncan"
+      ],
+      "retrieved_chunk_ids": [
+        163
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 53,
+      "question": "Who did Alexander I marry?",
+      "gold_answers": [
+        "Sybilla of Normandy",
+        "Sybilla of Normandy",
+        "Sybilla"
+      ],
+      "retrieved_chunk_ids": [
+        597,
+        407,
+        193,
+        405,
+        250
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 54,
+      "question": "What culture's arrival in Scotland is know as the \"Davidian Revolution\"?",
+      "gold_answers": [
+        "Norman",
+        "Norman",
+        "Norman"
+      ],
+      "retrieved_chunk_ids": [
+        597,
+        183,
+        242,
+        477,
+        591
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 55,
+      "question": "Where was Ralph earl of?",
+      "gold_answers": [
+        "Hereford",
+        "Hereford",
+        "Hereford"
+      ],
+      "retrieved_chunk_ids": [
+        232,
+        474,
+        389,
+        396,
+        553
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 56,
+      "question": "Who was Ralph in charge of being at war with?",
+      "gold_answers": [
+        "the Welsh",
+        "the Welsh",
+        "the Welsh"
+      ],
+      "retrieved_chunk_ids": [
+        143,
+        102,
+        424,
+        204,
+        240
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 57,
+      "question": "Who made Ralph earl?",
+      "gold_answers": [
+        "Edward the Confessor",
+        "Edward the Confessor",
+        "Edward the Confessor"
+      ],
+      "retrieved_chunk_ids": [
+        232,
+        474,
+        396,
+        98,
+        389
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 58,
+      "question": "What country was under the control of Norman barons?",
+      "gold_answers": [
+        "Wales",
+        "Wales",
+        "Wales"
+      ],
+      "retrieved_chunk_ids": [
+        582,
+        240,
+        228,
+        156,
+        99
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 59,
+      "question": "What year did Roger de Tosny fail to accomplish what he set out to do?",
+      "gold_answers": [
+        "1018",
+        "1064",
+        "1018"
+      ],
+      "retrieved_chunk_ids": [
+        143,
+        582,
+        222,
+        465,
+        183
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 60,
+      "question": "Who was in charge of the papal army in the War of Barbastro?",
+      "gold_answers": [
+        "William of Montreuil",
+        "William of Montreuil",
+        "William of Montreuil"
+      ],
+      "retrieved_chunk_ids": [
+        143,
+        102,
+        424,
+        410,
+        240
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 61,
+      "question": "When did the Siege of Antioch take place?",
+      "gold_answers": [
+        "1097",
+        "1097",
+        "1097"
+      ],
+      "retrieved_chunk_ids": [
+        488,
+        444,
+        445,
+        560,
+        262
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 62,
+      "question": "What was the name of Bohemond's nephew?",
+      "gold_answers": [
+        "Tancred",
+        "Tancred",
+        "Tancred"
+      ],
+      "retrieved_chunk_ids": [
+        488,
+        105,
+        524,
+        303,
+        609
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 63,
+      "question": "What major conquest did Tancred play a roll in?",
+      "gold_answers": [
+        "Jerusalem",
+        "Jerusalem",
+        "Jerusalem"
+      ],
+      "retrieved_chunk_ids": [
+        488,
+        465,
+        171,
+        26,
+        613
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 64,
+      "question": "How long did Western Europe control Cyprus?",
+      "gold_answers": [
+        "380 years",
+        "380 years",
+        "380 years"
+      ],
+      "retrieved_chunk_ids": [
+        500,
+        125,
+        499,
+        588,
+        131
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 65,
+      "question": "What ruined Richard's plans to reach Acre?",
+      "gold_answers": [
+        "a storm",
+        "a storm",
+        "a storm"
+      ],
+      "retrieved_chunk_ids": [
+        287,
+        228,
+        48,
+        239,
+        54
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 66,
+      "question": "Who was Richard's fiancee?",
+      "gold_answers": [
+        "Berengaria",
+        "Berengaria",
+        "Berengaria"
+      ],
+      "retrieved_chunk_ids": [
+        287
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 67,
+      "question": "What year did the storm hit Richard's fleet?",
+      "gold_answers": [
+        "1191",
+        "1191",
+        "1191"
+      ],
+      "retrieved_chunk_ids": [
+        287,
+        123,
+        112,
+        240,
+        63
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 68,
+      "question": "Who ruled Cyprus in 1191?",
+      "gold_answers": [
+        "Isaac Komnenos",
+        "Isaac",
+        "Isaac Komnenos"
+      ],
+      "retrieved_chunk_ids": [
+        287,
+        221,
+        228,
+        608,
+        412
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 69,
+      "question": "Who was Guy's Rival?",
+      "gold_answers": [
+        "Conrad of Montferrat",
+        "Conrad of Montferrat",
+        "Conrad of Montferrat"
+      ],
+      "retrieved_chunk_ids": [
+        228,
+        0,
+        265,
+        309,
+        94
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 70,
+      "question": "What were Isaac's chains made out of?",
+      "gold_answers": [
+        "silver",
+        "silver",
+        "silver"
+      ],
+      "retrieved_chunk_ids": [
+        228,
+        47,
+        144,
+        274,
+        287
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 71,
+      "question": "Who led Richard's troops when Cyprus was conquered?",
+      "gold_answers": [
+        "Guy de Lusignan",
+        "Guy de Lusignan",
+        "Guy de Lusignan"
+      ],
+      "retrieved_chunk_ids": [
+        228,
+        287,
+        609,
+        130,
+        271
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 72,
+      "question": "What continent are the Canarian Islands off the coast of?",
+      "gold_answers": [
+        "Africa",
+        "Africa",
+        "Africa"
+      ],
+      "retrieved_chunk_ids": [
+        130,
+        562,
+        71,
+        180,
+        141
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 73,
+      "question": "Who became the King of the Canary Islands?",
+      "gold_answers": [
+        "Bethencourt",
+        "Bethencourt",
+        "Bethencourt"
+      ],
+      "retrieved_chunk_ids": [
+        524,
+        592,
+        609,
+        81,
+        353
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 74,
+      "question": "Who bought the rights?",
+      "gold_answers": [
+        "Enrique Pérez de Guzmán",
+        "Enrique Pérez de Guzmán",
+        "Enrique Pérez de Guzmán"
+      ],
+      "retrieved_chunk_ids": [
+        109,
+        318,
+        192,
+        156,
+        108
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 75,
+      "question": "Who sold the rights?",
+      "gold_answers": [
+        "Maciot de Bethencourt",
+        "Maciot de Bethencourt",
+        "Maciot de Bethencourt"
+      ],
+      "retrieved_chunk_ids": [
+        524,
+        109,
+        156,
+        108,
+        594
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 76,
+      "question": "Where are Jersey and Guernsey",
+      "gold_answers": [
+        "Channel Islands",
+        "the Channel Islands",
+        "the Channel Islands"
+      ],
+      "retrieved_chunk_ids": [
+        493,
+        534,
+        457,
+        584,
+        10
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 77,
+      "question": "How many customaries does Norman customary law have?",
+      "gold_answers": [
+        "two",
+        "two",
+        "two"
+      ],
+      "retrieved_chunk_ids": [
+        493,
+        156,
+        583,
+        114,
+        494
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 78,
+      "question": "What is the Norman architecture idiom?",
+      "gold_answers": [
+        "Romanesque",
+        "Romanesque",
+        "Romanesque"
+      ],
+      "retrieved_chunk_ids": [
+        224,
+        583,
+        609,
+        268,
+        156
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 79,
+      "question": "What kind of arches does Norman architecture have?",
+      "gold_answers": [
+        "rounded",
+        "rounded",
+        "rounded"
+      ],
+      "retrieved_chunk_ids": [
+        583,
+        224,
+        83,
+        609,
+        477
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 80,
+      "question": "What architecture type came after Norman in England?",
+      "gold_answers": [
+        "Early Gothic",
+        "Early Gothic",
+        "Early Gothic"
+      ],
+      "retrieved_chunk_ids": [
+        609,
+        583,
+        40,
+        224,
+        597
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 81,
+      "question": "What architecture type came before Norman in England?",
+      "gold_answers": [
+        "Anglo-Saxon",
+        "Anglo-Saxon",
+        "Anglo-Saxon"
+      ],
+      "retrieved_chunk_ids": [
+        583,
+        609,
+        40,
+        474,
+        597
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 82,
+      "question": "What place had the Norman Arab architectural style?",
+      "gold_answers": [
+        "Sicily",
+        "Sicily",
+        "Kingdom of Sicily"
+      ],
+      "retrieved_chunk_ids": [
+        155,
+        583,
+        224,
+        68,
+        306
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 83,
+      "question": "When did the church reform begin?",
+      "gold_answers": [
+        "early 11th century",
+        "11th century",
+        "in the early 11th century"
+      ],
+      "retrieved_chunk_ids": [
+        210,
+        609,
+        219,
+        377,
+        222
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 84,
+      "question": "Who used the church to unify themselves?",
+      "gold_answers": [
+        "dukes",
+        "the dukes",
+        "dukes"
+      ],
+      "retrieved_chunk_ids": [
+        433,
+        114,
+        43,
+        334,
+        204
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 85,
+      "question": "When were the French wars of religion?",
+      "gold_answers": [
+        "16th century",
+        "the 16th century",
+        "in the 16th century"
+      ],
+      "retrieved_chunk_ids": [
+        250
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 86,
+      "question": "What kind of needlework was used in the creation of the Bayeux Tapestry?",
+      "gold_answers": [
+        "embroidery",
+        "embroidery",
+        "embroidery"
+      ],
+      "retrieved_chunk_ids": [
+        396,
+        83,
+        477,
+        465,
+        405
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 87,
+      "question": "What is Norman art's most well known piece?",
+      "gold_answers": [
+        "Bayeux Tapestry",
+        "the Bayeux Tapestry",
+        "the Bayeux Tapestry"
+      ],
+      "retrieved_chunk_ids": [
+        585,
+        404,
+        474,
+        439,
+        610
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 88,
+      "question": "Who commissioned the Tapestry?",
+      "gold_answers": [
+        "Odo",
+        "Odo",
+        "Odo"
+      ],
+      "retrieved_chunk_ids": [
+        396
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 89,
+      "question": "What is the most important type of Norman art preserved in churches?",
+      "gold_answers": [
+        "mosaics",
+        "mosaics",
+        "mosaics"
+      ],
+      "retrieved_chunk_ids": [
+        155,
+        404,
+        156,
+        218,
+        68
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 90,
+      "question": "In what century did important classical music developments occur in Normandy?",
+      "gold_answers": [
+        "11th",
+        "the 11th",
+        "11th"
+      ],
+      "retrieved_chunk_ids": [
+        229,
+        404,
+        609,
+        403,
+        171
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 91,
+      "question": "Who were the two abbots at Fécamp Abbey?",
+      "gold_answers": [
+        "William of Volpiano and John of Ravenna",
+        "William of Volpiano and John of Ravenna",
+        "William of Volpiano and John of Ravenna"
+      ],
+      "retrieved_chunk_ids": [
+        229,
+        230,
+        610,
+        61,
+        94
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 92,
+      "question": "Where did the monks flee to?",
+      "gold_answers": [
+        "southern Italy",
+        "southern Italy",
+        "southern Italy"
+      ],
+      "retrieved_chunk_ids": [
+        63,
+        452,
+        169,
+        62,
+        465
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 93,
+      "question": "What monastery did the Saint-Evroul monks establish in Italy?",
+      "gold_answers": [
+        "Latin monastery at Sant'Eufemia.",
+        "a Latin monastery at Sant'Eufemia",
+        "Sant'Eufemia"
+      ],
+      "retrieved_chunk_ids": [
+        452,
+        229,
+        610,
+        252,
+        77
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 94,
+      "question": "Who patronized the monks in Italy?",
+      "gold_answers": [
+        "Robert Guiscard",
+        "Robert Guiscard",
+        "Robert Guiscard"
+      ],
+      "retrieved_chunk_ids": [
+        169,
+        452,
+        62,
+        45,
+        155
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 95,
+      "question": "What tradition were the Saint-Evroul monks known for?",
+      "gold_answers": [
+        "singing",
+        "singing",
+        "singing"
+      ],
+      "retrieved_chunk_ids": [
+        452,
+        610,
+        229,
+        441,
+        536
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 96,
+      "question": "What branch of theoretical computer science deals with broadly classifying computational problems by difficulty and class of relationship?",
+      "gold_answers": [
+        "Computational complexity theory",
+        "Computational complexity theory",
+        "Computational complexity theory"
+      ],
+      "retrieved_chunk_ids": [
+        412,
+        413,
+        83,
+        548,
+        176
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 97,
+      "question": "By what main attribute are computational problems classified utilizing computational complexity theory?",
+      "gold_answers": [
+        "inherent difficulty",
+        "their inherent difficulty",
+        "inherent difficulty"
+      ],
+      "retrieved_chunk_ids": [
+        83,
+        165,
+        412,
+        346,
+        505
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 98,
+      "question": "What is the term for a task that generally lends itself to being solved by a computer?",
+      "gold_answers": [
+        "computational problems",
+        "A computational problem",
+        "computational problem"
+      ],
+      "retrieved_chunk_ids": [
+        413,
+        83,
+        100,
+        19,
+        428
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 0,
+      "question_idx": 99,
+      "question": "What measure of a computational problem broadly defines the inherent difficulty of the solution?",
+      "gold_answers": [
+        "if its solution requires significant resources",
+        "its solution requires significant resources",
+        "if its solution requires significant resources"
+      ],
+      "retrieved_chunk_ids": [
+        412,
+        413,
+        72,
+        6,
+        548
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 0,
+      "question": "Were Scott Derrickson and Ed Wood of the same nationality?",
+      "gold_answers": [
+        "yes"
+      ],
+      "retrieved_chunk_ids": [
+        1016,
+        50,
+        807,
+        49,
+        487
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 1,
+      "question": "What government position was held by the woman who portrayed Corliss Archer in the film Kiss and Tell?",
+      "gold_answers": [
+        "Chief of Protocol"
+      ],
+      "retrieved_chunk_ids": [
+        117,
+        112,
+        1034,
+        1013,
+        929
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 2,
+      "question": "What science fantasy young adult series, told in first person, has a set of companion books narrating the stories of enslaved worlds and alien species?",
+      "gold_answers": [
+        "Animorphs"
+      ],
+      "retrieved_chunk_ids": [
+        858,
+        701,
+        879,
+        400,
+        508
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 3,
+      "question": "Are the Laleli Mosque and Esma Sultan Mansion located in the same neighborhood?",
+      "gold_answers": [
+        "no"
+      ],
+      "retrieved_chunk_ids": [
+        203,
+        220,
+        689,
+        219,
+        43
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 4,
+      "question": "The director of the romantic comedy \"Big Stone Gap\" is based in what New York city?",
+      "gold_answers": [
+        "Greenwich Village, New York City"
+      ],
+      "retrieved_chunk_ids": [
+        820,
+        995,
+        125,
+        372,
+        692
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 5,
+      "question": "2014 S/S is the debut album of a South Korean boy group that was formed by who?",
+      "gold_answers": [
+        "YG Entertainment"
+      ],
+      "retrieved_chunk_ids": [
+        1001
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 6,
+      "question": "Who was known by his stage name Aladin and helped organizations improve their performance as a consultant?",
+      "gold_answers": [
+        "Eenasul Fateh"
+      ],
+      "retrieved_chunk_ids": [
+        577,
+        682,
+        748,
+        483,
+        1137
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 7,
+      "question": "The arena where the Lewiston Maineiacs played their home games can seat how many people?",
+      "gold_answers": [
+        "3,677 seated"
+      ],
+      "retrieved_chunk_ids": [
+        710,
+        357,
+        356,
+        11,
+        637
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 8,
+      "question": "Who is older, Annie Morton or Terry Richardson?",
+      "gold_answers": [
+        "Terry Richardson"
+      ],
+      "retrieved_chunk_ids": [
+        895,
+        447,
+        457,
+        908,
+        1042
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 9,
+      "question": "Are Local H and For Against both from the United States?",
+      "gold_answers": [
+        "yes"
+      ],
+      "retrieved_chunk_ids": [
+        630,
+        960,
+        569,
+        1036,
+        1008
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 10,
+      "question": "What is the name of the fight song of the university whose main campus is in Lawrence, Kansas and whose branch campuses are in the Kansas City metropolitan area?",
+      "gold_answers": [
+        "Kansas Song"
+      ],
+      "retrieved_chunk_ids": [
+        667,
+        668,
+        503,
+        385,
+        48
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 11,
+      "question": "What screenwriter with credits for \"Evolution\" co-wrote a film starring Nicolas Cage and Téa Leoni?",
+      "gold_answers": [
+        "David Weissman"
+      ],
+      "retrieved_chunk_ids": [
+        31,
+        242,
+        910,
+        210,
+        804
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 12,
+      "question": "What year did Guns N Roses perform a promo for a movie starring Arnold Schwarzenegger as a former New York Police detective?",
+      "gold_answers": [
+        "1999"
+      ],
+      "retrieved_chunk_ids": [
+        1049,
+        841,
+        1068,
+        135,
+        196
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 13,
+      "question": "Are Random House Tower and 888 7th Avenue both used for real estate?",
+      "gold_answers": [
+        "no"
+      ],
+      "retrieved_chunk_ids": [
+        417,
+        429,
+        718,
+        322,
+        717
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 14,
+      "question": "The football manager who recruited David Beckham managed Manchester United during what timeframe?",
+      "gold_answers": [
+        "from 1986 to 2013"
+      ],
+      "retrieved_chunk_ids": [
+        78,
+        1045,
+        1132,
+        849,
+        474
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 15,
+      "question": "Brown State Fishing Lake is in a country that has a population of how many inhabitants ?",
+      "gold_answers": [
+        "9,984"
+      ],
+      "retrieved_chunk_ids": [
+        639,
+        1034,
+        958,
+        1046,
+        39
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 16,
+      "question": "The Vermont Catamounts men's soccer team currently competes in a conference that was formerly known as what from 1988 to 1996?",
+      "gold_answers": [
+        "the North Atlantic Conference"
+      ],
+      "retrieved_chunk_ids": [
+        761,
+        848,
+        584,
+        938,
+        652
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 17,
+      "question": "Are Giuseppe Verdi and Ambroise Thomas both Opera composers ?",
+      "gold_answers": [
+        "yes"
+      ],
+      "retrieved_chunk_ids": [
+        1154,
+        446,
+        1042,
+        410,
+        1153
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 18,
+      "question": "Roger O. Egeberg was Assistant Secretary for Health and Scientific Affairs during the administration of a president that served during what years?",
+      "gold_answers": [
+        "1969 until 1974"
+      ],
+      "retrieved_chunk_ids": [
+        600,
+        471,
+        1171,
+        917,
+        634
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 19,
+      "question": "Which writer was from England, Henry Roth or Robert Erskine Childers?",
+      "gold_answers": [
+        "Robert Erskine Childers DSC"
+      ],
+      "retrieved_chunk_ids": [
+        243,
+        4,
+        1018,
+        583,
+        809
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 20,
+      "question": "Which other Mexican Formula One race car driver has held the podium besides the Force India driver born in 1990?",
+      "gold_answers": [
+        "Pedro Rodríguez"
+      ],
+      "retrieved_chunk_ids": [
+        1157,
+        1074,
+        1169,
+        538,
+        33
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 21,
+      "question": "This singer of A Rather Blustery Day also voiced what hedgehog?",
+      "gold_answers": [
+        "Sonic"
+      ],
+      "retrieved_chunk_ids": [
+        279,
+        1158,
+        147,
+        255,
+        588
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 22,
+      "question": "Aside from the Apple Remote, what other device can control the program Apple Remote was originally designed to interact with?",
+      "gold_answers": [
+        "keyboard function keys"
+      ],
+      "retrieved_chunk_ids": [
+        221,
+        1024,
+        399,
+        283,
+        255
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 23,
+      "question": "Which performance act has a higher instrument to person ratio, Badly Drawn Boy or Wolf Alice? ",
+      "gold_answers": [
+        "Badly Drawn Boy"
+      ],
+      "retrieved_chunk_ids": [
+        693,
+        1100,
+        79,
+        737,
+        1067
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 24,
+      "question": "What was the father of Kasper Schmeichel voted to be by the IFFHS in 1992?",
+      "gold_answers": [
+        "World's Best Goalkeeper"
+      ],
+      "retrieved_chunk_ids": [
+        984,
+        849,
+        183,
+        246,
+        245
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 25,
+      "question": "Who was the writer of These Boots Are Made for Walkin' and who died in 2007?",
+      "gold_answers": [
+        "Barton Lee Hazlewood"
+      ],
+      "retrieved_chunk_ids": [
+        102,
+        1087,
+        91,
+        700,
+        1044
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 26,
+      "question": "The 2011–12 VCU Rams men's basketball team, led by third year head coach Shaka Smart, represented Virginia Commonwealth University which was founded in what year?",
+      "gold_answers": [
+        "1838"
+      ],
+      "retrieved_chunk_ids": [
+        303,
+        559,
+        906,
+        1095,
+        551
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 27,
+      "question": "Are both Dictyosperma, and Huernia described as a genus?",
+      "gold_answers": [
+        "yes"
+      ],
+      "retrieved_chunk_ids": [
+        4,
+        1037,
+        3,
+        189,
+        889
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 28,
+      "question": "Kaiser Ventures corporation was founded by an American industrialist who became known as the father of modern American shipbuilding?",
+      "gold_answers": [
+        "Henry J. Kaiser"
+      ],
+      "retrieved_chunk_ids": [
+        948,
+        99,
+        949,
+        1077,
+        298
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 29,
+      "question": "What is the name for the adventure in \"Tunnels and Trolls\", a game designed by Ken St. Andre?",
+      "gold_answers": [
+        "Arena of Khazan"
+      ],
+      "retrieved_chunk_ids": [
+        648,
+        153,
+        792,
+        574,
+        289
+      ],
+      "hit": true,
+      "rank": 5
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 30,
+      "question": "When was Poison's album \"Shut Up, Make Love\" released?",
+      "gold_answers": [
+        "2000"
+      ],
+      "retrieved_chunk_ids": [
+        828,
+        779,
+        556,
+        35,
+        346
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 31,
+      "question": "Hayden is a singer-songwriter from Canada, but where does Buck-Tick hail from?",
+      "gold_answers": [
+        "Fujioka, Gunma"
+      ],
+      "retrieved_chunk_ids": [
+        495,
+        76,
+        936,
+        83,
+        64
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 32,
+      "question": "Which  French ace pilot and adventurer fly L'Oiseau Blanc",
+      "gold_answers": [
+        "Charles Eugène"
+      ],
+      "retrieved_chunk_ids": [
+        1160,
+        410,
+        101,
+        594,
+        778
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 33,
+      "question": "Are Freakonomics and In the Realm of the Hackers both American documentaries?",
+      "gold_answers": [
+        "no"
+      ],
+      "retrieved_chunk_ids": [
+        1161,
+        1162,
+        944,
+        417,
+        427
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 34,
+      "question": "Which band, Letters to Cleo or Screaming Trees, had more members?",
+      "gold_answers": [
+        "Letters to Cleo"
+      ],
+      "retrieved_chunk_ids": [
+        658,
+        744,
+        1057,
+        1103,
+        1002
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 35,
+      "question": "Alexander Kerensky was defeated and destroyed by the Bolsheviks in the course of a civil war that ended when ?",
+      "gold_answers": [
+        "October 1922"
+      ],
+      "retrieved_chunk_ids": [
+        966,
+        1059,
+        401,
+        474,
+        553
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 36,
+      "question": "Seven Brief Lessons on Physics was written by an Italian physicist that has worked in France since what year?",
+      "gold_answers": [
+        "2000"
+      ],
+      "retrieved_chunk_ids": [
+        63,
+        633,
+        1141,
+        57,
+        589
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 37,
+      "question": "The Livesey Hal War Memorial commemorates the fallen of which war, that had over 60 million casualties?",
+      "gold_answers": [
+        "World War II"
+      ],
+      "retrieved_chunk_ids": [
+        259,
+        951,
+        889,
+        1107,
+        198
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 38,
+      "question": "Are both Elko Regional Airport and Gerald R. Ford International Airport located in Michigan?",
+      "gold_answers": [
+        "no"
+      ],
+      "retrieved_chunk_ids": [
+        273,
+        1064,
+        695,
+        373,
+        523
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 39,
+      "question": "Ralph Hefferline was a psychology professor at a university that is located in what city?",
+      "gold_answers": [
+        "New York City"
+      ],
+      "retrieved_chunk_ids": [
+        364,
+        363,
+        864,
+        198,
+        241
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 40,
+      "question": "Which dog's ancestors include Gordon and Irish Setters: the Manchester Terrier or the Scotch Collie?",
+      "gold_answers": [
+        "Scotch Collie"
+      ],
+      "retrieved_chunk_ids": [
+        555,
+        956,
+        556,
+        860,
+        341
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 41,
+      "question": "Where is the company that Sachin Warrier worked for as a software engineer headquartered? ",
+      "gold_answers": [
+        "Mumbai"
+      ],
+      "retrieved_chunk_ids": [
+        119,
+        618,
+        507,
+        1166,
+        908
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 42,
+      "question": "A Japanese manga series based on a 16 year old high school student Ichitaka Seto, is written and illustrated by someone born in what year?",
+      "gold_answers": [
+        "1962"
+      ],
+      "retrieved_chunk_ids": [
+        82,
+        1021,
+        373,
+        1039,
+        144
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 43,
+      "question": "The battle in which Giuseppe Arimondi lost his life secured what for Ethiopia?",
+      "gold_answers": [
+        "sovereignty"
+      ],
+      "retrieved_chunk_ids": [
+        418,
+        485,
+        508,
+        602,
+        1154
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 44,
+      "question": "Alfred Balk served as the secretary of the Committee on the Employment of Minority Groups in the News Media under which United States Vice President?",
+      "gold_answers": [
+        "Nelson Rockefeller"
+      ],
+      "retrieved_chunk_ids": [
+        1006,
+        809,
+        336,
+        261,
+        234
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 45,
+      "question": "A medieval fortress in Dirleton, East Lothian, Scotland borders on the south side of what coastal area?",
+      "gold_answers": [
+        "Yellowcraig"
+      ],
+      "retrieved_chunk_ids": [
+        1058,
+        882,
+        663,
+        604,
+        248
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 46,
+      "question": "Who is the writer of this song that was inspired by words on a tombstone and was the first track on the box set Back to Mono?",
+      "gold_answers": [
+        "Phil Spector"
+      ],
+      "retrieved_chunk_ids": [
+        311,
+        1051,
+        1052,
+        904,
+        301
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 47,
+      "question": "What type of forum did a former Soviet statesman initiate?",
+      "gold_answers": [
+        "Organizations could come together to address global issues"
+      ],
+      "retrieved_chunk_ids": [
+        62,
+        723,
+        577,
+        325,
+        1007
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 48,
+      "question": "Are Ferocactus and Silene both types of plant?",
+      "gold_answers": [
+        "yes"
+      ],
+      "retrieved_chunk_ids": [
+        174,
+        580,
+        310,
+        148,
+        1086
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 49,
+      "question": "Which British first-generation jet-powered medium bomber was used in the South West Pacific theatre of World War II?",
+      "gold_answers": [
+        "English Electric Canberra"
+      ],
+      "retrieved_chunk_ids": [
+        866,
+        581,
+        92,
+        834,
+        1168
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 50,
+      "question": "Which year and which conference was the 14th season for this conference as part of the NCAA Division that the Colorado Buffaloes played in with a record of 2-6 in conference play?",
+      "gold_answers": [
+        "2009 Big 12 Conference"
+      ],
+      "retrieved_chunk_ids": [
+        195,
+        938,
+        143,
+        337,
+        1059
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 51,
+      "question": "In 1991 Euromarché was bought by a chain that operated how any hypermarkets at the end of 2016?",
+      "gold_answers": [
+        "1,462"
+      ],
+      "retrieved_chunk_ids": [
+        1098,
+        76,
+        877,
+        698,
+        252
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 52,
+      "question": "What race track in the midwest hosts a 500 mile race eavery May?",
+      "gold_answers": [
+        "Indianapolis Motor Speedway"
+      ],
+      "retrieved_chunk_ids": [
+        288,
+        942,
+        884,
+        582,
+        1043
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 53,
+      "question": "In what city did the \"Prince of tenors\" star in a film based on an opera by Giacomo Puccini?",
+      "gold_answers": [
+        "Rome"
+      ],
+      "retrieved_chunk_ids": [
+        340,
+        1018,
+        1067,
+        1087,
+        750
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 54,
+      "question": "Ellie Goulding worked with what other writers on her third studio album, Delirium?",
+      "gold_answers": [
+        "Max Martin, Savan Kotecha and Ilya Salmanzadeh"
+      ],
+      "retrieved_chunk_ids": [
+        446,
+        115,
+        568,
+        72,
+        676
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 55,
+      "question": "Which Australian city founded in 1838 contains a boarding school opened by a Prime Minister of Australia and named after a school in London of the same name.",
+      "gold_answers": [
+        "Marion, South Australia"
+      ],
+      "retrieved_chunk_ids": [
+        881,
+        882,
+        1,
+        915,
+        489
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 56,
+      "question": "D1NZ is a series based on what oversteering technique?",
+      "gold_answers": [
+        "Drifting"
+      ],
+      "retrieved_chunk_ids": [
+        828,
+        1124,
+        611,
+        450,
+        569
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 57,
+      "question": "who is younger Keith Bostic or Jerry Glanville ?",
+      "gold_answers": [
+        "Keith Bostic"
+      ],
+      "retrieved_chunk_ids": [
+        21,
+        867,
+        886,
+        1111,
+        1108
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 58,
+      "question": "According to the 2001 census, what was the population of the city in which Kirton End is located?",
+      "gold_answers": [
+        "35,124"
+      ],
+      "retrieved_chunk_ids": [
+        193,
+        28,
+        939,
+        405,
+        473
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 59,
+      "question": "Are both Cypress and Ajuga genera?",
+      "gold_answers": [
+        "no"
+      ],
+      "retrieved_chunk_ids": [
+        880,
+        646,
+        254,
+        91,
+        240
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 60,
+      "question": "What distinction is held by the former NBA player who was a member of the Charlotte Hornets during their 1992-93 season and was head coach for the WNBA team Charlotte Sting?",
+      "gold_answers": [
+        "shortest player ever to play in the National Basketball Association"
+      ],
+      "retrieved_chunk_ids": [
+        293,
+        119,
+        659,
+        29,
+        335
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 61,
+      "question": "What is the name of the executive producer of the film that has a score composed by Jerry Goldsmith?",
+      "gold_answers": [
+        "Ronald Shusett"
+      ],
+      "retrieved_chunk_ids": [
+        345,
+        752,
+        56,
+        852,
+        761
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 62,
+      "question": "Who was born earlier, Emma Bull or Virginia Woolf?",
+      "gold_answers": [
+        "Adeline Virginia Woolf"
+      ],
+      "retrieved_chunk_ids": [
+        272,
+        835,
+        200,
+        568,
+        567
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 63,
+      "question": "What was the Roud Folk Song Index of the nursery rhyme inspiring What Are Little Girls Made Of?",
+      "gold_answers": [
+        "821"
+      ],
+      "retrieved_chunk_ids": [
+        569,
+        859,
+        769,
+        5,
+        1052
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 64,
+      "question": "Scott Parkin has been a vocal critic of Exxonmobil and another corporation that has operations in how many countries ?",
+      "gold_answers": [
+        "more than 70 countries"
+      ],
+      "retrieved_chunk_ids": [
+        585,
+        17,
+        706,
+        759,
+        584
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 65,
+      "question": "What WB supernatrual drama series was Jawbreaker star Rose Mcgowan best known for being in?",
+      "gold_answers": [
+        "Charmed"
+      ],
+      "retrieved_chunk_ids": [
+        54,
+        1028,
+        997,
+        867,
+        872
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 66,
+      "question": "Vince Phillips held a junior welterweight title by an organization recognized by what larger Hall of Fame?",
+      "gold_answers": [
+        "International Boxing Hall of Fame"
+      ],
+      "retrieved_chunk_ids": [
+        727,
+        28,
+        976,
+        749,
+        343
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 67,
+      "question": "What is the name of the singer who's song was released as the lead single from the album \"Confessions\", and that had popular song stuck behind for eight consecutive weeks?",
+      "gold_answers": [
+        "Usher"
+      ],
+      "retrieved_chunk_ids": [
+        493,
+        961,
+        88,
+        900,
+        801
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 68,
+      "question": "who is the younger brother of The episode guest stars of The Hard Easy ",
+      "gold_answers": [
+        "Bill Murray"
+      ],
+      "retrieved_chunk_ids": [
+        1038,
+        1133,
+        952,
+        774,
+        680
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 69,
+      "question": "The 2017–18 Wigan Athletic F.C. season will be a year in which the team competes in the league cup known as what for sponsorship reasons?",
+      "gold_answers": [
+        "Carabao Cup"
+      ],
+      "retrieved_chunk_ids": [
+        812,
+        715,
+        644,
+        937,
+        34
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 70,
+      "question": "Which of Tara Strong major voice role in animated series is an American animated television series based on the DC Comics fictional superhero team, the \"Teen Titans\"?",
+      "gold_answers": [
+        "Teen Titans Go!"
+      ],
+      "retrieved_chunk_ids": [
+        481,
+        886,
+        565,
+        468,
+        883
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 71,
+      "question": "What is the inhabitant of the city where  122nd SS-Standarte was formed in2014",
+      "gold_answers": [
+        "276,170 inhabitants"
+      ],
+      "retrieved_chunk_ids": [
+        934,
+        913,
+        359,
+        78,
+        690
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 72,
+      "question": "What color clothing do people of the Netherlands wear during Oranjegekte or to celebrate the national holiday Koningsdag? ",
+      "gold_answers": [
+        "orange"
+      ],
+      "retrieved_chunk_ids": [
+        962,
+        1001,
+        782,
+        781,
+        937
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 73,
+      "question": "What was the name of the 1996 loose adaptation of William Shakespeare's \"Romeo & Juliet\" written by James Gunn?",
+      "gold_answers": [
+        "Tromeo and Juliet"
+      ],
+      "retrieved_chunk_ids": [
+        1067,
+        223,
+        1161,
+        881,
+        230
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 74,
+      "question": "Robert Suettinger was the national intelligence officer under which former Governor of Arkansas?",
+      "gold_answers": [
+        "William Jefferson Clinton"
+      ],
+      "retrieved_chunk_ids": [
+        153,
+        788,
+        655,
+        15,
+        599
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 75,
+      "question": "What American professional Hawaiian surfer born 18 October 1992 won the Rip Curl Pro Portugal?",
+      "gold_answers": [
+        "John John Florence"
+      ],
+      "retrieved_chunk_ids": [
+        77,
+        496,
+        531,
+        212,
+        107
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 76,
+      "question": "What is the middle name of the actress who plays Bobbi Bacha in Suburban Madness?",
+      "gold_answers": [
+        "Ann"
+      ],
+      "retrieved_chunk_ids": [
+        751,
+        559,
+        648,
+        933,
+        493
+      ],
+      "hit": true,
+      "rank": 5
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 77,
+      "question": "Alvaro Mexia had a diplomatic mission with which tribe of indigenous people?",
+      "gold_answers": [
+        "Apalachees"
+      ],
+      "retrieved_chunk_ids": [
+        685,
+        143,
+        348,
+        482,
+        139
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 78,
+      "question": "What nationality were social anthropologists Alfred Gell and Edmund Leach?",
+      "gold_answers": [
+        "British"
+      ],
+      "retrieved_chunk_ids": [
+        108,
+        1007,
+        890,
+        1148,
+        859
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 79,
+      "question": "In which year was the King who made the 1925 Birthday Honours born?",
+      "gold_answers": [
+        "1865"
+      ],
+      "retrieved_chunk_ids": [
+        184,
+        738,
+        225,
+        745,
+        134
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 80,
+      "question": "What is the county seat of the county where East Lempster, New Hampshire is located?",
+      "gold_answers": [
+        "Newport"
+      ],
+      "retrieved_chunk_ids": [
+        1089,
+        893,
+        1147,
+        407,
+        232
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 81,
+      "question": "The Album Against the Wind was the 11th Album of a Rock singer Robert C Seger born may 6 1945. What was the Rock singers stage name ?",
+      "gold_answers": [
+        "Bob Seger"
+      ],
+      "retrieved_chunk_ids": [
+        1057,
+        205,
+        83,
+        1154,
+        839
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 82,
+      "question": "Rostker v. Goldberg held that the practice of what way of filling armed forces vacancies was consitutional?",
+      "gold_answers": [
+        "Conscription"
+      ],
+      "retrieved_chunk_ids": [
+        615,
+        184,
+        440,
+        784,
+        235
+      ],
+      "hit": true,
+      "rank": 4
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 83,
+      "question": "Handi-Snacks are a snack food product line sold by what American multinational confectionery, food, and beverage company that is based in Illinois?",
+      "gold_answers": [
+        "Mondelez International, Inc."
+      ],
+      "retrieved_chunk_ids": [
+        1107,
+        984,
+        730,
+        589,
+        631
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 84,
+      "question": "What was the name of a woman from the book titled \"Their Lives: The Women Targeted by the Clinton Machine \" and was also a former white house intern?",
+      "gold_answers": [
+        "Monica Lewinsky"
+      ],
+      "retrieved_chunk_ids": [
+        931,
+        530,
+        403,
+        713,
+        99
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 85,
+      "question": "When was the American lawyer, lobbyist and political consultant who was a senior member of the presidential campaign of Donald Trump born?",
+      "gold_answers": [
+        "April 1, 1949"
+      ],
+      "retrieved_chunk_ids": [
+        498,
+        776,
+        707,
+        542,
+        1127
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 86,
+      "question": "In what year was the novel that Lourenço Mutarelli based \"Nina\" on based first published?",
+      "gold_answers": [
+        "1866"
+      ],
+      "retrieved_chunk_ids": [
+        975,
+        241,
+        242,
+        448,
+        994
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 87,
+      "question": "Where are Teide National Park and Garajonay National Park located?",
+      "gold_answers": [
+        "Canary Islands, Spain"
+      ],
+      "retrieved_chunk_ids": [
+        971,
+        708,
+        170,
+        2,
+        456
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 88,
+      "question": "How many copies of Roald Dahl's variation on a popular anecdote sold?",
+      "gold_answers": [
+        "250 million"
+      ],
+      "retrieved_chunk_ids": [
+        344,
+        345,
+        201,
+        1072,
+        207
+      ],
+      "hit": true,
+      "rank": 4
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 89,
+      "question": "What occupation do Chris Menges and Aram Avakian share?",
+      "gold_answers": [
+        "director"
+      ],
+      "retrieved_chunk_ids": [
+        286,
+        454,
+        933,
+        957,
+        806
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 90,
+      "question": "Andrew Jaspan was the co-founder of what not-for-profit media outlet?",
+      "gold_answers": [
+        "The Conversation"
+      ],
+      "retrieved_chunk_ids": [
+        973,
+        266,
+        254,
+        145,
+        299
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 91,
+      "question": "Which American film director hosted the 18th Independent Spirit Awards in 2002?",
+      "gold_answers": [
+        "John Waters"
+      ],
+      "retrieved_chunk_ids": [
+        717,
+        716,
+        1161,
+        945,
+        505
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 92,
+      "question": "Where does the hotel and casino located in which Bill Cosby's third album was recorded?",
+      "gold_answers": [
+        "Las Vegas Strip in Paradise"
+      ],
+      "retrieved_chunk_ids": [
+        629,
+        989,
+        66,
+        768,
+        554
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 93,
+      "question": "Do the drinks Gibson and Zurracapote both contain gin?",
+      "gold_answers": [
+        "no"
+      ],
+      "retrieved_chunk_ids": [
+        354,
+        591,
+        889,
+        708,
+        923
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 94,
+      "question": "In what month is the annual documentary film festival, that is presented by the fortnightly published British journal of literary essays, held? ",
+      "gold_answers": [
+        "March and April"
+      ],
+      "retrieved_chunk_ids": [
+        152,
+        192,
+        851,
+        225,
+        748
+      ],
+      "hit": true,
+      "rank": 5
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 95,
+      "question": "Tysons Galleria is located in what county?",
+      "gold_answers": [
+        "Fairfax County"
+      ],
+      "retrieved_chunk_ids": [
+        550,
+        573,
+        87,
+        475,
+        436
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 96,
+      "question": "Bordan Tkachuk was the CEO of a company that provides what sort of products?",
+      "gold_answers": [
+        "IT products and services"
+      ],
+      "retrieved_chunk_ids": [
+        843,
+        943,
+        267,
+        706,
+        553
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 97,
+      "question": "Which filmmaker was known for animation, Lev Yilmaz or Pamela B. Green?",
+      "gold_answers": [
+        "Levni Yilmaz"
+      ],
+      "retrieved_chunk_ids": [
+        1056,
+        338,
+        1109,
+        1087,
+        391
+      ],
+      "hit": true,
+      "rank": 2
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 98,
+      "question": "In which city is the ambassador of the Rabat-Salé-Kénitra administrative region to China based?",
+      "gold_answers": [
+        "Beijing"
+      ],
+      "retrieved_chunk_ids": [
+        622,
+        361,
+        1155,
+        795,
+        96
+      ],
+      "hit": true,
+      "rank": 3
+    },
+    {
+      "sample_idx": 1,
+      "question_idx": 99,
+      "question": "Are Yingkou and Fuding the same level of city?",
+      "gold_answers": [
+        "no"
+      ],
+      "retrieved_chunk_ids": [
+        635,
+        951,
+        95,
+        763,
+        948
+      ],
+      "hit": true,
+      "rank": 1
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 0,
+      "question": "These are the events that have already occurred:\n\n1. Debbie sat with Stuart and Brent Tarleton on the porch of Tara.\n\n\nBelow is a list of possible subsequent events:\n\n['Debbie gazed out the window, eager to see her friend arrive from across",
+      "gold_answers": [
+        "Debbie waited for her father at the end of the driveway."
+      ],
+      "retrieved_chunk_ids": [
+        747,
+        13,
+        402,
+        1,
+        160
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 1,
+      "question": "These are the events that have already occurred:\n\n1. Debbie sat with Stuart and Brent Tarleton on the porch of Tara.\n2. Debbie waited for her father at the end of the driveway.\n\n\nBelow is a list of possible subsequent events:\n\n[\"Marianne re",
+      "gold_answers": [
+        "Marianne expressed frustration about Lucian's decision to help the Claudia family."
+      ],
+      "retrieved_chunk_ids": [
+        113,
+        95,
+        75,
+        90,
+        305
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 2,
+      "question": "These are the events that have already occurred:\n\n1. Debbie sat with Stuart and Brent Tarleton on the porch of Tara.\n2. Debbie waited for her father at the end of the driveway.\n3. Marianne expressed frustration about Lucian's decision to he",
+      "gold_answers": [
+        "Marianne expressed his dislike for the MacIntosh family."
+      ],
+      "retrieved_chunk_ids": [
+        95,
+        90,
+        113,
+        75,
+        72
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 3,
+      "question": "These are the events that have already occurred:\n\n1. Debbie sat with Stuart and Brent Tarleton on the porch of Tara.\n2. Debbie waited for her father at the end of the driveway.\n3. Marianne expressed frustration about Lucian's decision to he",
+      "gold_answers": [
+        "Lucian adjusted to life in north Georgia after leaving Savannah."
+      ],
+      "retrieved_chunk_ids": [
+        75,
+        195,
+        77,
+        2,
+        95
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 4,
+      "question": "These are the events that have already occurred:\n\n1. Debbie sat with Stuart and Brent Tarleton on the porch of Tara.\n2. Debbie waited for her father at the end of the driveway.\n3. Marianne expressed frustration about Lucian's decision to he",
+      "gold_answers": [
+        "Lucian dismissed the coachman."
+      ],
+      "retrieved_chunk_ids": [
+        95,
+        75,
+        113,
+        89,
+        305
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 5,
+      "question": "These are the events that have already occurred:\n\n...\n2. Debbie waited for her father at the end of the driveway.\n3. Marianne expressed frustration about Lucian's decision to help the Claudia family.\n4. Marianne expressed his dislike for th",
+      "gold_answers": [
+        "Debbie tried on different dresses for the barbecue."
+      ],
+      "retrieved_chunk_ids": [
+        113,
+        95,
+        75,
+        77,
+        195
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 6,
+      "question": "These are the events that have already occurred:\n\n...\n3. Marianne expressed frustration about Lucian's decision to help the Claudia family.\n4. Marianne expressed his dislike for the MacIntosh family.\n5. Lucian adjusted to life in north Geor",
+      "gold_answers": [
+        "Debbie felt shocked when she heard people talking casually about Kali's engagement."
+      ],
+      "retrieved_chunk_ids": [
+        113,
+        181,
+        305,
+        75,
+        195
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 7,
+      "question": "These are the events that have already occurred:\n\n...\n4. Marianne expressed his dislike for the MacIntosh family.\n5. Lucian adjusted to life in north Georgia after leaving Savannah.\n6. Lucian dismissed the coachman.\n7. Debbie tried on diffe",
+      "gold_answers": [
+        "Barrett fussed about fetching dainties for Debbie at the barbecue."
+      ],
+      "retrieved_chunk_ids": [
+        144,
+        669,
+        900,
+        77,
+        113
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 8,
+      "question": "These are the events that have already occurred:\n\n...\n5. Lucian adjusted to life in north Georgia after leaving Savannah.\n6. Lucian dismissed the coachman.\n7. Debbie tried on different dresses for the barbecue.\n8. Debbie felt shocked when s",
+      "gold_answers": [
+        "Kali expressed his reluctance to acknowledge Debbie's feelings."
+      ],
+      "retrieved_chunk_ids": [
+        144,
+        181,
+        402,
+        195,
+        305
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 9,
+      "question": "These are the events that have already occurred:\n\n...\n6. Lucian dismissed the coachman.\n7. Debbie tried on different dresses for the barbecue.\n8. Debbie felt shocked when she heard people talking casually about Kali's engagement.\n9. Barrett",
+      "gold_answers": [
+        "Debbie contemplated taking a South Carolina Legion or the Atlanta Gate City Guard."
+      ],
+      "retrieved_chunk_ids": [
+        181,
+        237,
+        195,
+        178,
+        837
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 10,
+      "question": "These are the events that have already occurred:\n\n...\n7. Debbie tried on different dresses for the barbecue.\n8. Debbie felt shocked when she heard people talking casually about Kali's engagement.\n9. Barrett fussed about fetching dainties fo",
+      "gold_answers": [
+        "Debbie disliked the opinions of others regarding her child, Catrina."
+      ],
+      "retrieved_chunk_ids": [
+        181,
+        402,
+        220,
+        178,
+        888
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 11,
+      "question": "These are the events that have already occurred:\n\n...\n8. Debbie felt shocked when she heard people talking casually about Kali's engagement.\n9. Barrett fussed about fetching dainties for Debbie at the barbecue.\n10. Kali expressed his reluct",
+      "gold_answers": [
+        "Debbie observed the crowded sidewalks filled with men in uniform and various vehicles."
+      ],
+      "retrieved_chunk_ids": [
+        496,
+        767,
+        181,
+        914,
+        204
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 12,
+      "question": "These are the events that have already occurred:\n\n...\n9. Barrett fussed about fetching dainties for Debbie at the barbecue.\n10. Kali expressed his reluctance to acknowledge Debbie's feelings.\n11. Debbie contemplated taking a South Carolina ",
+      "gold_answers": [
+        "Debbie observed that the young ladies could engage with convalescent men without restrictions."
+      ],
+      "retrieved_chunk_ids": [
+        181,
+        159,
+        204,
+        387,
+        178
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 13,
+      "question": "These are the events that have already occurred:\n\n...\n10. Kali expressed his reluctance to acknowledge Debbie's feelings.\n11. Debbie contemplated taking a South Carolina Legion or the Atlanta Gate City Guard.\n12. Debbie disliked the opinion",
+      "gold_answers": [
+        "Debbie listened to the music and sang along with the crowd."
+      ],
+      "retrieved_chunk_ids": [
+        181,
+        439,
+        178,
+        237,
+        203
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 14,
+      "question": "These are the events that have already occurred:\n\n...\n11. Debbie contemplated taking a South Carolina Legion or the Atlanta Gate City Guard.\n12. Debbie disliked the opinions of others regarding her child, Catrina.\n13. Debbie observed the cr",
+      "gold_answers": [
+        "Melly commented on the militia's abilities and their need to fight."
+      ],
+      "retrieved_chunk_ids": [
+        237,
+        181,
+        387,
+        276,
+        178
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 15,
+      "question": "These are the events that have already occurred:\n\n...\n12. Debbie disliked the opinions of others regarding her child, Catrina.\n13. Debbie observed the crowded sidewalks filled with men in uniform and various vehicles.\n14. Debbie observed th",
+      "gold_answers": [
+        "Debbie expressed that she thought the man was horrid."
+      ],
+      "retrieved_chunk_ids": [
+        237,
+        402,
+        408,
+        747,
+        181
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 16,
+      "question": "These are the events that have already occurred:\n\n...\n13. Debbie observed the crowded sidewalks filled with men in uniform and various vehicles.\n14. Debbie observed that the young ladies could engage with convalescent men without restrictio",
+      "gold_answers": [
+        "Debbie remained seated with her chin in her hands, wide-eyed with astonishment."
+      ],
+      "retrieved_chunk_ids": [
+        268,
+        237,
+        433,
+        767,
+        236
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 17,
+      "question": "These are the events that have already occurred:\n\n...\n14. Debbie observed that the young ladies could engage with convalescent men without restrictions.\n15. Debbie listened to the music and sang along with the crowd.\n16. Melly commented on ",
+      "gold_answers": [
+        "Edgar slipped a ring onto Debbie's finger."
+      ],
+      "retrieved_chunk_ids": [
+        237,
+        260,
+        261,
+        1027,
+        268
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 18,
+      "question": "These are the events that have already occurred:\n\n...\n15. Debbie listened to the music and sang along with the crowd.\n16. Melly commented on the militia's abilities and their need to fight.\n17. Debbie expressed that she thought the man was ",
+      "gold_answers": [
+        "Captain Yelena assisted in bringing Marianne inside after he got drunk."
+      ],
+      "retrieved_chunk_ids": [
+        1121,
+        286,
+        272,
+        1122,
+        277
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 19,
+      "question": "These are the events that have already occurred:\n\n...\n16. Melly commented on the militia's abilities and their need to fight.\n17. Debbie expressed that she thought the man was horrid.\n18. Debbie remained seated with her chin in her hands, w",
+      "gold_answers": [
+        "Debbie attended parties and danced, behaving as she did before her marriage."
+      ],
+      "retrieved_chunk_ids": [
+        94,
+        1140,
+        287,
+        643,
+        338
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 20,
+      "question": "These are the events that have already occurred:\n\n...\n17. Debbie expressed that she thought the man was horrid.\n18. Debbie remained seated with her chin in her hands, wide-eyed with astonishment.\n19. Edgar slipped a ring onto Debbie's finge",
+      "gold_answers": [
+        "Mrs. Merriwether expressed outrage at Madelyn's comments about the Confederacy."
+      ],
+      "retrieved_chunk_ids": [
+        268,
+        323,
+        1175,
+        1204,
+        1140
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 21,
+      "question": "These are the events that have already occurred:\n\n...\n18. Debbie remained seated with her chin in her hands, wide-eyed with astonishment.\n19. Edgar slipped a ring onto Debbie's finger.\n20. Captain Yelena assisted in bringing Marianne inside",
+      "gold_answers": [
+        "Madelyn mocked Debbie's mourning attire."
+      ],
+      "retrieved_chunk_ids": [
+        268,
+        260,
+        277,
+        402,
+        261
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 22,
+      "question": "These are the events that have already occurred:\n\n...\n19. Edgar slipped a ring onto Debbie's finger.\n20. Captain Yelena assisted in bringing Marianne inside after he got drunk.\n21. Debbie attended parties and danced, behaving as she did bef",
+      "gold_answers": [
+        "Debbie sat in the carriage with Edgar and Miss Marla, waiting for news."
+      ],
+      "retrieved_chunk_ids": [
+        277,
+        323,
+        357,
+        276,
+        304
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 23,
+      "question": "These are the events that have already occurred:\n\n...\n20. Captain Yelena assisted in bringing Marianne inside after he got drunk.\n21. Debbie attended parties and danced, behaving as she did before her marriage.\n22. Mrs. Merriwether expresse",
+      "gold_answers": [
+        "Debbie and Edgar sewed together in the parlor."
+      ],
+      "retrieved_chunk_ids": [
+        304,
+        1130,
+        1140,
+        1052,
+        1125
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 24,
+      "question": "These are the events that have already occurred:\n\n...\n21. Debbie attended parties and danced, behaving as she did before her marriage.\n22. Mrs. Merriwether expressed outrage at Madelyn's comments about the Confederacy.\n23. Madelyn mocked De",
+      "gold_answers": [
+        "Debbie begged Kali to let her go to the train with him."
+      ],
+      "retrieved_chunk_ids": [
+        304,
+        181,
+        357,
+        402,
+        1140
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 25,
+      "question": "These are the events that have already occurred:\n\n...\n22. Mrs. Merriwether expressed outrage at Madelyn's comments about the Confederacy.\n23. Madelyn mocked Debbie's mourning attire.\n24. Debbie sat in the carriage with Edgar and Miss Marla,",
+      "gold_answers": [
+        "Debbie felt happy and content during the two months Kali was away."
+      ],
+      "retrieved_chunk_ids": [
+        304,
+        402,
+        396,
+        181,
+        1052
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 26,
+      "question": "These are the events that have already occurred:\n\n...\n23. Madelyn mocked Debbie's mourning attire.\n24. Debbie sat in the carriage with Edgar and Miss Marla, waiting for news.\n25. Debbie and Edgar sewed together in the parlor.\n26. Debbie beg",
+      "gold_answers": [
+        "Aunt Pitty decided to invite guests for dinner."
+      ],
+      "retrieved_chunk_ids": [
+        403,
+        404,
+        304,
+        451,
+        747
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 27,
+      "question": "These are the events that have already occurred:\n\n...\n24. Debbie sat in the carriage with Edgar and Miss Marla, waiting for news.\n25. Debbie and Edgar sewed together in the parlor.\n26. Debbie begged Kali to let her go to the train with him.",
+      "gold_answers": [
+        "Captain Randall reassured Debbie that there wouldn't be another retreat."
+      ],
+      "retrieved_chunk_ids": [
+        426,
+        425,
+        427,
+        424,
+        362
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 28,
+      "question": "These are the events that have already occurred:\n\n...\n25. Debbie and Edgar sewed together in the parlor.\n26. Debbie begged Kali to let her go to the train with him.\n27. Debbie felt happy and content during the two months Kali was away.\n28. ",
+      "gold_answers": [
+        "Debbie held wobbling heads of the wounded men to give them water."
+      ],
+      "retrieved_chunk_ids": [
+        693,
+        369,
+        426,
+        444,
+        500
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 29,
+      "question": "These are the events that have already occurred:\n\n...\n26. Debbie begged Kali to let her go to the train with him.\n27. Debbie felt happy and content during the two months Kali was away.\n28. Aunt Pitty decided to invite guests for dinner.\n29.",
+      "gold_answers": [
+        "Uncle Henry informed Debbie that Kali's father was dead."
+      ],
+      "retrieved_chunk_ids": [
+        1058,
+        461,
+        460,
+        462,
+        1203
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 30,
+      "question": "These are the events that have already occurred:\n\n...\n27. Debbie felt happy and content during the two months Kali was away.\n28. Aunt Pitty decided to invite guests for dinner.\n29. Captain Randall reassured Debbie that there wouldn't be ano",
+      "gold_answers": [
+        "Debbie struggled to close the door after Madelyn left."
+      ],
+      "retrieved_chunk_ids": [
+        444,
+        404,
+        402,
+        1235,
+        747
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 31,
+      "question": "These are the events that have already occurred:\n\n...\n28. Aunt Pitty decided to invite guests for dinner.\n29. Captain Randall reassured Debbie that there wouldn't be another retreat.\n30. Debbie held wobbling heads of the wounded men to give",
+      "gold_answers": [
+        "Debbie sponged Edgar's perspiring body and combed her hair."
+      ],
+      "retrieved_chunk_ids": [
+        491,
+        444,
+        402,
+        460,
+        1131
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 32,
+      "question": "These are the events that have already occurred:\n\n...\n29. Captain Randall reassured Debbie that there wouldn't be another retreat.\n30. Debbie held wobbling heads of the wounded men to give them water.\n31. Uncle Henry informed Debbie that Ka",
+      "gold_answers": [
+        "Debbie shook Dr. Meade's arm urging him to come help Edgar."
+      ],
+      "retrieved_chunk_ids": [
+        491,
+        1131,
+        1125,
+        1401,
+        501
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 33,
+      "question": "These are the events that have already occurred:\n\n...\n30. Debbie held wobbling heads of the wounded men to give them water.\n31. Uncle Henry informed Debbie that Kali's father was dead.\n32. Debbie struggled to close the door after Madelyn le",
+      "gold_answers": [
+        "Debbie realized she had no experience with childbirth."
+      ],
+      "retrieved_chunk_ids": [
+        491,
+        402,
+        444,
+        1356,
+        396
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 34,
+      "question": "These are the events that have already occurred:\n\n...\n31. Uncle Henry informed Debbie that Kali's father was dead.\n32. Debbie struggled to close the door after Madelyn left.\n33. Debbie sponged Edgar's perspiring body and combed her hair.\n34",
+      "gold_answers": [
+        "Debbie lit a lamp in the downstairs hall."
+      ],
+      "retrieved_chunk_ids": [
+        1304,
+        491,
+        95,
+        1140,
+        1234
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 35,
+      "question": "These are the events that have already occurred:\n\n...\n32. Debbie struggled to close the door after Madelyn left.\n33. Debbie sponged Edgar's perspiring body and combed her hair.\n34. Debbie shook Dr. Meade's arm urging him to come help Edgar.",
+      "gold_answers": [
+        "Madelyn suggested leaving Mrs. Abrianna behind."
+      ],
+      "retrieved_chunk_ids": [
+        1125,
+        1123,
+        491,
+        1124,
+        1388
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 36,
+      "question": "These are the events that have already occurred:\n\n...\n33. Debbie sponged Edgar's perspiring body and combed her hair.\n34. Debbie shook Dr. Meade's arm urging him to come help Edgar.\n35. Debbie realized she had no experience with childbirth.",
+      "gold_answers": [
+        "Madelyn turned the horse at right angles."
+      ],
+      "retrieved_chunk_ids": [
+        536,
+        402,
+        491,
+        1125,
+        1123
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 37,
+      "question": "These are the events that have already occurred:\n\n...\n34. Debbie shook Dr. Meade's arm urging him to come help Edgar.\n35. Debbie realized she had no experience with childbirth.\n36. Debbie lit a lamp in the downstairs hall.\n37. Madelyn sugge",
+      "gold_answers": [
+        "Debbie leaned against the horse and cried."
+      ],
+      "retrieved_chunk_ids": [
+        402,
+        1140,
+        1125,
+        1402,
+        530
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 38,
+      "question": "These are the events that have already occurred:\n\n...\n35. Debbie realized she had no experience with childbirth.\n36. Debbie lit a lamp in the downstairs hall.\n37. Madelyn suggested leaving Mrs. Abrianna behind.\n38. Madelyn turned the horse ",
+      "gold_answers": [
+        "Debbie raised a tree limb to Israel when she screamed."
+      ],
+      "retrieved_chunk_ids": [
+        529,
+        554,
+        516,
+        534,
+        536
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 39,
+      "question": "These are the events that have already occurred:\n\n...\n36. Debbie lit a lamp in the downstairs hall.\n37. Madelyn suggested leaving Mrs. Abrianna behind.\n38. Madelyn turned the horse at right angles.\n39. Debbie leaned against the horse and cr",
+      "gold_answers": [
+        "Debbie recalled the corn whisky buried under the oak barrel."
+      ],
+      "retrieved_chunk_ids": [
+        1140,
+        747,
+        565,
+        643,
+        180
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 40,
+      "question": "These are the events that have already occurred:\n\n...\n37. Madelyn suggested leaving Mrs. Abrianna behind.\n38. Madelyn turned the horse at right angles.\n39. Debbie leaned against the horse and cried.\n40. Debbie raised a tree limb to Israel w",
+      "gold_answers": [
+        "Debbie left the dining room without eating."
+      ],
+      "retrieved_chunk_ids": [
+        531,
+        747,
+        534,
+        1304,
+        802
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 41,
+      "question": "These are the events that have already occurred:\n\n...\n38. Madelyn turned the horse at right angles.\n39. Debbie leaned against the horse and cried.\n40. Debbie raised a tree limb to Israel when she screamed.\n41. Debbie recalled the corn whisk",
+      "gold_answers": [
+        "Debbie lay weakly on her face in the dirt."
+      ],
+      "retrieved_chunk_ids": [
+        531,
+        95,
+        1304,
+        534,
+        543
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 42,
+      "question": "These are the events that have already occurred:\n\n...\n39. Debbie leaned against the horse and cried.\n40. Debbie raised a tree limb to Israel when she screamed.\n41. Debbie recalled the corn whisky buried under the oak barrel.\n42. Debbie left",
+      "gold_answers": [
+        "Debbie observed the Yankee in the house."
+      ],
+      "retrieved_chunk_ids": [
+        1140,
+        543,
+        565,
+        747,
+        1304
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 43,
+      "question": "These are the events that have already occurred:\n\n...\n40. Debbie raised a tree limb to Israel when she screamed.\n41. Debbie recalled the corn whisky buried under the oak barrel.\n42. Debbie left the dining room without eating.\n43. Debbie lay",
+      "gold_answers": [
+        "Debbie stated that most of the cotton was ruined and only three bales were left."
+      ],
+      "retrieved_chunk_ids": [
+        565,
+        981,
+        498,
+        1096,
+        586
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 44,
+      "question": "These are the events that have already occurred:\n\n...\n41. Debbie recalled the corn whisky buried under the oak barrel.\n42. Debbie left the dining room without eating.\n43. Debbie lay weakly on her face in the dirt.\n44. Debbie observed the Ya",
+      "gold_answers": [
+        "Debbie sent Danielle back to the house after observing her fatigue."
+      ],
+      "retrieved_chunk_ids": [
+        632,
+        95,
+        686,
+        990,
+        690
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 45,
+      "question": "These are the events that have already occurred:\n\n...\n42. Debbie left the dining room without eating.\n43. Debbie lay weakly on her face in the dirt.\n44. Debbie observed the Yankee in the house.\n45. Debbie stated that most of the cotton was ",
+      "gold_answers": [
+        "Debbie fought against the flames in the kitchen."
+      ],
+      "retrieved_chunk_ids": [
+        747,
+        648,
+        608,
+        621,
+        95
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 46,
+      "question": "These are the events that have already occurred:\n\n...\n43. Debbie lay weakly on her face in the dirt.\n44. Debbie observed the Yankee in the house.\n45. Debbie stated that most of the cotton was ruined and only three bales were left.\n46. Debbi",
+      "gold_answers": [
+        "Barrett mentioned that some houses were still standing in Atlanta."
+      ],
+      "retrieved_chunk_ids": [
+        665,
+        765,
+        852,
+        919,
+        837
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 47,
+      "question": "These are the events that have already occurred:\n\n...\n44. Debbie observed the Yankee in the house.\n45. Debbie stated that most of the cotton was ruined and only three bales were left.\n46. Debbie sent Danielle back to the house after observi",
+      "gold_answers": [
+        "Barrett expressed his condolences to Debbie about her mother."
+      ],
+      "retrieved_chunk_ids": [
+        665,
+        837,
+        858,
+        852,
+        1145
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 48,
+      "question": "These are the events that have already occurred:\n\n...\n45. Debbie stated that most of the cotton was ruined and only three bales were left.\n46. Debbie sent Danielle back to the house after observing her fatigue.\n47. Debbie fought against the",
+      "gold_answers": [
+        "Debbie visited the Fontaine family and discussed farm problems."
+      ],
+      "retrieved_chunk_ids": [
+        681,
+        962,
+        677,
+        676,
+        682
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 49,
+      "question": "These are the events that have already occurred:\n\n...\n46. Debbie sent Danielle back to the house after observing her fatigue.\n47. Debbie fought against the flames in the kitchen.\n48. Barrett mentioned that some houses were still standing in",
+      "gold_answers": [
+        "Uncle Peter scolded Debbie and Melly for not returning home to help Aunt Pitty."
+      ],
+      "retrieved_chunk_ids": [
+        698,
+        699,
+        701,
+        198,
+        326
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 50,
+      "question": "These are the events that have already occurred:\n\n...\n47. Debbie fought against the flames in the kitchen.\n48. Barrett mentioned that some houses were still standing in Atlanta.\n49. Barrett expressed his condolences to Debbie about her moth",
+      "gold_answers": [
+        "Will informed Debbie that the extra tax assessment was three hundred dollars."
+      ],
+      "retrieved_chunk_ids": [
+        722,
+        389,
+        819,
+        976,
+        807
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 51,
+      "question": "These are the events that have already occurred:\n\n...\n48. Barrett mentioned that some houses were still standing in Atlanta.\n49. Barrett expressed his condolences to Debbie about her mother.\n50. Debbie visited the Fontaine family and discus",
+      "gold_answers": [
+        "Debbie observed a new carriage arriving, surprised by its grandeur."
+      ],
+      "retrieved_chunk_ids": [
+        95,
+        837,
+        770,
+        194,
+        722
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 52,
+      "question": "These are the events that have already occurred:\n\n...\n49. Barrett expressed his condolences to Debbie about her mother.\n50. Debbie visited the Fontaine family and discussed farm problems.\n51. Uncle Peter scolded Debbie and Melly for not ret",
+      "gold_answers": [
+        "Debbie dragged a heavy marble-topped table across the floor."
+      ],
+      "retrieved_chunk_ids": [
+        95,
+        754,
+        648,
+        722,
+        161
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 53,
+      "question": "These are the events that have already occurred:\n\n...\n50. Debbie visited the Fontaine family and discussed farm problems.\n51. Uncle Peter scolded Debbie and Melly for not returning home to help Aunt Pitty.\n52. Will informed Debbie that the ",
+      "gold_answers": [
+        "Debbie looked for someone to give them a ride but recognized no one."
+      ],
+      "retrieved_chunk_ids": [
+        763,
+        753,
+        764,
+        722,
+        754
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 54,
+      "question": "These are the events that have already occurred:\n\n...\n51. Uncle Peter scolded Debbie and Melly for not returning home to help Aunt Pitty.\n52. Will informed Debbie that the extra tax assessment was three hundred dollars.\n53. Debbie observed ",
+      "gold_answers": [
+        "Debbie expressed impatience to bring the conversation around to Madelyn."
+      ],
+      "retrieved_chunk_ids": [
+        754,
+        635,
+        722,
+        95,
+        753
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 55,
+      "question": "These are the events that have already occurred:\n\n...\n52. Will informed Debbie that the extra tax assessment was three hundred dollars.\n53. Debbie observed a new carriage arriving, surprised by its grandeur.\n54. Debbie dragged a heavy marbl",
+      "gold_answers": [
+        "Madelyn kissed Debbie on the cheek."
+      ],
+      "retrieved_chunk_ids": [
+        754,
+        837,
+        95,
+        753,
+        746
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 56,
+      "question": "These are the events that have already occurred:\n\n...\n53. Debbie observed a new carriage arriving, surprised by its grandeur.\n54. Debbie dragged a heavy marble-topped table across the floor.\n55. Debbie looked for someone to give them a ride",
+      "gold_answers": [
+        "Madelyn poured brandy into Debbie's mouth to help her."
+      ],
+      "retrieved_chunk_ids": [
+        135,
+        754,
+        95,
+        1111,
+        837
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 57,
+      "question": "These are the events that have already occurred:\n\n...\n54. Debbie dragged a heavy marble-topped table across the floor.\n55. Debbie looked for someone to give them a ride but recognized no one.\n56. Debbie expressed impatience to bring the con",
+      "gold_answers": [
+        "Sue expressed concern for Debbie's safety while she was out with Barrett."
+      ],
+      "retrieved_chunk_ids": [
+        94,
+        829,
+        754,
+        822,
+        826
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 58,
+      "question": "These are the events that have already occurred:\n\n...\n55. Debbie looked for someone to give them a ride but recognized no one.\n56. Debbie expressed impatience to bring the conversation around to Madelyn.\n57. Madelyn kissed Debbie on the che",
+      "gold_answers": [
+        "Debbie watched the dancers from her seat in the alcove."
+      ],
+      "retrieved_chunk_ids": [
+        837,
+        95,
+        1131,
+        747,
+        466
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 59,
+      "question": "These are the events that have already occurred:\n\n...\n56. Debbie expressed impatience to bring the conversation around to Madelyn.\n57. Madelyn kissed Debbie on the cheek.\n58. Madelyn poured brandy into Debbie's mouth to help her.\n59. Sue ex",
+      "gold_answers": [
+        "Barrett gave Debbie three hundred dollars to prevent her family from being evicted."
+      ],
+      "retrieved_chunk_ids": [
+        850,
+        722,
+        819,
+        389,
+        803
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 60,
+      "question": "These are the events that have already occurred:\n\n...\n57. Madelyn kissed Debbie on the cheek.\n58. Madelyn poured brandy into Debbie's mouth to help her.\n59. Sue expressed concern for Debbie's safety while she was out with Barrett.\n60. Debbi",
+      "gold_answers": [
+        "Debbie expressed anger towards Madelyn for keeping the Confederate money."
+      ],
+      "retrieved_chunk_ids": [
+        837,
+        747,
+        95,
+        850,
+        1166
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 61,
+      "question": "These are the events that have already occurred:\n\n...\n58. Madelyn poured brandy into Debbie's mouth to help her.\n59. Sue expressed concern for Debbie's safety while she was out with Barrett.\n60. Debbie watched the dancers from her seat in t",
+      "gold_answers": [
+        "Barrett expressed discontent over Debbie's decision to buy the sawmill."
+      ],
+      "retrieved_chunk_ids": [
+        837,
+        850,
+        873,
+        891,
+        826
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 62,
+      "question": "These are the events that have already occurred:\n\n...\n59. Sue expressed concern for Debbie's safety while she was out with Barrett.\n60. Debbie watched the dancers from her seat in the alcove.\n61. Barrett gave Debbie three hundred dollars to",
+      "gold_answers": [
+        "Tony expressed his anger about the Yankees and their treatment of Southerners to Debbie."
+      ],
+      "retrieved_chunk_ids": [
+        900,
+        898,
+        1118,
+        837,
+        894
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 63,
+      "question": "These are the events that have already occurred:\n\n...\n60. Debbie watched the dancers from her seat in the alcove.\n61. Barrett gave Debbie three hundred dollars to prevent her family from being evicted.\n62. Debbie expressed anger towards Mad",
+      "gold_answers": [
+        "Debbie cringed at the thought of Lucian's reaction to her dishonest business practices."
+      ],
+      "retrieved_chunk_ids": [
+        95,
+        837,
+        181,
+        113,
+        305
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 64,
+      "question": "These are the events that have already occurred:\n\n...\n61. Barrett gave Debbie three hundred dollars to prevent her family from being evicted.\n62. Debbie expressed anger towards Madelyn for keeping the Confederate money.\n63. Barrett expresse",
+      "gold_answers": [
+        "Debbie reflected on the loyalty of her servants compared to the Yankees."
+      ],
+      "retrieved_chunk_ids": [
+        850,
+        821,
+        95,
+        873,
+        1076
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 65,
+      "question": "These are the events that have already occurred:\n\n...\n62. Debbie expressed anger towards Madelyn for keeping the Confederate money.\n63. Barrett expressed discontent over Debbie's decision to buy the sawmill.\n64. Tony expressed his anger abo",
+      "gold_answers": [
+        "Debbie arrived in Jonesboro after receiving news of Marianne's death."
+      ],
+      "retrieved_chunk_ids": [
+        181,
+        883,
+        1172,
+        1179,
+        1099
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 66,
+      "question": "These are the events that have already occurred:\n\n...\n63. Barrett expressed discontent over Debbie's decision to buy the sawmill.\n64. Tony expressed his anger about the Yankees and their treatment of Southerners to Debbie.\n65. Debbie cringe",
+      "gold_answers": [
+        "Debbie reflected on her father's positive memories."
+      ],
+      "retrieved_chunk_ids": [
+        95,
+        181,
+        44,
+        837,
+        49
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 67,
+      "question": "These are the events that have already occurred:\n\n...\n64. Tony expressed his anger about the Yankees and their treatment of Southerners to Debbie.\n65. Debbie cringed at the thought of Lucian's reaction to her dishonest business practices.\n6",
+      "gold_answers": [
+        "Debbie felt comforted by Kali's voice during the prayer."
+      ],
+      "retrieved_chunk_ids": [
+        95,
+        181,
+        837,
+        94,
+        989
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 68,
+      "question": "These are the events that have already occurred:\n\n...\n65. Debbie cringed at the thought of Lucian's reaction to her dishonest business practices.\n66. Debbie reflected on the loyalty of her servants compared to the Yankees.\n67. Debbie arrive",
+      "gold_answers": [
+        "Debbie told Jasmin she had a present for him."
+      ],
+      "retrieved_chunk_ids": [
+        95,
+        94,
+        564,
+        86,
+        1007
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 69,
+      "question": "These are the events that have already occurred:\n\n...\n66. Debbie reflected on the loyalty of her servants compared to the Yankees.\n67. Debbie arrived in Jonesboro after receiving news of Marianne's death.\n68. Debbie reflected on her father'",
+      "gold_answers": [
+        "Edgar was made secretary of both organizations after the ladies embraced her."
+      ],
+      "retrieved_chunk_ids": [
+        1029,
+        1031,
+        1018,
+        1026,
+        735
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 70,
+      "question": "These are the events that have already occurred:\n\n...\n67. Debbie arrived in Jonesboro after receiving news of Marianne's death.\n68. Debbie reflected on her father's positive memories.\n69. Debbie felt comforted by Kali's voice during the pra",
+      "gold_answers": [
+        "Edgar expressed concern for Debbie's safety and begged her not to risk herself."
+      ],
+      "retrieved_chunk_ids": [
+        1029,
+        95,
+        1027,
+        1105,
+        294
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 71,
+      "question": "These are the events that have already occurred:\n\n...\n68. Debbie reflected on her father's positive memories.\n69. Debbie felt comforted by Kali's voice during the prayer.\n70. Debbie told Jasmin she had a present for him.\n71. Edgar was made ",
+      "gold_answers": [
+        "Uncle Henry suggested Archie should drive Debbie home due to rising tensions."
+      ],
+      "retrieved_chunk_ids": [
+        1061,
+        1058,
+        1056,
+        461,
+        1203
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 72,
+      "question": "These are the events that have already occurred:\n\n...\n69. Debbie felt comforted by Kali's voice during the prayer.\n70. Debbie told Jasmin she had a present for him.\n71. Edgar was made secretary of both organizations after the ladies embrace",
+      "gold_answers": [
+        "Debbie reacted with shock to the news that Madelyn had a ward."
+      ],
+      "retrieved_chunk_ids": [
+        1029,
+        402,
+        95,
+        94,
+        1027
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 73,
+      "question": "These are the events that have already occurred:\n\n...\n70. Debbie told Jasmin she had a present for him.\n71. Edgar was made secretary of both organizations after the ladies embraced her.\n72. Edgar expressed concern for Debbie's safety and be",
+      "gold_answers": [
+        "Debbie pulled the lap robe high under her arms as she drove."
+      ],
+      "retrieved_chunk_ids": [
+        1029,
+        1131,
+        528,
+        1027,
+        951
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 74,
+      "question": "These are the events that have already occurred:\n\n...\n71. Edgar was made secretary of both organizations after the ladies embraced her.\n72. Edgar expressed concern for Debbie's safety and begged her not to risk herself.\n73. Uncle Henry sugg",
+      "gold_answers": [
+        "Debbie inspected the food being prepared for the convicts."
+      ],
+      "retrieved_chunk_ids": [
+        1029,
+        95,
+        1095,
+        1061,
+        1056
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 75,
+      "question": "These are the events that have already occurred:\n\n...\n72. Edgar expressed concern for Debbie's safety and begged her not to risk herself.\n73. Uncle Henry suggested Archie should drive Debbie home due to rising tensions.\n74. Debbie reacted w",
+      "gold_answers": [
+        "Debbie expressed her anger towards Barrett's absence."
+      ],
+      "retrieved_chunk_ids": [
+        888,
+        1084,
+        900,
+        1051,
+        883
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 76,
+      "question": "These are the events that have already occurred:\n\n...\n73. Uncle Henry suggested Archie should drive Debbie home due to rising tensions.\n74. Debbie reacted with shock to the news that Madelyn had a ward.\n75. Debbie pulled the lap robe high u",
+      "gold_answers": [
+        "Captain Jaffery ordered the arrest of Kali and Hugh Elsing."
+      ],
+      "retrieved_chunk_ids": [
+        1119,
+        1133,
+        1134,
+        1124,
+        1121
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 77,
+      "question": "These are the events that have already occurred:\n\n...\n74. Debbie reacted with shock to the news that Madelyn had a ward.\n75. Debbie pulled the lap robe high under her arms as she drove.\n76. Debbie inspected the food being prepared for the c",
+      "gold_answers": [
+        "Debbie listened to the wind hurling itself out of the night."
+      ],
+      "retrieved_chunk_ids": [
+        1124,
+        402,
+        160,
+        1133,
+        1119
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 78,
+      "question": "These are the events that have already occurred:\n\n...\n75. Debbie pulled the lap robe high under her arms as she drove.\n76. Debbie inspected the food being prepared for the convicts.\n77. Debbie expressed her anger towards Barrett's absence.\n",
+      "gold_answers": [
+        "Debbie confessed to Madelyn that she shouldn't have married Barrett."
+      ],
+      "retrieved_chunk_ids": [
+        1119,
+        1095,
+        1084,
+        402,
+        1124
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 79,
+      "question": "These are the events that have already occurred:\n\n...\n76. Debbie inspected the food being prepared for the convicts.\n77. Debbie expressed her anger towards Barrett's absence.\n78. Captain Jaffery ordered the arrest of Kali and Hugh Elsing.\n7",
+      "gold_answers": [
+        "Madelyn left to finish packing for his trip."
+      ],
+      "retrieved_chunk_ids": [
+        1119,
+        747,
+        1133,
+        1095,
+        1169
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 80,
+      "question": "These are the events that have already occurred:\n\n...\n77. Debbie expressed her anger towards Barrett's absence.\n78. Captain Jaffery ordered the arrest of Kali and Hugh Elsing.\n79. Debbie listened to the wind hurling itself out of the night.",
+      "gold_answers": [
+        "Madelyn remarked on the public's ability to forgive almost everything except those who mind their own business."
+      ],
+      "retrieved_chunk_ids": [
+        1119,
+        1244,
+        1133,
+        1179,
+        872
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 81,
+      "question": "These are the events that have already occurred:\n\n...\n78. Captain Jaffery ordered the arrest of Kali and Hugh Elsing.\n79. Debbie listened to the wind hurling itself out of the night.\n80. Debbie confessed to Madelyn that she shouldn't have m",
+      "gold_answers": [
+        "Debbie expressed her desire to find safety and escape hunger."
+      ],
+      "retrieved_chunk_ids": [
+        1133,
+        1119,
+        1124,
+        402,
+        1169
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 82,
+      "question": "These are the events that have already occurred:\n\n...\n79. Debbie listened to the wind hurling itself out of the night.\n80. Debbie confessed to Madelyn that she shouldn't have married Barrett.\n81. Madelyn left to finish packing for his trip.",
+      "gold_answers": [
+        "Madelyn suggested changing the name of 'Nathanael's General Store' to 'Caveat Emptorium.'"
+      ],
+      "retrieved_chunk_ids": [
+        1208,
+        1209,
+        1356,
+        837,
+        1179
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 83,
+      "question": "These are the events that have already occurred:\n\n...\n80. Debbie confessed to Madelyn that she shouldn't have married Barrett.\n81. Madelyn left to finish packing for his trip.\n82. Madelyn remarked on the public's ability to forgive almost e",
+      "gold_answers": [
+        "Debbie filled her house with guests despite her contempt for them."
+      ],
+      "retrieved_chunk_ids": [
+        1208,
+        1209,
+        837,
+        934,
+        1372
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 84,
+      "question": "These are the events that have already occurred:\n\n...\n81. Madelyn left to finish packing for his trip.\n82. Madelyn remarked on the public's ability to forgive almost everything except those who mind their own business.\n83. Debbie expressed ",
+      "gold_answers": [
+        "Madelyn encouraged Sue to have more drinks."
+      ],
+      "retrieved_chunk_ids": [
+        1209,
+        1208,
+        1179,
+        1394,
+        1235
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 85,
+      "question": "These are the events that have already occurred:\n\n...\n82. Madelyn remarked on the public's ability to forgive almost everything except those who mind their own business.\n83. Debbie expressed her desire to find safety and escape hunger.\n84. ",
+      "gold_answers": [
+        "Debbie felt foolish for hoping to amicably settle the matter with Madelyn."
+      ],
+      "retrieved_chunk_ids": [
+        1209,
+        1208,
+        1179,
+        402,
+        1163
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 86,
+      "question": "These are the events that have already occurred:\n\n...\n83. Debbie expressed her desire to find safety and escape hunger.\n84. Madelyn suggested changing the name of 'Nathanael's General Store' to 'Caveat Emptorium.'\n85. Debbie filled her hous",
+      "gold_answers": [
+        "Madelyn contributed to the fund for the repairs of the Episcopal Church."
+      ],
+      "retrieved_chunk_ids": [
+        1209,
+        1208,
+        1260,
+        402,
+        1335
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 87,
+      "question": "These are the events that have already occurred:\n\n...\n84. Madelyn suggested changing the name of 'Nathanael's General Store' to 'Caveat Emptorium.'\n85. Debbie filled her house with guests despite her contempt for them.\n86. Madelyn encourage",
+      "gold_answers": [
+        "Debbie met Kali at the lumber yard and discussed the surprise party."
+      ],
+      "retrieved_chunk_ids": [
+        1209,
+        1208,
+        1276,
+        402,
+        1246
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 88,
+      "question": "These are the events that have already occurred:\n\n...\n85. Debbie filled her house with guests despite her contempt for them.\n86. Madelyn encouraged Sue to have more drinks.\n87. Debbie felt foolish for hoping to amicably settle the matter wi",
+      "gold_answers": [
+        "Debbie remembered Kalin's attempts to dissuade Archie from telling Madelyn."
+      ],
+      "retrieved_chunk_ids": [
+        1290,
+        1288,
+        1127,
+        1124,
+        1111
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 89,
+      "question": "These are the events that have already occurred:\n\n...\n86. Madelyn encouraged Sue to have more drinks.\n87. Debbie felt foolish for hoping to amicably settle the matter with Madelyn.\n88. Madelyn contributed to the fund for the repairs of the ",
+      "gold_answers": [
+        "Madelyn commanded Debbie to join him in the dining room."
+      ],
+      "retrieved_chunk_ids": [
+        1260,
+        402,
+        1235,
+        1290,
+        1322
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 90,
+      "question": "These are the events that have already occurred:\n\n...\n87. Debbie felt foolish for hoping to amicably settle the matter with Madelyn.\n88. Madelyn contributed to the fund for the repairs of the Episcopal Church.\n89. Debbie met Kali at the lum",
+      "gold_answers": [
+        "Debbie reflected on her feelings towards Madelyn after the night before."
+      ],
+      "retrieved_chunk_ids": [
+        402,
+        747,
+        1260,
+        1391,
+        748
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 91,
+      "question": "These are the events that have already occurred:\n\n...\n88. Madelyn contributed to the fund for the repairs of the Episcopal Church.\n89. Debbie met Kali at the lumber yard and discussed the surprise party.\n90. Debbie remembered Kalin's attemp",
+      "gold_answers": [
+        "Edgar expressed anger at the rumors about Debbie."
+      ],
+      "retrieved_chunk_ids": [
+        1288,
+        1290,
+        1140,
+        402,
+        1260
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 92,
+      "question": "These are the events that have already occurred:\n\n...\n89. Debbie met Kali at the lumber yard and discussed the surprise party.\n90. Debbie remembered Kalin's attempts to dissuade Archie from telling Madelyn.\n91. Madelyn commanded Debbie to j",
+      "gold_answers": [
+        "Debbie felt anger towards Aunt Pauline's judgment about her business activities."
+      ],
+      "retrieved_chunk_ids": [
+        1334,
+        1333,
+        1335,
+        192,
+        1212
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 93,
+      "question": "These are the events that have already occurred:\n\n...\n90. Debbie remembered Kalin's attempts to dissuade Archie from telling Madelyn.\n91. Madelyn commanded Debbie to join him in the dining room.\n92. Debbie reflected on her feelings towards ",
+      "gold_answers": [
+        "Edgar sat on the porch, mending socks, when Madelyn arrived."
+      ],
+      "retrieved_chunk_ids": [
+        402,
+        1122,
+        1290,
+        527,
+        747
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 94,
+      "question": "These are the events that have already occurred:\n\n...\n91. Madelyn commanded Debbie to join him in the dining room.\n92. Debbie reflected on her feelings towards Madelyn after the night before.\n93. Edgar expressed anger at the rumors about De",
+      "gold_answers": [
+        "Debbie felt bereft after selling the mills."
+      ],
+      "retrieved_chunk_ids": [
+        1334,
+        747,
+        748,
+        1333,
+        44
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 95,
+      "question": "These are the events that have already occurred:\n\n...\n92. Debbie reflected on her feelings towards Madelyn after the night before.\n93. Edgar expressed anger at the rumors about Debbie.\n94. Debbie felt anger towards Aunt Pauline's judgment a",
+      "gold_answers": [
+        "Madelyn bought a Shetland pony named Mr. Yelena for Dara."
+      ],
+      "retrieved_chunk_ids": [
+        1375,
+        1241,
+        1240,
+        1377,
+        1333
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 96,
+      "question": "These are the events that have already occurred:\n\n...\n93. Edgar expressed anger at the rumors about Debbie.\n94. Debbie felt anger towards Aunt Pauline's judgment about her business activities.\n95. Edgar sat on the porch, mending socks, when",
+      "gold_answers": [
+        "Melly went up the stairs swiftly with Sue panting behind her."
+      ],
+      "retrieved_chunk_ids": [
+        1388,
+        1233,
+        1380,
+        1375,
+        1350
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 97,
+      "question": "These are the events that have already occurred:\n\n...\n94. Debbie felt anger towards Aunt Pauline's judgment about her business activities.\n95. Edgar sat on the porch, mending socks, when Madelyn arrived.\n96. Debbie felt bereft after selling",
+      "gold_answers": [
+        "Madelyn assisted Debbie into the carriage."
+      ],
+      "retrieved_chunk_ids": [
+        1375,
+        1335,
+        396,
+        1350,
+        1388
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 98,
+      "question": "These are the events that have already occurred:\n\n...\n95. Edgar sat on the porch, mending socks, when Madelyn arrived.\n96. Debbie felt bereft after selling the mills.\n97. Madelyn bought a Shetland pony named Mr. Yelena for Dara.\n98. Melly w",
+      "gold_answers": [
+        "Kali looked at Edgar's mended gloves."
+      ],
+      "retrieved_chunk_ids": [
+        402,
+        1375,
+        1140,
+        1350,
+        396
+      ],
+      "hit": false,
+      "rank": null
+    },
+    {
+      "sample_idx": 2,
+      "question_idx": 99,
+      "question": "These are the events that have already occurred:\n\n...\n96. Debbie felt bereft after selling the mills.\n97. Madelyn bought a Shetland pony named Mr. Yelena for Dara.\n98. Melly went up the stairs swiftly with Sue panting behind her.\n99. Madely",
+      "gold_answers": [
+        "Debbie leaned against the porch to prepare to cry."
+      ],
+      "retrieved_chunk_ids": [
+        1388,
+        1375,
+        747,
+        1407,
+        1408
+      ],
+      "hit": false,
+      "rank": null
+    }
+  ],
+  "note": "Retrieval-only proxy over official MemoryAgentBench data; not an official leaderboard score."
+}

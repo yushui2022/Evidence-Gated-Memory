@@ -6,7 +6,7 @@
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="PyPI" src="https://img.shields.io/pypi/v/evidence-gated-memory?color=0B1220&label=pypi"></a>
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="Python" src="https://img.shields.io/pypi/pyversions/evidence-gated-memory?color=0B1220"></a>
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-0B1220"></a>
-  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-133%20passing-0F9F6E"></a>
+  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-134%20passing-0F9F6E"></a>
   <a href="#benchmarks"><img alt="Status" src="https://img.shields.io/badge/status-alpha-E7B549"></a>
 </p>
 
@@ -400,7 +400,24 @@ python -m pytest tests/test_benchmarks.py -q
 
 **Result: 10/10 attacks blocked.** These are not "EGM scores 1.00 on its own surface." They are "we tried 10 ways to slip something past the gate; the gate held every time."
 
-### 2. Correctness probes — product-surface validation
+### 2. Scenario probes — end-to-end domain workflows
+
+Three refund-domain scenarios exercise the full EGM loop. They verify the gate holds at every step, evidence is required before conclusions, and context is clean and drillable.
+
+```bash
+python benchmarks/scenario_probes.py                # run directly
+python benchmarks/run_local.py --scenarios-only     # via runner
+```
+
+| Scenario | What it exercises | Key metrics |
+|---|---|---|
+| Full refund lifecycle (3 orders) | eligibility → rejection → evidence → acceptance → completion → transition → context → revoke cascade | 9/9 thresholds: every gate fires, every fact is recallable, cascade works |
+| Multi-order concurrency (20 workflows) | Isolated task graphs, no cross-contamination of facts or context | Anchor isolation, fact-to-node binding, context boundary — all hold |
+| Partial-evidence rejection loop | try → reject → fetch → retry → accept, the canonical agent loop | 5 rounds, 3 rejections (all actionable), 2 acceptances after full evidence |
+
+**Result: 3/3 scenarios pass at every threshold.** These are the enterprise workflows EGM was built for — and they verify that rejection is never silent, evidence is never optional, and context never bleeds across workflows.
+
+### 3. Correctness probes — product-surface validation
 
 Four deterministic probes verify the happy-path core promises hold:
 
@@ -413,7 +430,7 @@ Four deterministic probes verify the happy-path core promises hold:
 
 A score below 1.00 on any of these **is a regression bug**. They are correctness guards, not competitive metrics.
 
-### 3. Retrieval proxy over MemoryAgentBench (ICLR 2026)
+### 4. Retrieval proxy over MemoryAgentBench (ICLR 2026)
 
 We run EGM's local FTS retrieval against official [MemoryAgentBench](https://github.com/HUST-AI-HYZ/MemoryAgentBench) data as a **retrieval-only proxy**. This is not a leaderboard submission — it measures how well EGM's current retrieval surface maps onto a published benchmark.
 
@@ -433,7 +450,7 @@ The Conflict Resolution result is the most representative: 800 questions over ev
 python benchmarks/official/memory_agent_bench.py path/to/Conflict_Resolution.parquet --top-k 5
 ```
 
-### 4. Agent benchmark integration (tau-bench / τ²-bench)
+### 5. Agent benchmark integration (tau-bench / τ²-bench)
 
 The harness runs and model routing have been validated (DeepSeek + LiteLLM, retail and mock domains). **EGM has not yet been integrated as the agent's memory layer for an A/B comparison.** This is the next major benchmark milestone — running the same tau/tau2 tasks with and without EGM, measuring pass rate, false-done rate, and evidence coverage. When those numbers exist they will be reported here.
 

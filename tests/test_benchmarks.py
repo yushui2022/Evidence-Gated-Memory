@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from benchmarks.adversarial_probes import run_all_adversarial
 from benchmarks.local_benchmarks import run_all_benchmarks
+from benchmarks.scenario_probes import run_all_scenarios
 
 
 def test_local_benchmark_suite_passes(tmp_path) -> None:
@@ -22,6 +23,31 @@ def test_local_benchmark_suite_passes(tmp_path) -> None:
     assert by_name["longmemeval_s_hard_anchor"]["metrics"]["evidence_source_coverage"] == 1.0
     assert by_name["beam_lite_hard_anchor_pressure"]["metrics"]["target_source_coverage"] == 1.0
     assert by_name["false_done_gate_benchmark"]["metrics"]["actionable_rejection_rate"] == 1.0
+
+
+def test_scenario_probes_all_pass(tmp_path) -> None:
+    result = run_all_scenarios(tmp_path / "scenarios")
+
+    assert result["passed"]
+    names = {s["name"] for s in result["scenarios"]}
+    assert names == {
+        "refund_full_lifecycle",
+        "refund_multi_order_concurrency",
+        "refund_partial_evidence_rejection_loop",
+    }
+
+    by_name = {s["name"]: s for s in result["scenarios"]}
+    lifecycle = by_name["refund_full_lifecycle"]
+    assert lifecycle["metrics"]["premature_eligibility_rejection_rate"] == 1.0
+    assert lifecycle["metrics"]["cascade_on_revoke"] == 1.0
+
+    concurrency = by_name["refund_multi_order_concurrency"]
+    assert concurrency["metrics"]["no_cross_contamination"] == 1.0
+
+    rejection = by_name["refund_partial_evidence_rejection_loop"]
+    assert rejection["metrics"]["actionable_rejection_rate"] == 1.0
+    assert rejection["metrics"]["rejection_rounds"] == 3
+    assert rejection["metrics"]["acceptance_rounds"] == 2
 
 
 def test_adversarial_probes_block_all_attacks(tmp_path) -> None:
