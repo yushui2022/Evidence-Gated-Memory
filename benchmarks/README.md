@@ -1,0 +1,44 @@
+# EGM Local Benchmarks
+
+These benchmarks are deterministic local probes for Evidence-Gated Memory. They
+are **not official leaderboard runs** and should not be reported as LongMemEval,
+LoCoMo, or BEAM scores.
+
+The suite maps well-known memory benchmark shapes onto EGM's product surface:
+
+- `longmemeval_s_hard_anchor` checks exact hard-anchor recall, evidence source
+  coverage, and unsupported-query abstention. This is aligned with the
+  LongMemEval / LongMemEval-S family of long-term-memory tasks.
+- `locomo_style_semantic_pyramid` checks the manual L0/L1/L2/L3 path: promoted
+  memories are recallable, source ids are shown, and raw L0 dialogue stays out
+  of prompt context. This is a narrow LoCoMo-style diagnostic, not an open
+  dialogue leaderboard run.
+- `beam_lite_hard_anchor_pressure` seeds many hard-anchor workflows and verifies
+  bounded context, TaskGraph presence, and drill-down source coverage under
+  synthetic pressure.
+- `false_done_gate_benchmark` is EGM-specific: unsupported completion claims and
+  DONE transitions must be rejected with actionable guidance, then accepted once
+  fresh evidence is attached.
+
+Reference task families:
+
+- LongMemEval: https://arxiv.org/abs/2410.10813
+- LoCoMo: https://aclanthology.org/2024.acl-long.747/
+
+Run from the repository root:
+
+```bash
+python benchmarks/run_local.py
+python benchmarks/run_local.py --json
+```
+
+CI coverage:
+
+```bash
+python -m pytest tests/test_benchmarks.py -q
+```
+
+The benchmark suite intentionally uses no external model or hosted dataset. That
+keeps it fast enough for pull requests while still checking the behavior that
+matters for EGM's target market: hard anchors, source coverage, bounded context,
+gate rejection, and false-completion resistance.

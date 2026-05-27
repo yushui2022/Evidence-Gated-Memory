@@ -393,7 +393,26 @@ egm ref .egm ref_abc123                   # drill down to raw evidence
 
 ## Benchmarks
 
-Measured on the predecessor `agent_memory_core` over continuous long-horizon sessions:
+EGM now has a deterministic local benchmark suite under `benchmarks/`. These are
+not official leaderboard submissions; they are CI-friendly probes that map
+public memory-benchmark shapes onto EGM's hard-anchor, evidence-gated surface.
+
+```bash
+python benchmarks/run_local.py
+python benchmarks/run_local.py --json
+python -m pytest tests/test_benchmarks.py -q
+```
+
+Current local probes:
+
+- `longmemeval_s_hard_anchor`: hard-anchor recall, evidence source coverage, and unsupported-query abstention.
+- `locomo_style_semantic_pyramid`: manual L0/L1/L2/L3 recall with raw L0 exclusion.
+- `beam_lite_hard_anchor_pressure`: bounded context and drill-down source coverage under synthetic hard-anchor pressure.
+- `false_done_gate_benchmark`: false-completion claims and DONE transitions must be rejected with actionable feedback until fresh evidence is attached.
+
+See [benchmarks/README.md](benchmarks/README.md) for scope and interpretation.
+
+Historical signal from the predecessor `agent_memory_core` over continuous long-horizon sessions:
 
 | Benchmark | Signal | Result |
 |---|---|---|
