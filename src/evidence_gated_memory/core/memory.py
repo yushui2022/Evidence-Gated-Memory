@@ -284,7 +284,11 @@ class EvidenceGatedMemory:
         expired_after_seconds: Optional[int] = None,
     ) -> Evidence:
         type_def = self.schema.evidence_type(evidence_type)
-        resolved_risk = risk_level or (type_def.risk if type_def else "medium")
+        if type_def is None:
+            raise ValueError(
+                f"unknown evidence_type '{evidence_type}'; declare it in the domain schema"
+            )
+        resolved_risk = risk_level or type_def.risk
         resolved_metadata = dict(metadata or {})
         entities = extract_entities(content, resolved_metadata, self.schema, self.entity_fallback)
         if entities:
@@ -829,6 +833,10 @@ class EvidenceGatedMemory:
         depends_on: Optional[list[Union[str, Fact]]] = None,
         metadata: Optional[dict[str, Any]] = None,
     ) -> Claim:
+        if self.schema.claim_type(claim_type) is None:
+            raise ValueError(
+                f"unknown claim_type '{claim_type}'; declare it in the domain schema"
+            )
         evidence_refs = [e.id if isinstance(e, Evidence) else e for e in (evidence or [])]
         dep_ids = [f.id if isinstance(f, Fact) else f for f in (depends_on or [])]
         claim = Claim(

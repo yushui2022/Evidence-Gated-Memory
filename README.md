@@ -376,11 +376,11 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 |---|---|---|---|
 | 11 | ✅ | Fix wheel packaging (YAML schemas) | shipped |
 | 12 | ✅ | FTS query escape | shipped |
-| 13 | ⬜ | Strict schema: reject unknown evidence/claim types outright | small, can be done anytime |
-| 14 | ⬜ | `source_system` allowlist gate | depends on schema field — small |
+| 13 | ✅ | Strict schema: reject unknown evidence/claim types outright | shipped |
+| 14 | ✅ | `source_system` allowlist gate | shipped |
 | 15 | ⬜ | Rewrite derived-fact semantics | needs design pass first |
 | 16 | 🟡 | Expired semantics: critical-field plan C | half-implemented, needs decision |
-| 17 | ⬜ | `commit_fact` must require a `GateResult` | API tightening |
+| 17 | ✅ | `commit_fact` must require a `GateResult` | shipped |
 | 18 | ⬜ | README ↔ API alignment | do **after** M1 lands or it'll re-rot |
 | 19 | 🟡 | Regression tests | grows alongside every task |
 
@@ -432,7 +432,7 @@ The principle we converged on is **"build trust at the base before growing up"**
 ✅ #29  long-term semantic pyramid foundation
 ```
 
-M1, M2 foundation, and M3 are now closed. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The v0.1 hardening items (#13–#19) are now the best next coding targets.
+M1, M2 foundation, and M3 are now closed. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The remaining v0.1 hardening items are now #15, #16, #18, and the ongoing regression-test bucket #19.
 
 ### How to resume tomorrow
 
@@ -441,7 +441,7 @@ M1, M2 foundation, and M3 are now closed. Automatic LLM distillation should be t
    python -m pytest          # expect 120 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Pick the next small hardening task.** Best candidates: #13 strict schema, #17 `commit_fact` requiring `GateResult`, or #18 README ↔ API alignment.
+3. **Pick the next small hardening task.** Best candidates: #18 README ↔ API alignment, #15 derived-fact semantics, or finishing #16 expired semantics.
 4. Keep long-term semantic memory separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
 
 ### Latest #29 slice
@@ -461,6 +461,14 @@ This slice intentionally completes the manual long-term semantic pyramid foundat
 - `memory_persona_recorded` audit entries preserve persona promotion decisions.
 - Automatic LLM distillation is not implemented yet.
 - Suite total after this slice: **120 passed**.
+
+### Latest hardening slice
+
+- #13 now fails closed at the public API edge:
+  - unknown `evidence_type` is rejected by `record_evidence()` before a ref file is written
+  - unknown `claim_type` is rejected by `propose_claim()` / `assert_fact()` before a claim row is stored
+- Gate-level unknown-type checks remain in place as defense in depth for old data and lower-level calls.
+- The status board also marks #14 and #17 done because both are already implemented and covered by tests.
 
 ### Key design decisions worth not re-litigating
 

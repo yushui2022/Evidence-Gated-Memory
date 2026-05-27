@@ -53,6 +53,8 @@ semantic pyramid foundation:
 
 - append-only events and raw evidence refs
 - claims, gate checks, committed facts
+- strict public-API schema checks for declared evidence and claim types
+- source-system allowlist gates
 - evidence freshness and fact invalidation
 - derived-fact cascading invalidation
 - structured Task, TaskNode, and TaskEdge rows
