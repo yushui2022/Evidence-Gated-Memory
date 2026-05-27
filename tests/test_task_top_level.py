@@ -10,6 +10,7 @@ from evidence_gated_memory import (
     EvidenceGatedMemory,
     Task,
     TaskEdgeKind,
+    TaskState,
     TaskStatus,
 )
 
@@ -62,6 +63,28 @@ def test_list_tasks_filters_by_status(memory: EvidenceGatedMemory) -> None:
 
     done_tasks = memory.list_tasks(status=TaskStatus.DONE)
     assert [t.id for t in done_tasks] == ["task_done"]
+
+
+def test_update_task_status_is_explicit_lifecycle_api(memory: EvidenceGatedMemory) -> None:
+    memory.create_task("task_status_api", title="Status API")
+
+    task = memory.update_task_status("task_status_api", TaskStatus.CANCELLED)
+
+    assert task.status == TaskStatus.CANCELLED
+    assert task.current_state == TaskState.OPEN
+
+    details = [
+        json.loads(row["detail"])
+        for row in memory.store.list_audit(limit=100)
+        if row["event_type"] == "task_status_changed"
+    ]
+    assert details[-1]["from_status"] == "open"
+    assert details[-1]["to_status"] == "cancelled"
+
+
+def test_update_task_status_rejects_missing_task(memory: EvidenceGatedMemory) -> None:
+    with pytest.raises(KeyError, match="task not found"):
+        memory.update_task_status("task_missing_status", TaskStatus.DONE)
 
 
 # ---------- TaskEdge ----------

@@ -245,6 +245,7 @@ def _task_map_block(store: SqliteStore, task_id: str) -> list[str]:
     nodes = store.list_task_nodes(task_id=task_id)
     edges = store.list_task_edges(task_id=task_id)
     task = store.get_task(task_id)
+    task_status = task.status.value if task else "unknown"
     current_state = (
         task.current_state.value
         if task
@@ -258,6 +259,8 @@ def _task_map_block(store: SqliteStore, task_id: str) -> list[str]:
         mermaid,
         "```",
         "</task_map>",
+        "",
+        f"<task_status>{task_status}</task_status>",
         "",
         f"<current_state>{current_state}</current_state>",
         "",

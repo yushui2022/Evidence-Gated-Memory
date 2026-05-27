@@ -400,8 +400,8 @@ class EvidenceGatedMemory:
 
         Most callers don't need to call this directly — `create_task_node`
         auto-creates a Task on first sight of a new `task_id`. Use this when
-        you want to set the workflow title/anchors up-front, or to flip the
-        top-level status (open → done) explicitly.
+        you want to set the workflow title/anchors up-front. Prefer
+        `update_task_status()` when only the explicit lifecycle status changes.
         """
         existing = self.store.get_task(task_id)
         if existing is None:
@@ -450,6 +450,33 @@ class EvidenceGatedMemory:
 
     def list_tasks(self, status: Optional[TaskStatus] = None) -> list[Task]:
         return self.store.list_tasks(status=status)
+
+    def update_task_status(self, task_id: str, status: Union[TaskStatus, str]) -> Task:
+        """Set a Task's explicit lifecycle status.
+
+        This is separate from `current_state`, which is derived from child
+        TaskNode statuses by `refresh_task_state()`. For example, a cancelled
+        task can still have child nodes whose last derived state was blocked.
+        """
+        task = self.store.get_task(task_id)
+        if task is None:
+            raise KeyError(f"task not found: {task_id}")
+
+        next_status = status if isinstance(status, TaskStatus) else TaskStatus(status)
+        prev_status = task.status
+        task.status = next_status
+        task.updated_at = datetime.now(timezone.utc)
+        self.store.upsert_task(task)
+        if prev_status != next_status:
+            self.store.append_audit(
+                event_type="task_status_changed",
+                detail={
+                    "task_id": task.id,
+                    "from_status": prev_status.value,
+                    "to_status": next_status.value,
+                },
+            )
+        return task
 
     def refresh_task_state(
         self,

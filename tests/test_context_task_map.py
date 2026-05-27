@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from evidence_gated_memory import EvidenceGatedMemory, TaskEdgeKind
+from evidence_gated_memory import EvidenceGatedMemory, TaskEdgeKind, TaskStatus
 from evidence_gated_memory.cli import main
 from evidence_gated_memory.schemas.builtin import REFUND
 
@@ -24,6 +24,16 @@ def test_context_includes_task_map_even_without_facts(memory: EvidenceGatedMemor
     assert b.id in ctx
     assert "depends" in ctx
     assert "no facts available" in ctx
+
+
+def test_context_shows_explicit_task_status_and_derived_state(memory: EvidenceGatedMemory) -> None:
+    memory.create_task_node("task_status_ctx", "step", "Last known node")
+    memory.update_task_status("task_status_ctx", TaskStatus.CANCELLED)
+
+    ctx = memory.build_context(task_id="task_status_ctx")
+
+    assert "<task_status>cancelled</task_status>" in ctx
+    assert "<current_state>open</current_state>" in ctx
 
 
 def test_context_includes_node_backlinks_for_fact_and_evidence(memory: EvidenceGatedMemory) -> None:

@@ -339,6 +339,8 @@ flowchart TD
 ```
 </task_map>
 
+<task_status>open</task_status>
+
 <current_state>done</current_state>
 
 [FACT] Order ORD-123 is eligible for refund under the 14-day policy
@@ -502,16 +504,16 @@ The principle we converged on is **"build trust at the base before growing up"**
 ✅ #29  long-term semantic pyramid manual path
 ```
 
-M1, M2 manual path, M3, and the v0.1 hardening board are now closed for the current scope. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The remaining pre-0.4 cleanup is: the `Task.status` lifecycle decision and a schema-version/migration table.
+M1, M2 manual path, M3, and the v0.1 hardening board are now closed for the current scope. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The remaining pre-0.4 cleanup is a schema-version/migration table.
 
 ### How to resume tomorrow
 
 1. **Verify the baseline still works.**
    ```bash
-   python -m pytest          # expect 124 passed
+   python -m pytest          # expect 127 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Pick the next cleanup task.** Best candidates: decide `Task.status` API/removal, or add a schema-version table.
+3. **Pick the next cleanup task.** Best candidate: add a schema-version table.
 4. Keep long-term semantic memory separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
 
 ### Latest #29 slice
@@ -542,6 +544,13 @@ This slice intentionally completes the manual long-term semantic pyramid path:
 - It reports `offload_records` from `offload/offload.jsonl`.
 - Missing tables in old workspaces are counted as zero instead of crashing inspect.
 - Suite total after this slice: **124 passed**.
+
+### Latest Task lifecycle slice
+
+- `update_task_status(task_id, status)` is the explicit API for workflow lifecycle changes.
+- `Task.status` stays separate from derived `Task.current_state`; status is user/system intent, current_state is recomputed from child TaskNodes.
+- `build_context(task_id=...)` now emits both `<task_status>` and `<current_state>` so prompt consumers can see the distinction.
+- Suite total after this slice: **127 passed**.
 
 ### Latest hardening slice
 
