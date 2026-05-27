@@ -44,6 +44,7 @@ def test_cli_inspect_context_audit_and_ref(tmp_path: Path, capsys):
 
     assert main(["inspect", str(workspace), "--schema", "refund"]) == 0
     inspect_out = capsys.readouterr().out
+    assert "schema_version: 1" in inspect_out
     assert "facts_active: 1" in inspect_out
     assert "evidence: 2" in inspect_out
 

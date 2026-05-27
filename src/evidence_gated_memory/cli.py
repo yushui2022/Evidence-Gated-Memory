@@ -87,6 +87,7 @@ def _cmd_inspect(args: argparse.Namespace) -> int:
 
     with sqlite3.connect(db_path) as conn:
         print(f"database: {db_path}")
+        print(f"schema_version: {_schema_version(conn)}")
         for table in (
             "events",
             "evidence",
@@ -205,6 +206,17 @@ def _count_where_if_exists(conn: sqlite3.Connection, table: str, where: str) -> 
     if not _table_exists(conn, table):
         return 0
     return conn.execute(f"SELECT COUNT(*) FROM {table} WHERE {where}").fetchone()[0]
+
+
+def _schema_version(conn: sqlite3.Connection) -> int:
+    if not _table_exists(conn, "schema_meta"):
+        return 0
+    row = conn.execute(
+        "SELECT value FROM schema_meta WHERE key='schema_version'"
+    ).fetchone()
+    if row is None:
+        return 0
+    return int(row[0])
 
 
 def _count_jsonl(path: Path) -> int:

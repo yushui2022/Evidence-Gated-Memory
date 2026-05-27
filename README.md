@@ -504,7 +504,7 @@ The principle we converged on is **"build trust at the base before growing up"**
 ✅ #29  long-term semantic pyramid manual path
 ```
 
-M1, M2 manual path, M3, and the v0.1 hardening board are now closed for the current scope. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The remaining pre-0.4 cleanup is a schema-version/migration table.
+M1, M2 manual path, M3, and the v0.1 hardening board are now closed for the current scope. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The pre-0.4 cleanup list is closed for the current scope.
 
 ### How to resume tomorrow
 
@@ -513,7 +513,7 @@ M1, M2 manual path, M3, and the v0.1 hardening board are now closed for the curr
    python -m pytest          # expect 127 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Pick the next cleanup task.** Best candidate: add a schema-version table.
+3. **Pick the next release task.** Best candidates: packaging smoke, README/API polish pass, or cut a 0.4 tag.
 4. Keep long-term semantic memory separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
 
 ### Latest #29 slice
@@ -550,6 +550,14 @@ This slice intentionally completes the manual long-term semantic pyramid path:
 - `update_task_status(task_id, status)` is the explicit API for workflow lifecycle changes.
 - `Task.status` stays separate from derived `Task.current_state`; status is user/system intent, current_state is recomputed from child TaskNodes.
 - `build_context(task_id=...)` now emits both `<task_status>` and `<current_state>` so prompt consumers can see the distinction.
+- Suite total after this slice: **127 passed**.
+
+### Latest schema-version slice
+
+- SQLite workspaces now include a `schema_meta` table.
+- `SqliteStore.get_schema_version()` returns the current schema version.
+- Existing workspaces are stamped during startup after lightweight migrations run.
+- `egm inspect` prints `schema_version`, using `0` for pre-version databases that are inspected without opening through `SqliteStore`.
 - Suite total after this slice: **127 passed**.
 
 ### Latest hardening slice

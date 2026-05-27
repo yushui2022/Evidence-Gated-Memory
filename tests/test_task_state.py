@@ -134,5 +134,6 @@ def test_sqlite_migrates_old_tasks_table_current_state(tmp_path: Path) -> None:
 
         assert "current_state" in columns
         assert task.current_state == TaskState.OPEN
+        assert store.get_schema_version() == 1
     finally:
         store.close()

@@ -38,7 +38,15 @@ from evidence_gated_memory.core.models import (
 )
 
 
+SCHEMA_VERSION = 1
+
+
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS schema_meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS events (
     id TEXT PRIMARY KEY,
     created_at TEXT NOT NULL,
@@ -263,6 +271,19 @@ class SqliteStore:
     def _migrate_schema(self) -> None:
         """Add columns introduced after the initial CREATE TABLE layout."""
         self._ensure_column("tasks", "current_state", "TEXT NOT NULL DEFAULT 'open'")
+        self._set_schema_version(SCHEMA_VERSION)
+
+    def get_schema_version(self) -> int:
+        row = self.conn.execute(
+            "SELECT value FROM schema_meta WHERE key='schema_version'"
+        ).fetchone()
+        return int(row["value"]) if row else 0
+
+    def _set_schema_version(self, version: int) -> None:
+        self.conn.execute(
+            "INSERT OR REPLACE INTO schema_meta(key, value) VALUES ('schema_version', ?)",
+            (str(version),),
+        )
 
     def _ensure_column(self, table: str, column: str, definition: str) -> None:
         columns = {
