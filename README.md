@@ -361,21 +361,55 @@ Enterprise agents don't need to remember more text. They need to maintain a **st
 
 Flat chat history is the default memory for most agents. Three failure modes come with it: summaries lose evidence, vector recall loses task structure, and nothing stops the agent from claiming "done" without the right tool results. EGM trades open-ended persona recall for **provenance, freshness, and state discipline** — a deliberate bet that in enterprise workflows, a wrong conclusion costs more than a slow one.
 
+The closest commercial-grade systems (Zep, Graphiti) do temporal knowledge graphs well. Academic work (CraniMem) explores neural gating. But no existing system combines **deterministic YAML rules + executable rejections + cascading invalidation + dual-channel memory + zero-platform-dependency deployment** in one library. EGM occupies a point on the design space that none of the six closest alternatives claim.
+
 ---
 
 ## How it compares
 
-|  | Mem0 / Zep / Letta | **EGM** |
+### Five things only EGM does
+
+**1. Deterministic YAML gate engine, not LLM judgment.**
+
+Zep/Graphiti depend on LLM extraction + temporal reasoning. CraniMem uses neural gating. EverMemOS is adaptive. Mem0, Letta, and LangMem delegate all trust decisions to the LLM. EGM's gates are pure deterministic functions: `required_evidence` present → source allowlisted → freshness threshold met → parent facts alive. The result is reproducible, auditable, and testable — it does not drift with model temperature.
+
+**2. Executable rejections, not boolean "no."**
+
+Every other system returns a pass/fail. EGM rejections name exactly what is missing, which system to call, and why. The gate is not a roadblock — it is a navigator. The agent does not need to guess what went wrong or which tool to call next.
+
+**3. Cascading invalidation, not independent expiry.**
+
+Zep supports temporal expiry ("state in February vs. state now"), but when upstream evidence is revoked, downstream conclusions do not automatically fall. In EGM, revoking a single `order_record` invalidates every observed fact and derived fact that depends on it. This is an audit requirement, not a convenience feature.
+
+**4. Dual-channel memory, not one flat store.**
+
+| | Short-term | Long-term |
 |---|---|---|
-| Default write policy | write-optimistic | **write-pessimistic at fact layer** |
-| Evidence requirement | optional | **mandatory, per-claim-type** |
-| Task structure | flat / graph-of-facts | **hard-anchor task graph + soft state machine** |
-| Ref-level freshness | no | **fresh / stale / expired per evidence type** |
-| Cascading invalidation | no | **derived facts track observed parents** |
-| State-transition gating | no | **DONE / blocked / etc. all gated** |
-| Rejection behavior | boolean | **actionable: what's missing + what to call** |
-| Drill-down to raw evidence | usually lost | **`refs/<id>.md` preserved, indexed by `node_id`** |
-| Best-fit domain | open dialogue, personas | **hard-anchor enterprise workflows** |
+| Zep / Graphiti | Knowledge graph | Same knowledge graph |
+| EverMemOS | L0 → L3 linear pipeline | Same pipeline |
+| Mem0 / Letta / LangMem | Session history | Vector / summary |
+| **EGM** | **TaskGraph + refs/\*.md (structured task map)** | **L0→L3 semantic pyramid (manual promotion, auditable)** |
+
+EGM's short-term memory maintains a task structure with drillable evidence refs. Its long-term memory maintains a cross-session semantic pyramid. They are two independent systems that compose at `build_context()` time — not one pipeline doing double duty.
+
+**5. `pip install` + zero platform dependency.**
+
+Zep enterprise requires cloud or self-hosted infrastructure. EverMemOS is closer to an operating system than a library. EGM is a single `pip install` with deterministic smoke tests that need no API key. Any LiteLLM-compatible model works.
+
+### Full comparison matrix
+
+| Dimension | EGM | Zep / Graphiti | EverMemOS | CraniMem | Mem0 | Letta | LangMem |
+|---|---|---|---|---|---|---|---|
+| Gate mechanism | **YAML deterministic** | LLM + temporal | Adaptive | Neural | LLM-only | LLM-only | None |
+| Evidence chain | **refs/\*.md + audit log** | Episode trace | L0 immutable | Partial | Fact text only | Agent notes | State snapshot |
+| Freshness / expiry | **Per-type TTL + claim thresholds** | Bi-temporal | L0 preserved, no TTL | Interference-resistant | Time decay | None | Manual |
+| Cascading invalidation | **Observed → derived** | No | No | No | No | No | No |
+| Rejection | **Actionable (what + why + next call)** | Boolean | Boolean | Boolean | Boolean | Boolean | Boolean |
+| Task structure | **Graph + anchors + soft state machine** | Entity graph | Layered pipeline | Episodic buffer | Flat facts | Agent managed | LangGraph state |
+| Deployment | **`pip install`** | Cloud / self-host | Heavy platform | Research code | `pip install` | `pip install` | `pip install` |
+| Best fit | **Hard-anchor enterprise workflows** | CRM, compliance, tickets | Regulated long-cycle | Research / long-horizon | Chatbots, personas | Autonomous agents | LangGraph workflows |
+
+EGM is the only system that combines strongest deterministic gating with the lightest deployment footprint. EverMemOS is closest in gate philosophy but carries platform-level weight. Zep/Graphiti are mature but gate through LLM inference, not deterministic rules. Mem0, Letta, and LangMem occupy a different design space entirely — they optimize for conversational memory, not evidence-gated enterprise task memory.
 
 ---
 
