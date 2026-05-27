@@ -411,6 +411,8 @@ Current local probes:
 - `false_done_gate_benchmark`: false-completion claims and DONE transitions must be rejected with actionable feedback until fresh evidence is attached.
 
 See [benchmarks/README.md](benchmarks/README.md) for scope and interpretation.
+The current two-table benchmark report is in
+[reports/benchmark_report.md](reports/benchmark_report.md).
 
 For public-facing benchmark reports, use the optional official-data runners:
 
