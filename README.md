@@ -6,7 +6,7 @@
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="PyPI" src="https://img.shields.io/pypi/v/evidence-gated-memory?color=0B1220&label=pypi"></a>
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="Python" src="https://img.shields.io/pypi/pyversions/evidence-gated-memory?color=0B1220"></a>
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-0B1220"></a>
-  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-132%20passing-0F9F6E"></a>
+  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-133%20passing-0F9F6E"></a>
   <a href="#benchmarks"><img alt="Status" src="https://img.shields.io/badge/status-alpha-E7B549"></a>
 </p>
 
@@ -373,28 +373,47 @@ egm ref .egm ref_abc123                     # drill down to raw evidence
 
 > We report what we run. We don't report what we haven't.
 
-EGM's benchmark story has two layers that are ready to show, and one that is in progress:
+EGM's benchmark story has three layers:
 
-### 1. Correctness verification (repo-local, deterministic)
+### 1. Adversarial probes — 10 attack vectors, 10 blocks
 
-These are not benchmarks in the leaderboard sense. They are **deterministic probes that verify EGM's core promises hold** — every gate, every rejection, every drill-down path. They run in CI on every push.
+We actively try to break EGM and measure whether each attack is stopped. These are deterministic, run in CI, and need no API keys.
 
 ```bash
-python benchmarks/run_local.py             # human-readable
-python benchmarks/run_local.py --json      # machine-readable
+python benchmarks/run_local.py              # correctness + adversarial
+python benchmarks/run_local.py --json       # machine-readable
 python -m pytest tests/test_benchmarks.py -q
 ```
 
-| Probe | What it verifies | Result |
-|---|---|---|
-| Hard-anchor recall + evidence coverage | Every stored fact is recallable by its business ID; every evidence ref appears in context | **1.00** |
-| L0→L3 semantic pyramid | Manually promoted atoms/scenarios/personas are recallable; raw L0 stays out of prompt | **1.00** |
-| Bounded context under pressure | With 24 concurrent workflows, the target workflow's facts, task map, and refs all appear without bleed | **1.00** |
-| False-done gate | A claim without evidence is **blocked** with an actionable reason; the same claim with fresh evidence is **accepted** | **1.00** |
+| Attack attempted | What EGM did |
+|---|---|
+| Ground a fact on LLM-generated evidence | **Blocked.** `llm_output_not_as_source` gate fired. |
+| Assert a fact with expired required evidence | **Blocked.** `expired_evidence_block` gate fired. |
+| Use evidence from a non-allowlisted source system | **Blocked.** `source_system_not_allowed` gate fired. |
+| Call `commit_fact()` without a `GateResult` | **Blocked.** `ValueError` before any row is written. |
+| Transition a node to DONE without required evidence | **Blocked.** Actionable rejection: "call refund_api, attach refund_api_response." |
+| Attach a nonexistent evidence id to a node | **Blocked.** `KeyError` immediately. |
+| Attach an already-invalidated fact to a node | **Blocked.** `ValueError` immediately. |
+| Revoke root evidence — does cascade work? | **Blocked.** Observed fact AND derived child both invalidated. |
+| Record evidence with an undeclared `evidence_type` | **Blocked.** `ValueError` before any disk write. |
+| Assert a fact with an undeclared `claim_type` | **Blocked.** `ValueError` at the API edge. |
 
-These scores are tautological by design: they test whether EGM does what it claims to do. A score below 1.00 on any of these **is a regression bug**. They are correctness guards, not competitive metrics.
+**Result: 10/10 attacks blocked.** These are not "EGM scores 1.00 on its own surface." They are "we tried 10 ways to slip something past the gate; the gate held every time."
 
-### 2. Retrieval proxy over MemoryAgentBench (ICLR 2026)
+### 2. Correctness probes — product-surface validation
+
+Four deterministic probes verify the happy-path core promises hold:
+
+| Probe | What it verifies |
+|---|---|
+| Hard-anchor recall + evidence coverage | Every fact is recallable by its business ID; every evidence ref appears in context |
+| L0→L3 semantic pyramid | Promoted atoms/scenarios/personas are recallable; raw L0 stays out of prompt |
+| Bounded context under pressure | 24 concurrent workflows, no cross-bleed of facts or task maps |
+| False-done gate | A claim without evidence is blocked; with fresh evidence, it's accepted |
+
+A score below 1.00 on any of these **is a regression bug**. They are correctness guards, not competitive metrics.
+
+### 3. Retrieval proxy over MemoryAgentBench (ICLR 2026)
 
 We run EGM's local FTS retrieval against official [MemoryAgentBench](https://github.com/HUST-AI-HYZ/MemoryAgentBench) data as a **retrieval-only proxy**. This is not a leaderboard submission — it measures how well EGM's current retrieval surface maps onto a published benchmark.
 
@@ -414,7 +433,7 @@ The Conflict Resolution result is the most representative: 800 questions over ev
 python benchmarks/official/memory_agent_bench.py path/to/Conflict_Resolution.parquet --top-k 5
 ```
 
-### 3. Agent benchmark integration (tau-bench / τ²-bench)
+### 4. Agent benchmark integration (tau-bench / τ²-bench)
 
 The harness runs and model routing have been validated (DeepSeek + LiteLLM, retail and mock domains). **EGM has not yet been integrated as the agent's memory layer for an A/B comparison.** This is the next major benchmark milestone — running the same tau/tau2 tasks with and without EGM, measuring pass rate, false-done rate, and evidence coverage. When those numbers exist they will be reported here.
 

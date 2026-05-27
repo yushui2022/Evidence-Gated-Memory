@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from benchmarks.adversarial_probes import run_all_adversarial
 from benchmarks.local_benchmarks import run_all_benchmarks
 
 
@@ -21,3 +22,13 @@ def test_local_benchmark_suite_passes(tmp_path) -> None:
     assert by_name["longmemeval_s_hard_anchor"]["metrics"]["evidence_source_coverage"] == 1.0
     assert by_name["beam_lite_hard_anchor_pressure"]["metrics"]["target_source_coverage"] == 1.0
     assert by_name["false_done_gate_benchmark"]["metrics"]["actionable_rejection_rate"] == 1.0
+
+
+def test_adversarial_probes_block_all_attacks(tmp_path) -> None:
+    result = run_all_adversarial(tmp_path / "adversarial")
+
+    assert result["passed"]
+    assert result["blocked"] == result["total"], (
+        f"Expected all {result['total']} attack vectors blocked, got {result['blocked']}"
+    )
+    assert result["total"] == 10
