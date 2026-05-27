@@ -143,13 +143,149 @@ flowchart TD
     P --> A
 ```
 
-### Architecture posture and fit
+### How the pieces fit together
 
-EGM is designed for **hard-anchor enterprise agents**: tasks are not organized around open-ended conversation, but around stable business IDs and auditable workflows such as `order_id`, `ticket_id`, `refund_id`, `case_id`, and `task_id`. The core risk in these agents is not failing to recall a past sentence; it is turning missing, stale, or untrusted evidence into a completed conclusion.
+The mermaid above is the full dataflow. What matters: every tool result lands in `refs/*.md` (never summarized away), every fact passes a schema-defined gate before it enters the prompt, and every long-term memory carries a source path back to raw conversation. The task graph is maintained as a structured object — not periodically collapsed into a lossy summary.
 
-Architecturally, EGM separates the active task into three concerns: the short-term `TaskGraph` keeps the workflow map, `refs/*.md` preserves drillable raw evidence, and the `Fact Layer` only accepts claims that pass schema-defined gates. Long-term memory remains an auditable L0/L1/L2/L3 pyramid: curated high-level memories enter the prompt by default, while raw L0 dialogue remains available for trace-back when needed.
+---
 
-In practice, EGM fits customer-support refunds, ticket handling, compliance review, finance approval, code repair, and test-verification workflows: domains with **strong process, strong evidence, and strong state constraints**. It is not trying to be a general chatbot memory or persona-memory system; it is built to make the agent obtain fresh, trusted, replayable evidence before saying "refund approved", "task complete", "tests passed", or "case closed".
+## Benchmarks
+
+> We report what we run. We don't report what we haven't.
+
+EGM runs on **two domain schemas** (REFUND + CODING) and reports results across six benchmark categories:
+
+### 1. Adversarial probes — 10 attack vectors, 10 blocks
+
+We actively try to break EGM and measure whether each attack is stopped. These are deterministic, run in CI, and need no API keys.
+
+```bash
+python benchmarks/run_local.py              # correctness + adversarial
+python benchmarks/run_local.py --json       # machine-readable
+python -m pytest tests/test_benchmarks.py -q
+```
+
+| Attack attempted | What EGM did |
+|---|---|
+| Ground a fact on LLM-generated evidence | **Blocked.** `llm_output_not_as_source` gate fired. |
+| Assert a fact with expired required evidence | **Blocked.** `expired_evidence_block` gate fired. |
+| Use evidence from a non-allowlisted source system | **Blocked.** `source_system_not_allowed` gate fired. |
+| Call `commit_fact()` without a `GateResult` | **Blocked.** `ValueError` before any row is written. |
+| Transition a node to DONE without required evidence | **Blocked.** Actionable rejection: "call refund_api, attach refund_api_response." |
+| Attach a nonexistent evidence id to a node | **Blocked.** `KeyError` immediately. |
+| Attach an already-invalidated fact to a node | **Blocked.** `ValueError` immediately. |
+| Revoke root evidence — does cascade work? | **Blocked.** Observed fact AND derived child both invalidated. |
+| Record evidence with an undeclared `evidence_type` | **Blocked.** `ValueError` before any disk write. |
+| Assert a fact with an undeclared `claim_type` | **Blocked.** `ValueError` at the API edge. |
+
+**Result: 10/10 attacks blocked.** These are not "EGM scores 1.00 on its own surface." They are "we tried 10 ways to slip something past the gate; the gate held every time."
+
+### 2. Scenario probes — end-to-end domain workflows
+
+Six scenarios across two domains exercise the full EGM loop. Three for refund, three for coding — same architecture, different schema.
+
+```bash
+python benchmarks/scenario_probes.py                # run directly
+python benchmarks/run_local.py --scenarios-only     # via runner
+```
+
+**Refund domain** (`refund.yaml` — 6 evidence types, 3 claim types, 2 state gates):
+
+| Scenario | What it exercises | Result |
+|---|---|---|
+| Full refund lifecycle (3 orders) | eligibility → rejection → evidence → acceptance → completion → transition → context → cascade | 9/9 thresholds |
+| Multi-order concurrency (20 workflows) | Task isolation, no cross-contamination of facts, context, or anchors | All boundaries hold |
+| Partial-evidence rejection loop | try → reject with actionable feedback → fetch → retry → accept | 5 rounds, 3 rejections (100% actionable) |
+
+**Coding domain** (`coding.yaml` — 4 evidence types, 3 claim types, 2 state gates):
+
+| Scenario | What it exercises | Result |
+|---|---|---|
+| File → diagnosis → done (6 rounds) | file_read → file_content → test_log → error_diagnosis → fresh test_log → task_done | 3 rejections (100% actionable), 3 acceptances |
+| Stale evidence gate | `file_content` accepts stale file_read; `task_done` rejects stale test_log (requires fresh) | Same evidence, different outcomes — correctly gated |
+| Multi-file concurrency (10 workflows) | 10 files repaired concurrently; verify anchor isolation and context boundary | No cross-contamination |
+
+**Result: 6/6 scenarios pass at every threshold.** EGM's schema system works identically across domains — the gates, freshness rules, and context isolation are schema-driven, not hardcoded for refund.
+
+### 3. Correctness probes — product-surface validation
+
+Four deterministic probes verify the happy-path core promises hold:
+
+| Probe | What it verifies |
+|---|---|
+| Hard-anchor recall + evidence coverage | Every fact is recallable by its business ID; every evidence ref appears in context |
+| L0→L3 semantic pyramid | Promoted atoms/scenarios/personas are recallable; raw L0 stays out of prompt |
+| Bounded context under pressure | 24 concurrent workflows, no cross-bleed of facts or task maps |
+| False-done gate | A claim without evidence is blocked; with fresh evidence, it's accepted |
+
+A score below 1.00 on any of these **is a regression bug**. They are correctness guards, not competitive metrics.
+
+### 4. Retrieval proxy over MemoryAgentBench (ICLR 2026)
+
+We run EGM's local FTS retrieval against official [MemoryAgentBench](https://github.com/HUST-AI-HYZ/MemoryAgentBench) data as a **retrieval-only proxy**. This is not a leaderboard submission — it measures how well EGM's current retrieval surface maps onto a published benchmark.
+
+| MAB split | Samples | Questions | Coverage@5 | MRR |
+|---|---|---|---|---|
+| Conflict Resolution | 8 | 800 | **0.67** | **0.47** |
+| Accurate Retrieval | 3 | 300 | **0.48** | **0.40** |
+
+Two splits that the retrieval-only proxy does **not** fit:
+
+- **Test-Time Learning** — requires incremental knowledge updates across sessions; retrieval-only is the wrong instrument.
+- **Long-Range Understanding** — requires multi-hop summarization; EGM does not generate answers, it retrieves evidence.
+
+The Conflict Resolution result is the most representative: 800 questions over evidence-backed updates and stale-information conflicts — exactly the surface EGM is built for.
+
+```bash
+python benchmarks/official/memory_agent_bench.py path/to/Conflict_Resolution.parquet --top-k 5
+```
+
+### 5. Agent benchmark integration (tau-bench)
+
+EGM has been integrated as a memory layer for [tau-bench](https://github.com/sierra-research/tau-bench) retail agents. The adapter wraps the environment, recording every tool result as EGM evidence and gating agent conclusions. The same task is run twice — once with the standard agent (raw message history), once with EGM (structured, gated context).
+
+```bash
+set DEEPSEEK_API_KEY=...                            # any LiteLLM-compatible key
+python benchmarks/tau_bench/run_ab.py --task 0      # A/B on a single task
+python benchmarks/tau_bench/run_ab.py --task 0 --json  # machine-readable
+python benchmarks/tau_bench/run_ab.py --smoke       # deterministic, no API keys
+```
+
+**A/B results** (3 retail tasks, DeepSeek-chat, ~$0.01/task):
+
+| Task | Baseline | EGM | Context (EGM) | Context (raw) | Compression |
+|---|---|---|---|---|---|
+| Exchange keyboard + thermostat | 0.0 (fail) | **1.0** | 394 tokens | 7,539 tokens | **19x** |
+| Exchange with color/size changes | 1.0 | **1.0** | 354 tokens | 9,203 tokens | **26x** |
+| Cancel and reorder with modifications | 1.0 | **1.0** | 399 tokens | 7,658 tokens | **19x** |
+
+- **EGM pass rate: 3/3 (100%)** vs. baseline 2/3 (67%)
+- **Average context compression: ~20x** — EGM delivers a 400-token evidence-gated summary instead of 8,000 tokens of raw dialogue
+- **All tool calls recorded as evidence** — 5–10 per task, indexed by task_id, drillable by ref
+- **Gate correctly fires** — facts asserted without `refund_policy` evidence are rejected with actionable reasons
+
+The gate is particularly visible on task 0: the baseline agent failed (reward 0), while the EGM agent passed (reward 1). The EGM context is compact, provenance-labeled, and every tool result has a permanent audit trail.
+
+> **Caveat:** 3 tasks is a small sample. The user simulator is LLM-based and non-deterministic, so individual task rewards vary between runs. These results show the integration works end-to-end — a full pass@k evaluation across the 115-task test set requires a dedicated budget.
+
+### What this adds up to
+
+EGM is strongest on **hard-anchor, strong-evidence, conflict-dense** enterprise workflows. It deliberately trades open-ended persona recall for provenance and gate discipline:
+
+| Strength | Evidence |
+|---|---|
+| Evidence-gated retrieval | 10/10 attack vectors blocked; 0 false acceptances across 135 tests |
+| Actionable rejection | Every gate rejection names what's missing and what tool to call next |
+| Bounded task context | 20 concurrent refund workflows, 10 concurrent coding workflows — zero cross-bleed |
+| Cascading invalidation | Revoke root evidence → observed + derived facts both invalidated |
+| Multi-domain | Same architecture, two schemas (REFUND + CODING), identical correctness guarantees |
+| Freshness discipline | Fresh/stale/expired per evidence type; claim-type-specific thresholds enforced |
+| Agent task integration | tau-bench A/B: EGM 3/3 pass vs. baseline 2/3, ~20x context compression |
+| LLM agnostic | Works with any LiteLLM-compatible model (DeepSeek tested); deterministic smoke tests need no API key |
+
+**Small-sample tau-bench disclaimer:** 3 tasks is a sample, not a pass@k evaluation. Full 115-task results need a dedicated budget.
+
+See [benchmarks/README.md](benchmarks/README.md) and [reports/benchmark_report.md](reports/benchmark_report.md).
 
 ---
 
@@ -223,13 +359,7 @@ Enterprise agents don't need to remember more text. They need to maintain a **st
 
 ## Why EGM
 
-A long-running agent produces a linear, ever-growing history. Three things go wrong with it:
-
-- **Plain summaries lose evidence.** Once a tool result is summarized, you can't drill back to the API response that justified the conclusion.
-- **Plain memory lacks process structure.** Vector recall finds related text, but it can't tell you which task node is blocked, or why.
-- **Enterprise agents need discipline, not just recall.** In refund, finance, compliance, medical, and coding agents, the cost of a wrong "done" is far higher than the cost of being slow.
-
-EGM is built for **hard-anchor** workflows — those organized around stable business IDs like `order_id`, `ticket_id`, `refund_id`, `task_id` — not open-ended persona-style dialogue. This is a deliberate trade: EGM gives up open relationship-heavy recall to gain **provenance, freshness, and state discipline** on enterprise processes.
+Flat chat history is the default memory for most agents. Three failure modes come with it: summaries lose evidence, vector recall loses task structure, and nothing stops the agent from claiming "done" without the right tool results. EGM trades open-ended persona recall for **provenance, freshness, and state discipline** — a deliberate bet that in enterprise workflows, a wrong conclusion costs more than a slow one.
 
 ---
 
@@ -416,146 +546,6 @@ egm audit .egm --limit 20                   # who wrote what, who got rejected a
 egm sweep .egm --schema refund              # expire stale evidence, cascade-invalidate
 egm ref .egm ref_abc123                     # drill down to raw evidence
 ```
-
----
-
-## Benchmarks
-
-> We report what we run. We don't report what we haven't.
-
-EGM runs on **two domain schemas** (REFUND + CODING) and reports results across six benchmark categories:
-
-### 1. Adversarial probes — 10 attack vectors, 10 blocks
-
-We actively try to break EGM and measure whether each attack is stopped. These are deterministic, run in CI, and need no API keys.
-
-```bash
-python benchmarks/run_local.py              # correctness + adversarial
-python benchmarks/run_local.py --json       # machine-readable
-python -m pytest tests/test_benchmarks.py -q
-```
-
-| Attack attempted | What EGM did |
-|---|---|
-| Ground a fact on LLM-generated evidence | **Blocked.** `llm_output_not_as_source` gate fired. |
-| Assert a fact with expired required evidence | **Blocked.** `expired_evidence_block` gate fired. |
-| Use evidence from a non-allowlisted source system | **Blocked.** `source_system_not_allowed` gate fired. |
-| Call `commit_fact()` without a `GateResult` | **Blocked.** `ValueError` before any row is written. |
-| Transition a node to DONE without required evidence | **Blocked.** Actionable rejection: "call refund_api, attach refund_api_response." |
-| Attach a nonexistent evidence id to a node | **Blocked.** `KeyError` immediately. |
-| Attach an already-invalidated fact to a node | **Blocked.** `ValueError` immediately. |
-| Revoke root evidence — does cascade work? | **Blocked.** Observed fact AND derived child both invalidated. |
-| Record evidence with an undeclared `evidence_type` | **Blocked.** `ValueError` before any disk write. |
-| Assert a fact with an undeclared `claim_type` | **Blocked.** `ValueError` at the API edge. |
-
-**Result: 10/10 attacks blocked.** These are not "EGM scores 1.00 on its own surface." They are "we tried 10 ways to slip something past the gate; the gate held every time."
-
-### 2. Scenario probes — end-to-end domain workflows
-
-Six scenarios across two domains exercise the full EGM loop. Three for refund, three for coding — same architecture, different schema.
-
-```bash
-python benchmarks/scenario_probes.py                # run directly
-python benchmarks/run_local.py --scenarios-only     # via runner
-```
-
-**Refund domain** (`refund.yaml` — 6 evidence types, 3 claim types, 2 state gates):
-
-| Scenario | What it exercises | Result |
-|---|---|---|
-| Full refund lifecycle (3 orders) | eligibility → rejection → evidence → acceptance → completion → transition → context → cascade | 9/9 thresholds |
-| Multi-order concurrency (20 workflows) | Task isolation, no cross-contamination of facts, context, or anchors | All boundaries hold |
-| Partial-evidence rejection loop | try → reject with actionable feedback → fetch → retry → accept | 5 rounds, 3 rejections (100% actionable) |
-
-**Coding domain** (`coding.yaml` — 4 evidence types, 3 claim types, 2 state gates):
-
-| Scenario | What it exercises | Result |
-|---|---|---|
-| File → diagnosis → done (6 rounds) | file_read → file_content → test_log → error_diagnosis → fresh test_log → task_done | 3 rejections (100% actionable), 3 acceptances |
-| Stale evidence gate | `file_content` accepts stale file_read; `task_done` rejects stale test_log (requires fresh) | Same evidence, different outcomes — correctly gated |
-| Multi-file concurrency (10 workflows) | 10 files repaired concurrently; verify anchor isolation and context boundary | No cross-contamination |
-
-**Result: 6/6 scenarios pass at every threshold.** EGM's schema system works identically across domains — the gates, freshness rules, and context isolation are schema-driven, not hardcoded for refund.
-
-### 3. Correctness probes — product-surface validation
-
-Four deterministic probes verify the happy-path core promises hold:
-
-| Probe | What it verifies |
-|---|---|
-| Hard-anchor recall + evidence coverage | Every fact is recallable by its business ID; every evidence ref appears in context |
-| L0→L3 semantic pyramid | Promoted atoms/scenarios/personas are recallable; raw L0 stays out of prompt |
-| Bounded context under pressure | 24 concurrent workflows, no cross-bleed of facts or task maps |
-| False-done gate | A claim without evidence is blocked; with fresh evidence, it's accepted |
-
-A score below 1.00 on any of these **is a regression bug**. They are correctness guards, not competitive metrics.
-
-### 4. Retrieval proxy over MemoryAgentBench (ICLR 2026)
-
-We run EGM's local FTS retrieval against official [MemoryAgentBench](https://github.com/HUST-AI-HYZ/MemoryAgentBench) data as a **retrieval-only proxy**. This is not a leaderboard submission — it measures how well EGM's current retrieval surface maps onto a published benchmark.
-
-| MAB split | Samples | Questions | Coverage@5 | MRR |
-|---|---|---|---|---|
-| Conflict Resolution | 8 | 800 | **0.67** | **0.47** |
-| Accurate Retrieval | 3 | 300 | **0.48** | **0.40** |
-
-Two splits that the retrieval-only proxy does **not** fit:
-
-- **Test-Time Learning** — requires incremental knowledge updates across sessions; retrieval-only is the wrong instrument.
-- **Long-Range Understanding** — requires multi-hop summarization; EGM does not generate answers, it retrieves evidence.
-
-The Conflict Resolution result is the most representative: 800 questions over evidence-backed updates and stale-information conflicts — exactly the surface EGM is built for.
-
-```bash
-python benchmarks/official/memory_agent_bench.py path/to/Conflict_Resolution.parquet --top-k 5
-```
-
-### 5. Agent benchmark integration (tau-bench)
-
-EGM has been integrated as a memory layer for [tau-bench](https://github.com/sierra-research/tau-bench) retail agents. The adapter wraps the environment, recording every tool result as EGM evidence and gating agent conclusions. The same task is run twice — once with the standard agent (raw message history), once with EGM (structured, gated context).
-
-```bash
-set DEEPSEEK_API_KEY=...                            # any LiteLLM-compatible key
-python benchmarks/tau_bench/run_ab.py --task 0      # A/B on a single task
-python benchmarks/tau_bench/run_ab.py --task 0 --json  # machine-readable
-python benchmarks/tau_bench/run_ab.py --smoke       # deterministic, no API keys
-```
-
-**A/B results** (3 retail tasks, DeepSeek-chat, ~$0.01/task):
-
-| Task | Baseline | EGM | Context (EGM) | Context (raw) | Compression |
-|---|---|---|---|---|---|
-| Exchange keyboard + thermostat | 0.0 (fail) | **1.0** | 394 tokens | 7,539 tokens | **19x** |
-| Exchange with color/size changes | 1.0 | **1.0** | 354 tokens | 9,203 tokens | **26x** |
-| Cancel and reorder with modifications | 1.0 | **1.0** | 399 tokens | 7,658 tokens | **19x** |
-
-- **EGM pass rate: 3/3 (100%)** vs. baseline 2/3 (67%)
-- **Average context compression: ~20x** — EGM delivers a 400-token evidence-gated summary instead of 8,000 tokens of raw dialogue
-- **All tool calls recorded as evidence** — 5–10 per task, indexed by task_id, drillable by ref
-- **Gate correctly fires** — facts asserted without `refund_policy` evidence are rejected with actionable reasons
-
-The gate is particularly visible on task 0: the baseline agent failed (reward 0), while the EGM agent passed (reward 1). The EGM context is compact, provenance-labeled, and every tool result has a permanent audit trail.
-
-> **Caveat:** 3 tasks is a small sample. The user simulator is LLM-based and non-deterministic, so individual task rewards vary between runs. These results show the integration works end-to-end — a full pass@k evaluation across the 115-task test set requires a dedicated budget.
-
-### What this adds up to
-
-EGM is strongest on **hard-anchor, strong-evidence, conflict-dense** enterprise workflows. It deliberately trades open-ended persona recall for provenance and gate discipline:
-
-| Strength | Evidence |
-|---|---|
-| Evidence-gated retrieval | 10/10 attack vectors blocked; 0 false acceptances across 135 tests |
-| Actionable rejection | Every gate rejection names what's missing and what tool to call next |
-| Bounded task context | 20 concurrent refund workflows, 10 concurrent coding workflows — zero cross-bleed |
-| Cascading invalidation | Revoke root evidence → observed + derived facts both invalidated |
-| Multi-domain | Same architecture, two schemas (REFUND + CODING), identical correctness guarantees |
-| Freshness discipline | Fresh/stale/expired per evidence type; claim-type-specific thresholds enforced |
-| Agent task integration | tau-bench A/B: EGM 3/3 pass vs. baseline 2/3, ~20x context compression |
-| LLM agnostic | Works with any LiteLLM-compatible model (DeepSeek tested); deterministic smoke tests need no API key |
-
-**Small-sample tau-bench disclaimer:** 3 tasks is a sample, not a pass@k evaluation. Full 115-task results need a dedicated budget.
-
-See [benchmarks/README.md](benchmarks/README.md) and [reports/benchmark_report.md](reports/benchmark_report.md).
 
 ---
 
