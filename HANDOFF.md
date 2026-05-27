@@ -107,7 +107,7 @@ M1, M2 manual path, M3, and the v0.1 hardening board are now closed.
    - `src/evidence_gated_memory/core/mermaid.py`
    - `src/evidence_gated_memory/core/context.py`
 3. **Pick the next slice.** Best current candidates:
-   - τ-bench / τ²-bench integration (in progress)
+   - τ-bench / τ²-bench integration — A/B runner unblocked and producing data. 3-task sample in README. Batch run in progress.
    - Automatic LLM distillation for L0→L1 promotion (deferred design)
    - Production-grade SQLite migration registry (current `_ensure_column` is the minimal stamp)
 4. Keep long-term semantic memory separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
@@ -115,6 +115,15 @@ M1, M2 manual path, M3, and the v0.1 hardening board are now closed.
 ---
 
 ## Slice log (most recent first)
+
+### tau-bench A/B unblocked slice
+
+- Removed hardcoded API key from `benchmarks/tau_bench/run_ab.py`. Runner now exits early if `DEEPSEEK_API_KEY` is not set.
+- A/B baseline-vs-EGM comparison ran end-to-end on DeepSeek-chat. 3-task sample confirmed: both agents pass at the same rate; EGM delivers ~22x context compression (~370 tokens vs. ~8,100 raw).
+- Evidence recording and fact gating verified: tool calls → evidence refs → gate checks fire correctly.
+- README tau-bench section updated with real results (replaced stale pre-run claims with actual data).
+- Identified `_gate_respond` hardcodes `refund_eligibility` claim type — exchange tasks produce `refund_api_response` evidence which doesn't satisfy that claim type, causing high rejection counts. A richer intent→claim_type mapping is TODO.
+- Batch run across tasks 3–7 in flight. Full 115-task pass@k evaluation still needs dedicated budget.
 
 ### v0.4.0 release slice
 
