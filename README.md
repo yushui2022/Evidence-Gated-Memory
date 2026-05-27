@@ -6,7 +6,7 @@
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="PyPI" src="https://img.shields.io/pypi/v/evidence-gated-memory?color=0B1220&label=pypi"></a>
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="Python" src="https://img.shields.io/pypi/pyversions/evidence-gated-memory?color=0B1220"></a>
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-0B1220"></a>
-  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-134%20passing-0F9F6E"></a>
+  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-135%20passing-0F9F6E"></a>
   <a href="#benchmarks"><img alt="Status" src="https://img.shields.io/badge/status-alpha-E7B549"></a>
 </p>
 
@@ -373,7 +373,7 @@ egm ref .egm ref_abc123                     # drill down to raw evidence
 
 > We report what we run. We don't report what we haven't.
 
-EGM runs on **two domain schemas** (REFUND + CODING) and reports results across five benchmark categories:
+EGM runs on **two domain schemas** (REFUND + CODING) and reports results across six benchmark categories:
 
 ### 1. Adversarial probes — 10 attack vectors, 10 blocks
 
@@ -462,7 +462,38 @@ python benchmarks/official/memory_agent_bench.py path/to/Conflict_Resolution.par
 
 ### 5. Agent benchmark integration (tau-bench / τ²-bench)
 
-The harness runs and model routing have been validated (DeepSeek + LiteLLM, retail and mock domains). **EGM has not yet been integrated as the agent's memory layer for an A/B comparison.** This is the next major benchmark milestone — running the same tau/tau2 tasks with and without EGM, measuring pass rate, false-done rate, and evidence coverage. When those numbers exist they will be reported here.
+EGM's tau-bench adapter wraps a tau-bench environment, routing every tool result through EGM's evidence layer and gating agent conclusions before they become facts. The integration code is ready; the A/B scores are blocked on two prerequisites.
+
+**What's done:**
+
+```bash
+python benchmarks/tau_bench/run_ab.py --smoke    # deterministic, no API keys
+python benchmarks/run_local.py --tau-smoke        # via unified runner
+python -m pytest tests/test_benchmarks.py -q      # includes tau smoke test
+```
+
+The smoke test simulates a complete tau-bench retail refund task through EGM: tool calls → evidence recording → fact assertion → gate rejection (premature completion blocked) → re-assert with evidence → transition to DONE → context building. **8/8 thresholds pass.**
+
+**EGM adapter capabilities** (`benchmarks/tau_bench/adapter.py`):
+- `EGMTauAdapter`: wraps any tau-bench Env, records tool results as EGM evidence
+- Tracks evidence coverage, fact acceptance rate, context compression ratio
+- `run_single_task_comparison()`: A/B harness — runs the same task with and without EGM
+
+**What's blocked:**
+
+| Prerequisite | Status |
+|---|---|
+| tau-bench installed + data files | ZIP archives available (`D:/bench_repos/`) |
+| LLM API key (DeepSeek / Anthropic) | Not configured |
+| Real A/B run across task set | **Blocked** on the two items above |
+
+**When unblocked**, the A/B harness measures:
+- **Task pass rate** — does EGM help or hurt task completion?
+- **Context compression** — EGM context vs. raw message history (token count)
+- **Evidence coverage** — what fraction of tool results are recorded as evidence
+- **False-done rate** — how often the agent claims completion without sufficient evidence
+
+The adapter is architected to work with any tau-bench domain (retail, airline, mock) — it maps tool names to EGM evidence types via a configurable dictionary. When real A/B scores exist they will be reported here.
 
 ### What this adds up to
 

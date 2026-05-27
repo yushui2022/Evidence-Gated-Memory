@@ -18,6 +18,7 @@ if str(SRC) not in sys.path:
 from benchmarks.local_benchmarks import run_all_benchmarks  # noqa: E402
 from benchmarks.adversarial_probes import run_all_adversarial  # noqa: E402
 from benchmarks.scenario_probes import run_all_scenarios  # noqa: E402
+from benchmarks.tau_bench.adapter import run_smoke_test as run_tau_smoke  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -31,9 +32,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Print raw JSON output.")
     parser.add_argument("--adversarial-only", action="store_true", help="Run only adversarial probes.")
     parser.add_argument("--scenarios-only", action="store_true", help="Run only scenario probes.")
+    parser.add_argument("--tau-smoke", action="store_true", help="Run tau-bench EGM integration smoke test.")
     args = parser.parse_args(argv)
 
     all_passed = True
+
+    if args.tau_smoke:
+        result = run_tau_smoke(args.workspace_root)
+        _print_single(result, args.json)
+        return 0 if result["passed"] else 1
 
     if args.adversarial_only:
         adv = run_all_adversarial(args.workspace_root)
@@ -57,7 +64,23 @@ def main(argv: list[str] | None = None) -> int:
     _print_result(sc, args.json)
     all_passed = all_passed and sc["passed"]
 
+    tau = run_tau_smoke(args.workspace_root)
+    _print_single(tau, args.json)
+    all_passed = all_passed and tau["passed"]
+
     return 0 if all_passed else 1
+
+
+def _print_single(result: dict, as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return
+    status = "PASS" if result["passed"] else "FAIL"
+    print(f"\n[{status}] {result['name']}")
+    print(f"  {result['description']}")
+    for k, v in result["metrics"].items():
+        t = result["thresholds"].get(k, "")
+        print(f"  {k}: {v}  (threshold: {t})")
 
 
 def _print_result(result: dict, as_json: bool) -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from benchmarks.adversarial_probes import run_all_adversarial
 from benchmarks.local_benchmarks import run_all_benchmarks
 from benchmarks.scenario_probes import run_all_scenarios
+from benchmarks.tau_bench.adapter import run_smoke_test as run_tau_smoke
 
 
 def test_local_benchmark_suite_passes(tmp_path) -> None:
@@ -75,3 +76,16 @@ def test_adversarial_probes_block_all_attacks(tmp_path) -> None:
         f"Expected all {result['total']} attack vectors blocked, got {result['blocked']}"
     )
     assert result["total"] == 10
+
+
+def test_tau_bench_egm_smoke_passes(tmp_path) -> None:
+    result = run_tau_smoke(tmp_path / "tau_smoke")
+
+    assert result["passed"]
+    assert result["metrics"]["eligibility_accepted"] == 1.0
+    assert result["metrics"]["premature_completion_blocked"] == 1.0
+    assert result["metrics"]["rejection_actionable"] == 1.0
+    assert result["metrics"]["completion_accepted"] == 1.0
+    assert result["metrics"]["transition_accepted"] == 1.0
+    assert result["metrics"]["context_has_fact"] == 1.0
+    assert result["metrics"]["context_has_task_map"] == 1.0
