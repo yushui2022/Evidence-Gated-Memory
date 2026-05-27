@@ -373,7 +373,7 @@ egm ref .egm ref_abc123                     # drill down to raw evidence
 
 > We report what we run. We don't report what we haven't.
 
-EGM's benchmark story has three layers:
+EGM runs on **two domain schemas** (REFUND + CODING) and reports results across five benchmark categories:
 
 ### 1. Adversarial probes — 10 attack vectors, 10 blocks
 
@@ -402,20 +402,30 @@ python -m pytest tests/test_benchmarks.py -q
 
 ### 2. Scenario probes — end-to-end domain workflows
 
-Three refund-domain scenarios exercise the full EGM loop. They verify the gate holds at every step, evidence is required before conclusions, and context is clean and drillable.
+Six scenarios across two domains exercise the full EGM loop. Three for refund, three for coding — same architecture, different schema.
 
 ```bash
 python benchmarks/scenario_probes.py                # run directly
 python benchmarks/run_local.py --scenarios-only     # via runner
 ```
 
-| Scenario | What it exercises | Key metrics |
-|---|---|---|
-| Full refund lifecycle (3 orders) | eligibility → rejection → evidence → acceptance → completion → transition → context → revoke cascade | 9/9 thresholds: every gate fires, every fact is recallable, cascade works |
-| Multi-order concurrency (20 workflows) | Isolated task graphs, no cross-contamination of facts or context | Anchor isolation, fact-to-node binding, context boundary — all hold |
-| Partial-evidence rejection loop | try → reject → fetch → retry → accept, the canonical agent loop | 5 rounds, 3 rejections (all actionable), 2 acceptances after full evidence |
+**Refund domain** (`refund.yaml` — 6 evidence types, 3 claim types, 2 state gates):
 
-**Result: 3/3 scenarios pass at every threshold.** These are the enterprise workflows EGM was built for — and they verify that rejection is never silent, evidence is never optional, and context never bleeds across workflows.
+| Scenario | What it exercises | Result |
+|---|---|---|
+| Full refund lifecycle (3 orders) | eligibility → rejection → evidence → acceptance → completion → transition → context → cascade | 9/9 thresholds |
+| Multi-order concurrency (20 workflows) | Task isolation, no cross-contamination of facts, context, or anchors | All boundaries hold |
+| Partial-evidence rejection loop | try → reject with actionable feedback → fetch → retry → accept | 5 rounds, 3 rejections (100% actionable) |
+
+**Coding domain** (`coding.yaml` — 4 evidence types, 3 claim types, 2 state gates):
+
+| Scenario | What it exercises | Result |
+|---|---|---|
+| File → diagnosis → done (6 rounds) | file_read → file_content → test_log → error_diagnosis → fresh test_log → task_done | 3 rejections (100% actionable), 3 acceptances |
+| Stale evidence gate | `file_content` accepts stale file_read; `task_done` rejects stale test_log (requires fresh) | Same evidence, different outcomes — correctly gated |
+| Multi-file concurrency (10 workflows) | 10 files repaired concurrently; verify anchor isolation and context boundary | No cross-contamination |
+
+**Result: 6/6 scenarios pass at every threshold.** EGM's schema system works identically across domains — the gates, freshness rules, and context isolation are schema-driven, not hardcoded for refund.
 
 ### 3. Correctness probes — product-surface validation
 
@@ -458,9 +468,16 @@ The harness runs and model routing have been validated (DeepSeek + LiteLLM, reta
 
 EGM is strongest on **hard-anchor, strong-evidence, conflict-dense** enterprise workflows. It deliberately trades open-ended persona recall for provenance and gate discipline:
 
-- **Strong** on evidence-gated retrieval, actionable rejection, bounded task context, blocking unsupported conclusions
-- **Weak** on open-ended long-range summarization and relationship-heavy dialogue recall
-- **Not yet measured** on end-to-end agent task success (the tau/tau2 A/B gap)
+| Strength | Evidence |
+|---|---|
+| Evidence-gated retrieval | 10/10 attack vectors blocked; 0 false acceptances across 134 tests |
+| Actionable rejection | Every gate rejection names what's missing and what tool to call next |
+| Bounded task context | 20 concurrent refund workflows, 10 concurrent coding workflows — zero cross-bleed |
+| Cascading invalidation | Revoke root evidence → observed + derived facts both invalidated |
+| Multi-domain | Same architecture, two schemas (REFUND + CODING), identical correctness guarantees |
+| Freshness discipline | Fresh/stale/expired per evidence type; claim-type-specific thresholds enforced |
+
+**Not yet measured:** end-to-end agent task success with EGM as the memory layer (tau-bench / τ²-bench A/B comparison).
 
 See [benchmarks/README.md](benchmarks/README.md) and [reports/benchmark_report.md](reports/benchmark_report.md).
 

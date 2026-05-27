@@ -34,9 +34,13 @@ def test_scenario_probes_all_pass(tmp_path) -> None:
         "refund_full_lifecycle",
         "refund_multi_order_concurrency",
         "refund_partial_evidence_rejection_loop",
+        "coding_file_to_diagnosis",
+        "coding_stale_rejection",
+        "coding_multi_file_workflow",
     }
 
     by_name = {s["name"]: s for s in result["scenarios"]}
+    # Refund scenarios
     lifecycle = by_name["refund_full_lifecycle"]
     assert lifecycle["metrics"]["premature_eligibility_rejection_rate"] == 1.0
     assert lifecycle["metrics"]["cascade_on_revoke"] == 1.0
@@ -48,6 +52,19 @@ def test_scenario_probes_all_pass(tmp_path) -> None:
     assert rejection["metrics"]["actionable_rejection_rate"] == 1.0
     assert rejection["metrics"]["rejection_rounds"] == 3
     assert rejection["metrics"]["acceptance_rounds"] == 2
+
+    # Coding scenarios
+    coding_diag = by_name["coding_file_to_diagnosis"]
+    assert coding_diag["metrics"]["actionable_rejection_rate"] == 1.0
+    assert coding_diag["metrics"]["file_content_accepted"] == 1.0
+    assert coding_diag["metrics"]["task_done_accepted"] == 1.0
+
+    coding_stale = by_name["coding_stale_rejection"]
+    assert coding_stale["metrics"]["task_done_with_stale_blocked"] == 1.0
+    assert coding_stale["metrics"]["diagnosis_with_stale_ok"] == 1.0
+
+    coding_multi = by_name["coding_multi_file_workflow"]
+    assert coding_multi["metrics"]["no_cross_contamination"] == 1.0
 
 
 def test_adversarial_probes_block_all_attacks(tmp_path) -> None:
