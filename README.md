@@ -502,16 +502,16 @@ The principle we converged on is **"build trust at the base before growing up"**
 ✅ #29  long-term semantic pyramid manual path
 ```
 
-M1, M2 manual path, M3, and the v0.1 hardening board are now closed for the current scope. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The remaining pre-0.4 cleanup is: CLI inspect coverage, the `Task.status` lifecycle decision, and a schema-version/migration table.
+M1, M2 manual path, M3, and the v0.1 hardening board are now closed for the current scope. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The remaining pre-0.4 cleanup is: the `Task.status` lifecycle decision and a schema-version/migration table.
 
 ### How to resume tomorrow
 
 1. **Verify the baseline still works.**
    ```bash
-   python -m pytest          # expect 123 passed
+   python -m pytest          # expect 124 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Pick the next cleanup task.** Best candidates: update `egm inspect`, decide `Task.status` API/removal, or add a schema-version table.
+3. **Pick the next cleanup task.** Best candidates: decide `Task.status` API/removal, or add a schema-version table.
 4. Keep long-term semantic memory separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
 
 ### Latest #29 slice
@@ -534,6 +534,14 @@ This slice intentionally completes the manual long-term semantic pyramid path:
 - `memory_persona_recorded` audit entries preserve persona promotion decisions.
 - Automatic LLM distillation is not implemented yet.
 - Suite total after this slice: **123 passed**.
+
+### Latest CLI inspect slice
+
+- `egm inspect` now reports TaskGraph counts: `tasks`, `task_nodes`, and `task_edges`.
+- It reports long-term semantic memory counts: `conversation_messages`, `memory_atoms`, `memory_scenarios`, and `memory_personas`.
+- It reports `offload_records` from `offload/offload.jsonl`.
+- Missing tables in old workspaces are counted as zero instead of crashing inspect.
+- Suite total after this slice: **124 passed**.
 
 ### Latest hardening slice
 

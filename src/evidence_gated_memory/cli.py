@@ -87,12 +87,26 @@ def _cmd_inspect(args: argparse.Namespace) -> int:
 
     with sqlite3.connect(db_path) as conn:
         print(f"database: {db_path}")
-        for table in ("events", "evidence", "claims", "facts", "audit_log"):
-            print(f"{table}: {_count(conn, table)}")
-        active = conn.execute("SELECT COUNT(*) FROM facts WHERE invalidated_at IS NULL").fetchone()[0]
-        invalidated = conn.execute("SELECT COUNT(*) FROM facts WHERE invalidated_at IS NOT NULL").fetchone()[0]
+        for table in (
+            "events",
+            "evidence",
+            "claims",
+            "facts",
+            "tasks",
+            "task_nodes",
+            "task_edges",
+            "conversation_messages",
+            "memory_atoms",
+            "memory_scenarios",
+            "memory_personas",
+            "audit_log",
+        ):
+            print(f"{table}: {_count_if_exists(conn, table)}")
+        active = _count_where_if_exists(conn, "facts", "invalidated_at IS NULL")
+        invalidated = _count_where_if_exists(conn, "facts", "invalidated_at IS NOT NULL")
         print(f"facts_active: {active}")
         print(f"facts_invalidated: {invalidated}")
+    print(f"offload_records: {_count_jsonl(workspace / 'offload' / 'offload.jsonl')}")
     refs = list((workspace / "refs").glob("*.md")) if (workspace / "refs").exists() else []
     print(f"refs: {len(refs)}")
     return 0
@@ -174,6 +188,29 @@ def _print_schema_summary(schema: DomainSchema) -> None:
 
 def _count(conn: sqlite3.Connection, table: str) -> int:
     return conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+
+
+def _table_exists(conn: sqlite3.Connection, table: str) -> bool:
+    return conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+        (table,),
+    ).fetchone() is not None
+
+
+def _count_if_exists(conn: sqlite3.Connection, table: str) -> int:
+    return _count(conn, table) if _table_exists(conn, table) else 0
+
+
+def _count_where_if_exists(conn: sqlite3.Connection, table: str, where: str) -> int:
+    if not _table_exists(conn, table):
+        return 0
+    return conn.execute(f"SELECT COUNT(*) FROM {table} WHERE {where}").fetchone()[0]
+
+
+def _count_jsonl(path: Path) -> int:
+    if not path.exists():
+        return 0
+    return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
 
 
 def _compact_json(raw: str, max_len: int = 160) -> str:

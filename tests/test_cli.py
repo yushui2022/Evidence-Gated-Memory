@@ -63,6 +63,62 @@ def test_cli_inspect_context_audit_and_ref(tmp_path: Path, capsys):
     assert ref_out.strip()
 
 
+def test_cli_inspect_includes_graph_offload_and_long_term_counts(tmp_path: Path, capsys):
+    workspace = tmp_path / "egm"
+    memory = EvidenceGatedMemory(workspace, REFUND)
+    try:
+        node_a = memory.create_task_node("task_cli_inspect", "check_order", "Check order")
+        node_b = memory.create_task_node("task_cli_inspect", "check_payment", "Check payment")
+        memory.add_task_edge(node_a.id, node_b.id)
+        evidence = memory.record_evidence(
+            evidence_type="order_record",
+            source="order_api",
+            source_system="order_api",
+            content='{"order_id":"ORD-INSPECT","status":"PAID"}',
+            metadata={"order_id": "ORD-INSPECT"},
+        )
+        memory.record_offload(
+            task_id="task_cli_inspect",
+            node_id=node_a.id,
+            tool_call_id="call_cli_inspect",
+            result_ref=evidence,
+            summary="order_api returned ORD-INSPECT status=PAID",
+        )
+        message = memory.record_conversation_message(
+            "user",
+            "Refund workflows need explicit source ids.",
+            session_id="session_cli_inspect",
+        )
+        atom = memory.record_memory_atom(
+            "instruction",
+            "Refund workflow context should stay drill-downable.",
+            source_messages=[message],
+        )
+        scenario = memory.record_memory_scenario(
+            "CLI inspect scenario",
+            "Inspect should report long-term memory layers.",
+            atoms=[atom],
+        )
+        memory.record_memory_persona(
+            "CLI inspect persona",
+            "Maintains evidence-gated memory diagnostics.",
+            scenarios=[scenario],
+        )
+    finally:
+        memory.close()
+
+    assert main(["inspect", str(workspace)]) == 0
+    out = capsys.readouterr().out
+    assert "tasks: 1" in out
+    assert "task_nodes: 2" in out
+    assert "task_edges: 1" in out
+    assert "offload_records: 1" in out
+    assert "conversation_messages: 1" in out
+    assert "memory_atoms: 1" in out
+    assert "memory_scenarios: 1" in out
+    assert "memory_personas: 1" in out
+
+
 def test_cli_sweep(tmp_path: Path, capsys):
     workspace = tmp_path / "egm"
     _seed(workspace)
