@@ -11,7 +11,16 @@ from typing import Optional
 
 from evidence_gated_memory.core.freshness import freshness_of, is_usable
 from evidence_gated_memory.core.mermaid import render_mermaid
-from evidence_gated_memory.core.models import Evidence, Fact, FactKind, Freshness, derive_task_state
+from evidence_gated_memory.core.models import (
+    Evidence,
+    Fact,
+    FactKind,
+    Freshness,
+    MemoryAtom,
+    MemoryPersona,
+    MemoryScenario,
+    derive_task_state,
+)
 from evidence_gated_memory.schemas.loader import DomainSchema
 from evidence_gated_memory.storage.sqlite import SqliteStore
 
@@ -30,6 +39,10 @@ def build_context(
     query: Optional[str] = None,
     task_id: Optional[str] = None,
     max_facts: int = 10,
+    include_long_term: bool = True,
+    max_memory_atoms: int = 5,
+    max_memory_scenarios: int = 3,
+    max_memory_personas: int = 2,
     now: Optional[datetime] = None,
 ) -> str:
     """Render a markdown prompt context block.
@@ -51,6 +64,15 @@ def build_context(
     if task_id:
         lines.append(f"_task_id: {task_id}_")
     lines.append("")
+
+    if include_long_term:
+        lines.extend(_long_term_memory_block(
+            store,
+            query=query,
+            max_atoms=max_memory_atoms,
+            max_scenarios=max_memory_scenarios,
+            max_personas=max_memory_personas,
+        ))
 
     if task_id:
         lines.extend(_task_map_block(store, task_id))
@@ -108,6 +130,115 @@ def build_context(
         lines.append("⚠ One or more facts were BLOCKED due to expired evidence. Do not assert conclusions that depend on them without reverification.")
 
     return "\n".join(lines)
+
+
+def _long_term_memory_block(
+    store: SqliteStore,
+    *,
+    query: Optional[str],
+    max_atoms: int,
+    max_scenarios: int,
+    max_personas: int,
+) -> list[str]:
+    personas = _select_personas(store, query=query, limit=max_personas)
+    scenarios = _select_scenarios(store, query=query, limit=max_scenarios)
+    atoms = _select_atoms(store, query=query, limit=max_atoms)
+    if not personas and not scenarios and not atoms:
+        return []
+
+    lines: list[str] = ["<long_term_memory>"]
+    if personas:
+        lines.append("## L3 Personas")
+        for persona in personas:
+            lines.extend(_render_persona(persona))
+    if scenarios:
+        lines.append("## L2 Scenarios")
+        for scenario in scenarios:
+            lines.extend(_render_scenario(scenario))
+    if atoms:
+        lines.append("## L1 Atoms")
+        for atom in atoms:
+            lines.extend(_render_atom(atom))
+    lines.append("</long_term_memory>")
+    lines.append("")
+    return lines
+
+
+def _select_personas(
+    store: SqliteStore,
+    *,
+    query: Optional[str],
+    limit: int,
+) -> list[MemoryPersona]:
+    if limit <= 0:
+        return []
+    personas = (
+        store.search_memory_personas(query, limit=limit)
+        if query
+        else store.list_memory_personas()
+    )
+    return personas[:limit]
+
+
+def _select_scenarios(
+    store: SqliteStore,
+    *,
+    query: Optional[str],
+    limit: int,
+) -> list[MemoryScenario]:
+    if limit <= 0:
+        return []
+    scenarios = (
+        store.search_memory_scenarios(query, limit=limit)
+        if query
+        else store.list_memory_scenarios()
+    )
+    return scenarios[:limit]
+
+
+def _select_atoms(
+    store: SqliteStore,
+    *,
+    query: Optional[str],
+    limit: int,
+) -> list[MemoryAtom]:
+    if limit <= 0:
+        return []
+    atoms = (
+        store.search_memory_atoms(query, limit=limit)
+        if query
+        else store.list_memory_atoms()
+    )
+    return atoms[:limit]
+
+
+def _render_persona(persona: MemoryPersona) -> list[str]:
+    return [
+        f"[PERSONA] {persona.name}",
+        f"  id: {persona.id}",
+        f"  summary: {persona.summary}",
+        f"  scenario_ids: {persona.scenario_ids}",
+        "",
+    ]
+
+
+def _render_scenario(scenario: MemoryScenario) -> list[str]:
+    return [
+        f"[SCENARIO] {scenario.title}",
+        f"  id: {scenario.id}",
+        f"  summary: {scenario.summary}",
+        f"  atom_ids: {scenario.atom_ids}",
+        "",
+    ]
+
+
+def _render_atom(atom: MemoryAtom) -> list[str]:
+    return [
+        f"[ATOM:{atom.kind.value}] {atom.text}",
+        f"  id: {atom.id}",
+        f"  source_message_ids: {atom.source_message_ids}",
+        "",
+    ]
 
 
 def _task_map_block(store: SqliteStore, task_id: str) -> list[str]:

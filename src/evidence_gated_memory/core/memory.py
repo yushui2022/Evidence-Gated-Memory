@@ -1020,6 +1020,10 @@ class EvidenceGatedMemory:
         max_facts: int = 10,
         *,
         task_id: Optional[str] = None,
+        include_long_term: bool = True,
+        max_memory_atoms: int = 5,
+        max_memory_scenarios: int = 3,
+        max_memory_personas: int = 2,
     ) -> str:
         return build_context(
             self.store,
@@ -1027,6 +1031,10 @@ class EvidenceGatedMemory:
             query=query,
             task_id=task_id,
             max_facts=max_facts,
+            include_long_term=include_long_term,
+            max_memory_atoms=max_memory_atoms,
+            max_memory_scenarios=max_memory_scenarios,
+            max_memory_personas=max_memory_personas,
         )
 
     # ---------- audit ----------

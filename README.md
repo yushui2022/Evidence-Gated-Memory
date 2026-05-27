@@ -13,7 +13,7 @@ Evidence-Gated Graph Memory turns a linear agent history into a layered, recover
 It combines three ideas:
 
 1. **Symbolic short-term memory** — heavy tool outputs are offloaded into `refs/*.md`, indexed by `node_id` / `result_ref`, and folded into a Mermaid task graph.
-2. **Layered long-term memory** — the current foundation records L0 raw messages, manually promoted L1 atoms, L2 scenarios, and L3 persona profiles.
+2. **Layered long-term memory** — the current foundation records L0 raw messages, manually promoted L1 atoms, L2 scenarios, and L3 persona profiles; `build_context()` injects L1-L3 with drill-down ids.
 3. **Evidence-gated quality control** — business facts and task-state transitions must pass schema-defined gates for required evidence, trusted sources, freshness, and auditability.
 
 **The goal is not to remember more text. The goal is to keep a compact task map while preserving a path back to the original evidence.**
@@ -152,7 +152,7 @@ User dialogue should not become flat embedding search. The target design is a se
 L0 Conversation  →  L1 Atom  →  L2 Scenario  →  L3 Persona
 ```
 
-This answers "who is the user, what is the project background, what were the historical decisions." The current implementation has the full manual L0/L1/L2/L3 foundation: raw conversation messages, manually promoted persona / episodic / instruction atoms, scenario blocks that group related atoms, and persona profiles grounded in scenarios. Automatic LLM distillation is intentionally left out until it has a separate design.
+This answers "who is the user, what is the project background, what were the historical decisions." The current implementation has the full manual L0/L1/L2/L3 foundation: raw conversation messages, manually promoted persona / episodic / instruction atoms, scenario blocks that group related atoms, and persona profiles grounded in scenarios. `build_context()` injects L1-L3 summaries with source ids; L0 raw messages stay out of the prompt by default. Automatic LLM distillation is intentionally left out until it has a separate design.
 
 **3. Evidence-gated quality layer — what makes the graph and facts trustworthy**
 
@@ -305,12 +305,31 @@ DEEPSEEK_API_KEY=... python examples/deepseek_refund_agent/run.py
 
 ## What context looks like
 
-`build_context()` returns a compact, provenance-labeled prompt. Pass `task_id` when you want the current Mermaid task map included; pass `query` when you want fact recall narrowed by text/anchor.
+`build_context()` returns a compact, provenance-labeled prompt. Pass `task_id` when you want the current Mermaid task map included; pass `query` when you want fact and long-term-memory recall narrowed by text/anchor.
 
 ````
 # Evidence-Gated Memory Context
 _query: ORD-123_
 _task_id: refund:ORD-123_
+
+<long_term_memory>
+## L3 Personas
+[PERSONA] Refund-agent operator
+  id: persona_123
+  summary: Prefers evidence-gated completion and explicit audit trails.
+  scenario_ids: ['scene_123']
+
+## L2 Scenarios
+[SCENARIO] Refund completion rules
+  id: scene_123
+  summary: Completion claims need fresh refund API evidence.
+  atom_ids: ['atom_123']
+
+## L1 Atoms
+[ATOM:instruction] Refund completion requires refund_api_response evidence.
+  id: atom_123
+  source_message_ids: ['msg_123']
+</long_term_memory>
 
 <task_map>
 task_id: refund:ORD-123
@@ -329,7 +348,7 @@ flowchart TD
   - ref=ref_456 type=refund_policy source=policy_db observed=0.0h ago [fresh] node=node_abcd
 ````
 
-The agent reads the high-level map; when it needs to verify, it drills down by `node_id` and `ref` to structured rows and raw `refs/*.md`. Gate rejections are returned by `assert_fact()` / `transition_node()` and recorded in the audit log; `build_context()` is the prompt snapshot, not the rejection API.
+The agent reads the high-level map and long-term background; when it needs to verify, it drills down by `node_id`, `ref`, `atom_id`, `scenario_id`, `persona_id`, or `source_message_ids`. Gate rejections are returned by `assert_fact()` / `transition_node()` and recorded in the audit log; `build_context()` is the prompt snapshot, not the rejection API.
 
 ---
 
@@ -415,7 +434,7 @@ EGM has completed **Milestone M1: restoring the graph-memory pillar** on top of 
 
 - **v0.1 (shipped):** evidence + claims + facts + freshness + cascading invalidation + audit + CLI. Tests green (49/49).
 - **M1 complete:** the flat fact store now has a hard-anchor **task graph** with structured TaskNodes, evidence-gated state transitions, and a Mermaid projection that the agent can read as a task map.
-- **M2 foundation complete:** L0 Conversation + L1 Atom + L2 Scenario + L3 Persona are implemented as manual, auditable layers. Automatic LLM distillation is not implemented yet.
+- **M2 complete for the manual path:** L0 Conversation + L1 Atom + L2 Scenario + L3 Persona are implemented as manual, auditable layers, and `build_context()` injects L1-L3. Automatic LLM distillation is not implemented yet.
 
 ### Status of every tracked task
 
@@ -429,11 +448,11 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 | 12 | ✅ | FTS query escape | shipped |
 | 13 | ✅ | Strict schema: reject unknown evidence/claim types outright | shipped |
 | 14 | ✅ | `source_system` allowlist gate | shipped |
-| 15 | ⬜ | Rewrite derived-fact semantics | needs design pass first |
-| 16 | 🟡 | Expired semantics: critical-field plan C | half-implemented, needs decision |
+| 15 | ✅ | Rewrite derived-fact semantics | shipped |
+| 16 | ✅ | Expired semantics: critical-field plan C | shipped |
 | 17 | ✅ | `commit_fact` must require a `GateResult` | shipped |
 | 18 | ✅ | README ↔ API alignment | shipped |
-| 19 | 🟡 | Regression tests | grows alongside every task |
+| 19 | ✅ | Regression tests | current suite green; grows with future work |
 
 #### M1 — short-term graph memory (current focus)
 
@@ -451,11 +470,11 @@ Legend: ✅ done · 🟡 in progress · ⬜ pending · 🔒 blocked by another t
 | 31 | ✅ | `transition_node()` — the **gated** business API (current `update_task_node_status` is low-level CRUD only) | #22 ✅ |
 | 26 | ✅ | Architecture doc: three pillars + lineage from TencentDB Agent Memory | #31 ✅ |
 
-#### M2 — long-term semantic pyramid (manual foundation complete)
+#### M2 — long-term semantic pyramid (manual path complete)
 
 | # | Status | Task |
 |---|---|---|
-| 29 | ✅ | L0 conversation → L1 atom → L2 scenario → L3 persona manual pyramid foundation; automatic distillation intentionally deferred |
+| 29 | ✅ | L0 conversation → L1 atom → L2 scenario → L3 persona manual pyramid + context injection; automatic distillation intentionally deferred |
 
 #### M3 — offload mid-layer index
 
@@ -480,24 +499,24 @@ The principle we converged on is **"build trust at the base before growing up"**
 ✅ #31  transition_node — the gated state API
 ✅ #26  architecture doc
 ✅ #27  offload JSONL index
-✅ #29  long-term semantic pyramid foundation
+✅ #29  long-term semantic pyramid manual path
 ```
 
-M1, M2 foundation, and M3 are now closed. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The remaining v0.1 hardening items are now #15, #16, and the ongoing regression-test bucket #19.
+M1, M2 manual path, M3, and the v0.1 hardening board are now closed for the current scope. Automatic LLM distillation should be treated as a separately designed future task, not a casual extension of #29. The remaining pre-0.4 cleanup is: CLI inspect coverage, the `Task.status` lifecycle decision, and a schema-version/migration table.
 
 ### How to resume tomorrow
 
 1. **Verify the baseline still works.**
    ```bash
-   python -m pytest          # expect 120 passed
+   python -m pytest          # expect 123 passed
    ```
 2. **Re-read this section** plus `src/evidence_gated_memory/core/memory.py`, `src/evidence_gated_memory/core/mermaid.py`, `src/evidence_gated_memory/core/context.py`.
-3. **Pick the next hardening task.** Best candidates: #15 derived-fact semantics, or finishing #16 expired semantics.
+3. **Pick the next cleanup task.** Best candidates: update `egm inspect`, decide `Task.status` API/removal, or add a schema-version table.
 4. Keep long-term semantic memory separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
 
 ### Latest #29 slice
 
-This slice intentionally completes the manual long-term semantic pyramid foundation:
+This slice intentionally completes the manual long-term semantic pyramid path:
 
 - `ConversationMessage` stores L0 raw user / assistant messages by `session_id`.
 - `MemoryAtom` stores manually promoted L1 atoms with `persona`, `episodic`, or `instruction` kind.
@@ -507,11 +526,14 @@ This slice intentionally completes the manual long-term semantic pyramid foundat
 - L2 scenario search uses safe FTS with LIKE fallback.
 - `MemoryPersona` stores manually promoted L3 persona profiles backed by real L2 scenario ids.
 - L3 persona search uses safe FTS with LIKE fallback.
+- `build_context()` injects matching L1 atoms, L2 scenarios, and L3 personas into `<long_term_memory>`.
+- L0 raw messages are not injected by default; context carries `source_message_ids` for drill-down.
+- `include_long_term=False` disables the block, and `max_memory_*` limits bound prompt size.
 - `memory_atom_recorded` audit entries preserve promotion decisions.
 - `memory_scenario_recorded` audit entries preserve scenario promotion decisions.
 - `memory_persona_recorded` audit entries preserve persona promotion decisions.
 - Automatic LLM distillation is not implemented yet.
-- Suite total after this slice: **120 passed**.
+- Suite total after this slice: **123 passed**.
 
 ### Latest hardening slice
 
