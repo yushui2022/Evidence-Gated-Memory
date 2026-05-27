@@ -6,7 +6,7 @@
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="PyPI" src="https://img.shields.io/pypi/v/evidence-gated-memory?color=0B1220&label=pypi"></a>
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="Python" src="https://img.shields.io/pypi/pyversions/evidence-gated-memory?color=0B1220"></a>
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-0B1220"></a>
-  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-130%20passing-0F9F6E"></a>
+  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-131%20passing-0F9F6E"></a>
   <a href="#benchmarks"><img alt="Status" src="https://img.shields.io/badge/status-alpha-E7B549"></a>
 </p>
 
@@ -17,6 +17,7 @@
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
+  <a href="#architecture-at-a-glance">Architecture map</a> ·
   <a href="#why-egm">Why EGM</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#benchmarks">Benchmarks</a> ·
@@ -43,6 +44,92 @@
 ```
 
 **The goal is not to remember more text. The goal is to keep a compact task map while preserving a path back to the original evidence.**
+
+---
+
+## Architecture at a glance
+
+```mermaid
+flowchart TD
+    subgraph INPUT["Agent 运行输入"]
+        A["Agent 对话<br/>用户请求 / Agent 回复"]
+        T["工具调用与业务系统返回<br/>API 响应 / 搜索结果 / 测试日志 / 文件内容"]
+    end
+
+    subgraph SHORT["短期图记忆：当前任务的可折叠上下文"]
+        R["refs/*.md 原始证据层<br/>完整工具结果 / API 返回 / 日志 / 文件片段"]
+        O["offload JSONL 摘要索引层<br/>tool_call_id / node_id / result_ref / summary / score"]
+        G["TaskGraph 任务图<br/>任务节点 / 边 / 状态 / 依赖 / hard anchor"]
+        M["Mermaid 任务画布<br/>current_task_context<br/>给 Agent 的高层任务地图"]
+    end
+
+    subgraph LONG["长期语义记忆：跨会话背景"]
+        L0["L0 Conversation<br/>原始 user / assistant 对话"]
+        L1["L1 Atom<br/>persona / episodic / instruction 原子记忆"]
+        L2["L2 Scenario<br/>场景块 / 项目档案 / 历史决策"]
+        L3["L3 Persona<br/>用户画像 / 长期偏好 / 稳定背景"]
+    end
+
+    subgraph EGM["EGM 证据门控层：让图结构和事实可信"]
+        S["Domain Schema<br/>业务规则：实体 / 证据类型 / TTL / 状态机 / gate 规则"]
+        E["Entity Anchor Index<br/>metadata → connector → regex → LLM fallback<br/>order_id / ticket_id / refund_id / task_id"]
+        F["Fact Layer<br/>L1a observed facts<br/>L1b derived facts"]
+        Q["Quality Gates<br/>证据要求 / source allowlist / freshness / 状态转移门控"]
+        X["Actionable Rejection<br/>缺什么证据 / 为什么拒绝 / 下一步该调什么工具"]
+        AU["Audit & Replay<br/>证据链 / 拒绝记录 / 状态变更 / 可恢复历史"]
+    end
+
+    subgraph PROMPT["Prompt 组装：少 token，但可下钻"]
+        C["Context Builder<br/>选择当前最相关的图、事实、记忆和证据指针"]
+        P["Agent Prompt<br/>L3 Persona + L2 Scene Navigation + L1 Relevant Memories<br/>+ Mermaid TaskGraph + Gated Facts + refs 指针"]
+    end
+
+    A --> L0
+    A --> G
+
+    T --> R
+    T --> O
+    R --> O
+    O --> G
+    G --> M
+
+    L0 --> L1
+    L1 --> L2
+    L2 --> L3
+
+    A --> E
+    T --> E
+    R --> E
+    O --> E
+    E --> G
+    E --> F
+
+    S --> E
+    S --> Q
+
+    R --> Q
+    F --> Q
+    G --> Q
+
+    Q -->|"通过：事实可写入"| F
+    Q -->|"通过：任务状态可流转"| G
+    Q -->|"拒绝：证据不足 / 过期 / 来源不可信"| X
+    X --> AU
+    Q --> AU
+    F --> AU
+    G --> AU
+
+    L3 --> C
+    L2 --> C
+    L1 --> C
+    M --> C
+    G --> C
+    F --> C
+    R -. "需要查证时按 node_id / result_ref 下钻" .-> C
+
+    C --> P
+    P --> A
+```
 
 ---
 
@@ -160,73 +247,6 @@ Components:
 - **Quality Gates** — enforce required evidence, source allowlists, freshness, and state-transition rules.
 - **Actionable Rejection** — never just `False`. Returns what's missing, why, which tool to call next, and the `audit_id`.
 - **Audit & Replay** — full evidence chain, rejection records, state changes. History recoverable after a context wipe.
-
-<details>
-<summary>Click to expand the full data-flow diagram</summary>
-
-```mermaid
-flowchart TD
-    subgraph INPUT["Agent input"]
-        A["Agent dialogue<br/>user / assistant"]
-        T["Tool calls & business systems<br/>API / search / logs / files"]
-    end
-
-    subgraph SHORT["Short-term graph memory"]
-        R["refs/*.md raw evidence"]
-        O["offload JSONL summary index"]
-        G["TaskGraph<br/>nodes / edges / state / anchors"]
-        M["Mermaid task map"]
-    end
-
-    subgraph LONG["Long-term semantic memory"]
-        L0["L0 Conversation"]
-        L1["L1 Atom"]
-        L2["L2 Scenario"]
-        L3["L3 Persona"]
-    end
-
-    subgraph EGM["Evidence-gated quality layer"]
-        S["Domain Schema"]
-        E["Entity Anchor Index"]
-        F["Fact Layer (observed + derived)"]
-        Q["Quality Gates"]
-        X["Actionable Rejection"]
-        AU["Audit & Replay"]
-    end
-
-    subgraph PROMPT["Prompt assembly"]
-        C["Context Builder"]
-        P["Agent Prompt"]
-    end
-
-    A --> L0
-    A --> G
-    T --> R --> O --> G --> M
-    L0 --> L1 --> L2 --> L3
-    A --> E
-    T --> E
-    R --> E
-    S --> E
-    S --> Q
-    R --> Q
-    F --> Q
-    G --> Q
-    Q -->|pass: fact writable| F
-    Q -->|pass: state transition| G
-    Q -->|reject: evidence missing/stale/untrusted| X
-    X --> AU
-    Q --> AU
-    L3 --> C
-    L2 --> C
-    L1 --> C
-    M --> C
-    G --> C
-    F --> C
-    R -. "drill-down by node_id / ref" .-> C
-    C --> P --> A
-```
-
-</details>
 
 Full architecture document: [docs/architecture.md](docs/architecture.md).
 
