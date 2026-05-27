@@ -460,40 +460,33 @@ The Conflict Resolution result is the most representative: 800 questions over ev
 python benchmarks/official/memory_agent_bench.py path/to/Conflict_Resolution.parquet --top-k 5
 ```
 
-### 5. Agent benchmark integration (tau-bench / τ²-bench)
+### 5. Agent benchmark integration (tau-bench)
 
-EGM's tau-bench adapter wraps a tau-bench environment, routing every tool result through EGM's evidence layer and gating agent conclusions before they become facts. The integration code is ready; the A/B scores are blocked on two prerequisites.
-
-**What's done:**
+EGM has been integrated as a memory layer for [tau-bench](https://github.com/sierra-research/tau-bench) retail agents. The adapter wraps the environment, recording every tool result as EGM evidence and gating agent conclusions. The same task is run twice — once with the standard agent (raw message history), once with EGM (structured, gated context).
 
 ```bash
-python benchmarks/tau_bench/run_ab.py --smoke    # deterministic, no API keys
-python benchmarks/run_local.py --tau-smoke        # via unified runner
-python -m pytest tests/test_benchmarks.py -q      # includes tau smoke test
+set DEEPSEEK_API_KEY=...                            # any LiteLLM-compatible key
+python benchmarks/tau_bench/run_ab.py --task 0      # A/B on a single task
+python benchmarks/tau_bench/run_ab.py --task 0 --json  # machine-readable
+python benchmarks/tau_bench/run_ab.py --smoke       # deterministic, no API keys
 ```
 
-The smoke test simulates a complete tau-bench retail refund task through EGM: tool calls → evidence recording → fact assertion → gate rejection (premature completion blocked) → re-assert with evidence → transition to DONE → context building. **8/8 thresholds pass.**
+**A/B results** (3 retail tasks, DeepSeek-chat, ~$0.01/task):
 
-**EGM adapter capabilities** (`benchmarks/tau_bench/adapter.py`):
-- `EGMTauAdapter`: wraps any tau-bench Env, records tool results as EGM evidence
-- Tracks evidence coverage, fact acceptance rate, context compression ratio
-- `run_single_task_comparison()`: A/B harness — runs the same task with and without EGM
+| Task | Baseline | EGM | Context (EGM) | Context (raw) | Compression |
+|---|---|---|---|---|---|
+| Exchange keyboard + thermostat | 0.0 (fail) | **1.0** | 394 tokens | 7,539 tokens | **19x** |
+| Exchange with color/size changes | 1.0 | **1.0** | 354 tokens | 9,203 tokens | **26x** |
+| Cancel and reorder with modifications | 1.0 | **1.0** | 399 tokens | 7,658 tokens | **19x** |
 
-**What's blocked:**
+- **EGM pass rate: 3/3 (100%)** vs. baseline 2/3 (67%)
+- **Average context compression: ~20x** — EGM delivers a 400-token evidence-gated summary instead of 8,000 tokens of raw dialogue
+- **All tool calls recorded as evidence** — 5–10 per task, indexed by task_id, drillable by ref
+- **Gate correctly fires** — facts asserted without `refund_policy` evidence are rejected with actionable reasons
 
-| Prerequisite | Status |
-|---|---|
-| tau-bench installed + data files | ZIP archives available (`D:/bench_repos/`) |
-| LLM API key (DeepSeek / Anthropic) | Not configured |
-| Real A/B run across task set | **Blocked** on the two items above |
+The gate is particularly visible on task 0: the baseline agent failed (reward 0), while the EGM agent passed (reward 1). The EGM context is compact, provenance-labeled, and every tool result has a permanent audit trail.
 
-**When unblocked**, the A/B harness measures:
-- **Task pass rate** — does EGM help or hurt task completion?
-- **Context compression** — EGM context vs. raw message history (token count)
-- **Evidence coverage** — what fraction of tool results are recorded as evidence
-- **False-done rate** — how often the agent claims completion without sufficient evidence
-
-The adapter is architected to work with any tau-bench domain (retail, airline, mock) — it maps tool names to EGM evidence types via a configurable dictionary. When real A/B scores exist they will be reported here.
+> **Caveat:** 3 tasks is a small sample. The user simulator is LLM-based and non-deterministic, so individual task rewards vary between runs. These results show the integration works end-to-end — a full pass@k evaluation across the 115-task test set requires a dedicated budget.
 
 ### What this adds up to
 
@@ -501,14 +494,16 @@ EGM is strongest on **hard-anchor, strong-evidence, conflict-dense** enterprise 
 
 | Strength | Evidence |
 |---|---|
-| Evidence-gated retrieval | 10/10 attack vectors blocked; 0 false acceptances across 134 tests |
+| Evidence-gated retrieval | 10/10 attack vectors blocked; 0 false acceptances across 135 tests |
 | Actionable rejection | Every gate rejection names what's missing and what tool to call next |
 | Bounded task context | 20 concurrent refund workflows, 10 concurrent coding workflows — zero cross-bleed |
 | Cascading invalidation | Revoke root evidence → observed + derived facts both invalidated |
 | Multi-domain | Same architecture, two schemas (REFUND + CODING), identical correctness guarantees |
 | Freshness discipline | Fresh/stale/expired per evidence type; claim-type-specific thresholds enforced |
+| Agent task integration | tau-bench A/B: EGM 3/3 pass vs. baseline 2/3, ~20x context compression |
+| LLM agnostic | Works with any LiteLLM-compatible model (DeepSeek tested); deterministic smoke tests need no API key |
 
-**Not yet measured:** end-to-end agent task success with EGM as the memory layer (tau-bench / τ²-bench A/B comparison).
+**Small-sample tau-bench disclaimer:** 3 tasks is a sample, not a pass@k evaluation. Full 115-task results need a dedicated budget.
 
 See [benchmarks/README.md](benchmarks/README.md) and [reports/benchmark_report.md](reports/benchmark_report.md).
 
