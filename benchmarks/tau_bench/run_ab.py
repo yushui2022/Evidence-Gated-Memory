@@ -25,9 +25,10 @@ if str(ROOT) not in sys.path:
 from evidence_gated_memory import EvidenceGatedMemory, TaskNodeStatus
 from evidence_gated_memory.schemas.builtin import REFUND
 
-API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-c98e9186c4d847dba7e21f58b48299ad")
-os.environ.setdefault("DEEPSEEK_API_KEY", API_KEY)
-os.environ.setdefault("OPENAI_API_KEY", API_KEY)  # LiteLLM fallback for openai provider
+API_KEY = os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY")
+if API_KEY:
+    os.environ.setdefault("DEEPSEEK_API_KEY", API_KEY)
+    os.environ.setdefault("OPENAI_API_KEY", API_KEY)  # LiteLLM fallback for openai provider
 MODEL = "deepseek-chat"
 BASE_URL = "https://api.deepseek.com"
 PROVIDER = "deepseek"  # LiteLLM provider name for DeepSeek
@@ -50,6 +51,14 @@ TOOL_EVIDENCE_MAP = {
     "modify_user_address": "refund_api_response",
     "transfer_to_human_agents": "refund_api_response",
 }
+
+
+def _require_api_key() -> None:
+    if os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY"):
+        return
+    raise SystemExit(
+        "tau-bench A/B requires a model API key. Set DEEPSEEK_API_KEY before running."
+    )
 
 
 # ── EGM-aware agent ──────────────────────────────────────────────────────────
@@ -290,6 +299,7 @@ def run_baseline(env, task_index=0, max_steps=30) -> dict:
 
 def run_ab(task_index: int = 0) -> dict:
     """Run baseline + EGM on the same tau-bench task, compare."""
+    _require_api_key()
     from tau_bench.envs.retail.env import MockRetailDomainEnv
 
     print(f"Loading tau-bench retail env for task {task_index}...")

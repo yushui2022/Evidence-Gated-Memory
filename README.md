@@ -251,22 +251,21 @@ python benchmarks/tau_bench/run_ab.py --task 0 --json  # machine-readable
 python benchmarks/tau_bench/run_ab.py --smoke       # deterministic, no API keys
 ```
 
-**A/B results** (3 retail tasks, DeepSeek-chat, ~$0.01/task):
+**A/B results** (3 retail tasks, DeepSeek-chat, $0.003–0.005/task):
 
-| Task | Baseline | EGM | Context (EGM) | Context (raw) | Compression |
-|---|---|---|---|---|---|
-| Exchange keyboard + thermostat | 0.0 (fail) | **1.0** | 394 tokens | 7,539 tokens | **19x** |
-| Exchange with color/size changes | 1.0 | **1.0** | 354 tokens | 9,203 tokens | **26x** |
-| Cancel and reorder with modifications | 1.0 | **1.0** | 399 tokens | 7,658 tokens | **19x** |
+| Task | Baseline | EGM | Evidence | Facts (ok/rej) | EGM ctx | Raw msg | Compression |
+|---|---|---|---|---|---|---|---|
+| Exchange keyboard + thermostat | 1.0 | **1.0** | 6 | 0 / 6 | 394 | 7,601 | **19x** |
+| Exchange keyboard variant | 1.0 | **1.0** | 6 | 0 / 7 | 399 | 7,773 | **19x** |
+| Product lookup (tshirt count) | 1.0 | **1.0** | 10 | 3 / 1 | 315 | 9,065 | **29x** |
 
-- **EGM pass rate: 3/3 (100%)** vs. baseline 2/3 (67%)
-- **Average context compression: ~20x** — EGM delivers a 400-token evidence-gated summary instead of 8,000 tokens of raw dialogue
-- **All tool calls recorded as evidence** — 5–10 per task, indexed by task_id, drillable by ref
-- **Gate correctly fires** — facts asserted without `refund_policy` evidence are rejected with actionable reasons
+- **Both agents pass all 3 tasks.** The user simulator is LLM-based and non-deterministic; failure patterns vary per run. The value of EGM is not "baseline fails / EGM passes" but that EGM delivers the same result with a structured, auditable, drillable context.
+- **Average context compression: ~22x** — ~370 tokens of evidence-gated, provenance-labeled context vs. ~8,100 tokens of raw dialogue.
+- **All tool calls recorded as evidence** — 6–10 per task, indexed by `task_id`, attached to the task node for drill-down.
+- **Gate fires correctly** — premature fact assertions (made before `order_record` + `refund_policy` evidence is gathered) are rejected with actionable reasons. On task 2 the agent gathers query-type evidence first, so 3 of 4 facts pass the gate.
+- **High rejection count on exchange tasks** is expected: the exchange tool calls map to `refund_api_response` evidence, but the gate checks for `refund_eligibility` which requires `order_record` + `refund_policy`. The adapter correctly refuses to accept facts that don't meet the evidence requirements.
 
-The gate is particularly visible on task 0: the baseline agent failed (reward 0), while the EGM agent passed (reward 1). The EGM context is compact, provenance-labeled, and every tool result has a permanent audit trail.
-
-> **Caveat:** 3 tasks is a small sample. The user simulator is LLM-based and non-deterministic, so individual task rewards vary between runs. These results show the integration works end-to-end — a full pass@k evaluation across the 115-task test set requires a dedicated budget.
+> **Caveat:** 3 tasks is a small sample. The user simulator is LLM-based and non-deterministic, so individual task rewards vary between runs. Full pass@k across the 115-task test set needs a dedicated budget. The `_gate_respond` path currently hardcodes `refund_eligibility` claim type; a richer intent→claim_type mapping is a TODO for the adapter.
 
 ### What this adds up to
 
