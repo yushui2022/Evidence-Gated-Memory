@@ -567,6 +567,11 @@ class EvidenceGatedMemory:
         directly without consulting any quality gate. Use it for setup,
         recovery, or tests. The gated counterpart is `transition_node()`
         which enforces schema-defined transition rules.
+
+        `blocked_reason` and `suggested_action` are only persisted while the
+        target status is BLOCKED. Passing them with any other status is accepted
+        but they are cleared before the node is stored; the prior BLOCKED
+        context remains available in the audit entry.
         """
         node = self.store.get_task_node(node_id)
         if node is None:

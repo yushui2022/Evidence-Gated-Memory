@@ -280,6 +280,11 @@ class Task(BaseModel):
     about whole workflows, not just nodes.
 
     Auto-created on first `create_task_node(task_id=...)` for back-compat.
+    `status` is an explicit lifecycle field set only by explicit Task writes
+    such as `create_task(..., status=...)`; it is not the child-node aggregate.
+    `current_state` is the derived snapshot used by context/retrieval today.
+    If explicit lifecycle transitions become user-facing, define precedence
+    between `status` and `current_state` before using both in prompts.
     """
 
     id: str                                            # the same string used as TaskNode.task_id
