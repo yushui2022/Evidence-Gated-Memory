@@ -1,5 +1,5 @@
 <svg width="1600" height="240" viewBox="0 0 1600 240" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">EGM — Evidence-Gated Memory</title>
+  <title id="title">EGM - Evidence-Gated Memory</title>
   <desc id="desc">Wordmark banner. The mark is a shield containing a horizontal gate line: above the line, a small claim awaits verification; below it, a checkmark confirms the claim has been admitted as a fact. The image conveys evidence-driven admission and strict gating.</desc>
 
   <defs>
@@ -17,50 +17,52 @@
 
   <rect width="1600" height="240" fill="#F7F5EF"/>
 
-  <g transform="translate(120 60)">
-    <rect x="0" y="0" width="120" height="120" rx="22" fill="url(#markFill)"/>
+  <g transform="translate(322 0)">
+    <g transform="translate(0 60)">
+      <rect x="0" y="0" width="120" height="120" rx="22" fill="url(#markFill)"/>
 
-    <g transform="translate(60 60)">
-      <path d="M0 -40
-               L30 -30
-               L30 6
-               C30 24 17 36 0 42
-               C-17 36 -30 24 -30 6
-               L-30 -30 Z"
-            fill="none" stroke="#F7F5EF" stroke-width="2.6" stroke-linejoin="round"/>
+      <g transform="translate(60 60)">
+        <path d="M0 -40
+                 L30 -30
+                 L30 6
+                 C30 24 17 36 0 42
+                 C-17 36 -30 24 -30 6
+                 L-30 -30 Z"
+              fill="none" stroke="#F7F5EF" stroke-width="2.6" stroke-linejoin="round"/>
 
-      <path d="M0 -40
-               L30 -30
-               L30 6
-               C30 24 17 36 0 42
-               C-17 36 -30 24 -30 6
-               L-30 -30 Z"
-            fill="none" stroke="#F7F5EF" stroke-width="1" stroke-linejoin="round"
-            opacity="0.35" transform="scale(0.78)"/>
+        <path d="M0 -40
+                 L30 -30
+                 L30 6
+                 C30 24 17 36 0 42
+                 C-17 36 -30 24 -30 6
+                 L-30 -30 Z"
+              fill="none" stroke="#F7F5EF" stroke-width="1" stroke-linejoin="round"
+              opacity="0.35" transform="scale(0.78)"/>
 
-      <line x1="-22" y1="-2" x2="22" y2="-2"
-            stroke="#F7F5EF" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
-      <line x1="-22" y1="2"  x2="22" y2="2"
-            stroke="#F7F5EF" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
+        <line x1="-22" y1="-2" x2="22" y2="-2"
+              stroke="#F7F5EF" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
+        <line x1="-22" y1="2" x2="22" y2="2"
+              stroke="#F7F5EF" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
 
-      <path d="M-12 16 L-3 25 L14 6"
-            fill="none" stroke="#E7B549" stroke-width="4"
-            stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M-12 16 L-3 25 L14 6"
+              fill="none" stroke="#E7B549" stroke-width="4"
+              stroke-linecap="round" stroke-linejoin="round"/>
 
-      <circle cx="0" cy="-18" r="1.6" fill="#F7F5EF" opacity="0.7"/>
+        <circle cx="0" cy="-18" r="1.6" fill="#F7F5EF" opacity="0.7"/>
+      </g>
+    </g>
+
+    <line x1="156" y1="60" x2="156" y2="180" stroke="#0B1220" stroke-opacity="0.12" stroke-width="1"/>
+
+    <g transform="translate(194 0)" font-family="Inter, 'Segoe UI', system-ui, -apple-system, Arial, sans-serif">
+      <text x="0" y="118" fill="#0B1220" font-size="56" font-weight="700" textLength="762" lengthAdjust="spacingAndGlyphs">
+        Evidence-Gated Memory
+      </text>
+      <text x="2" y="156" fill="#4B5563" font-size="20" font-weight="450" textLength="520" lengthAdjust="spacingAndGlyphs">
+        Provenance-first graph memory for hard-anchor enterprise agents.
+      </text>
     </g>
   </g>
 
-  <line x1="280" y1="60" x2="280" y2="180" stroke="#0B1220" stroke-opacity="0.12" stroke-width="1"/>
-
-  <g transform="translate(316 0)" font-family="Inter, 'Segoe UI', system-ui, -apple-system, Arial, sans-serif">
-    <text x="0" y="118" fill="#0B1220" font-size="56" font-weight="700" letter-spacing="-1.2">
-      Evidence-Gated Memory
-    </text>
-    <text x="2" y="156" fill="#4B5563" font-size="20" font-weight="450" letter-spacing="0.1">
-      Provenance-first graph memory for hard-anchor enterprise agents.
-    </text>
-  </g>
-
-  <line x1="120" y1="216" x2="1480" y2="216" stroke="url(#hairline)" stroke-width="1"/>
+  <line x1="180" y1="216" x2="1420" y2="216" stroke="url(#hairline)" stroke-width="1"/>
 </svg>
