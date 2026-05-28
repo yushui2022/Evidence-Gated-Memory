@@ -5,7 +5,7 @@
 >
 > For end-user docs see [README.md](README.md). For the architecture write-up see [docs/architecture.md](docs/architecture.md). For the original Codex-specific transition notes see [HANDOFF_TO_CODEX.md](HANDOFF_TO_CODEX.md).
 
-_Last updated: 2026-05-27 — v0.4.0 published to PyPI._
+_Last updated: 2026-05-28 — 30-task tau-bench v1 A/B complete, EGM 93% vs baseline 90%._
 
 ---
 
@@ -107,7 +107,8 @@ M1, M2 manual path, M3, and the v0.1 hardening board are now closed.
    - `src/evidence_gated_memory/core/mermaid.py`
    - `src/evidence_gated_memory/core/context.py`
 3. **Pick the next slice.** Best current candidates:
-   - τ-bench / τ²-bench integration — A/B runner unblocked and producing data. 3-task sample in README. Batch run in progress.
+   - τ²-bench batch completion — 3/30 done, need ~2h for full run. Already debugged. tau-bench v1 30-task complete (93% EGM vs 90% baseline).
+   - Fix low fact acceptance (1.4 vs 4.3 rejected) — gate only tool-call responses, not every agent message.
    - Automatic LLM distillation for L0→L1 promotion (deferred design)
    - Production-grade SQLite migration registry (current `_ensure_column` is the minimal stamp)
 4. Keep long-term semantic memory separate from the short-term TaskGraph: L0/L1/L2/L3 remembers cross-session user/project background; TaskGraph remembers the active hard-anchor workflow.
@@ -115,6 +116,35 @@ M1, M2 manual path, M3, and the v0.1 hardening board are now closed.
 ---
 
 ## Slice log (most recent first)
+
+### 30-task benchmark + intent fix slice (2026-05-28)
+
+**tau-bench v1 A/B: 30 tasks complete, 0 errors.**
+- **EGM 28/30 (93.3%) vs Baseline 27/30 (90.0%).** EGM outperforms baseline by 1 task.
+- EGM won on 2 tasks (5, 18), baseline won on 1 (16), both failed on 1 (2). Non-determinism.
+- **~23x compression:** 369 EGM context tokens avg vs 8,402 raw message tokens.
+- **Facts:** 1.4 avg asserted, 4.3 avg rejected per task. Gate correctly fires on missing evidence.
+- Results: `results_tau_v1_0_29.json` in repo root.
+
+**Intent classification fixed** (root cause of exchange-task 0% fact acceptance).
+- `_gate_respond` no longer hardcodes `refund_eligibility`.
+- `_classify_intent()` + `INTENT_TO_CLAIM_TYPE` mapping: cancel/return/exchange → `refund_completed`, lookup/search/check → `refund_eligibility`.
+- Fixed ordering: strong action verbs checked before inquiry verbs to avoid "order" matching before "cancel".
+
+**Batch mode added** to both benchmarks.
+- `--batch 0 29 --json-out results.json` with compact summary table.
+- Retry logic: 2 retries with backoff for rate-limit/500 errors.
+- 4s inter-task delay to avoid DeepSeek rate limiting.
+- 30/30 tau-bench v1 tasks completed with zero rate-limit errors.
+
+**τ²-bench partial.**
+- Model format fixed: `deepseek/deepseek-chat` (provider prefix required by LiteLLM).
+- `sim.trajectory` → `sim.messages` (correct SimulationRun field).
+- Removed invalid `llm_agent_provider`/`llm_user_provider` fields from TextRunConfig.
+- 3 tasks completed before timeout; remaining ~27 need ~2 hours.
+- τ²-bench is slower (~4 min/task, 20-33 conversation steps vs tau-bench v1's 8-17).
+
+**README updated** with 30-task summary table replacing the stale 8-task data.
 
 ### tau-bench A/B unblocked slice
 

@@ -1,0 +1,1090 @@
+[
+  {
+    "task_index": 0,
+    "task": "You are Yusuf Rossi in 19122. You received your order #W2378156 and wish to exchange the mechanical keyboard for a similar one but with clicky switches and the smart thermostat for one compatible with",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.0048141519999999995,
+      "steps": 15,
+      "messages_count": 32,
+      "raw_tokens_est": 8624,
+      "duration_s": 41.0
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.003704484,
+      "steps": 11,
+      "messages_count": 24,
+      "raw_tokens_est": 7901,
+      "egm": {
+        "evidence_recorded": 5,
+        "tool_calls": 5,
+        "facts_asserted": 1,
+        "facts_rejected": 5,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 394,
+        "context_compression": 0.05
+      },
+      "task_id": "tau:yusuf_rossi_9620:0",
+      "duration_s": 37.8
+    }
+  },
+  {
+    "task_index": 1,
+    "task": "You are Yusuf Rossi in 19122. You received your order #W2378156 and wish to exchange the mechanical keyboard for a similar one but with clicky switches and the smart thermostat for one compatible with",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.003796184,
+      "steps": 12,
+      "messages_count": 26,
+      "raw_tokens_est": 8150,
+      "duration_s": 37.1
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0038557679999999994,
+      "steps": 12,
+      "messages_count": 26,
+      "raw_tokens_est": 8090,
+      "egm": {
+        "evidence_recorded": 6,
+        "tool_calls": 7,
+        "facts_asserted": 1,
+        "facts_rejected": 4,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 399,
+        "context_compression": 0.049
+      },
+      "task_id": "tau:yusuf_rossi_9620:1",
+      "duration_s": 36.1
+    }
+  },
+  {
+    "task_index": 2,
+    "task": "You are Yusuf Rossi in 19122. You want to know how many tshirt options are available in the online store right now. You want to also return the cleaner, headphone, and smart watch.",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 0.0,
+      "total_cost": 0.0031191440000000003,
+      "steps": 10,
+      "messages_count": 22,
+      "raw_tokens_est": 8087,
+      "duration_s": 26.0
+    },
+    "egm": {
+      "reward": 0.0,
+      "total_cost": 0.003057292,
+      "steps": 8,
+      "messages_count": 18,
+      "raw_tokens_est": 8217,
+      "egm": {
+        "evidence_recorded": 6,
+        "tool_calls": 6,
+        "facts_asserted": 2,
+        "facts_rejected": 0,
+        "rejection_reasons": [],
+        "context_tokens_est": 315,
+        "context_compression": 0.038
+      },
+      "task_id": "tau:yusuf_rossi_9620:2",
+      "duration_s": 23.9
+    }
+  },
+  {
+    "task_index": 3,
+    "task": "You are Yusuf Rossi in 19122. You want to know how many tshirt options are available in the online store right now. You want to modify all your pending small tshirt to purple, same size, same v-neck, ",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.004647832,
+      "steps": 15,
+      "messages_count": 32,
+      "raw_tokens_est": 8503,
+      "duration_s": 38.6
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.005254956,
+      "steps": 16,
+      "messages_count": 34,
+      "raw_tokens_est": 8862,
+      "egm": {
+        "evidence_recorded": 10,
+        "tool_calls": 11,
+        "facts_asserted": 5,
+        "facts_rejected": 0,
+        "rejection_reasons": [],
+        "context_tokens_est": 354,
+        "context_compression": 0.04
+      },
+      "task_id": "tau:yusuf_rossi_9620:3",
+      "duration_s": 43.0
+    }
+  },
+  {
+    "task_index": 4,
+    "task": "You are Yusuf Rossi in 19122. You want to know how many tshirt options are available in the online store right now. You want to modify all your pending tshirts (i.e., your 2 relevant orders) to purple",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.0057477560000000006,
+      "steps": 17,
+      "messages_count": 36,
+      "raw_tokens_est": 9634,
+      "duration_s": 46.2
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.005511548,
+      "steps": 17,
+      "messages_count": 36,
+      "raw_tokens_est": 9430,
+      "egm": {
+        "evidence_recorded": 11,
+        "tool_calls": 11,
+        "facts_asserted": 4,
+        "facts_rejected": 2,
+        "rejection_reasons": [
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 362,
+        "context_compression": 0.038
+      },
+      "task_id": "tau:yusuf_rossi_9620:4",
+      "duration_s": 51.1
+    }
+  },
+  {
+    "task_index": 5,
+    "task": "You are mei_kovacs_8020 (zip code 28236) and you want to exchange the water bottle and the desk lamp. You want to exchange the water bottle to a bigger one, and the desk lamp to a less bright one (pre",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 0.0,
+      "total_cost": 0.006229859999999999,
+      "steps": 17,
+      "messages_count": 36,
+      "raw_tokens_est": 10915,
+      "duration_s": 50.3
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.00506758,
+      "steps": 15,
+      "messages_count": 32,
+      "raw_tokens_est": 8796,
+      "egm": {
+        "evidence_recorded": 7,
+        "tool_calls": 7,
+        "facts_asserted": 1,
+        "facts_rejected": 7,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 386,
+        "context_compression": 0.044
+      },
+      "task_id": "tau:mei_kovacs_8020:5",
+      "duration_s": 45.6
+    }
+  },
+  {
+    "task_index": 6,
+    "task": "You are mei_kovacs_8020 (zip code 28236) and you want to exchange the water bottle and the desk lamp. You want to exchange the water bottle to a bigger one, and the desk lamp to a less bright one (pre",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.0040400639999999995,
+      "steps": 13,
+      "messages_count": 28,
+      "raw_tokens_est": 7781,
+      "duration_s": 37.7
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0038423000000000007,
+      "steps": 12,
+      "messages_count": 26,
+      "raw_tokens_est": 7509,
+      "egm": {
+        "evidence_recorded": 6,
+        "tool_calls": 6,
+        "facts_asserted": 1,
+        "facts_rejected": 5,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 352,
+        "context_compression": 0.047
+      },
+      "task_id": "tau:mei_kovacs_8020:6",
+      "duration_s": 37.9
+    }
+  },
+  {
+    "task_index": 7,
+    "task": "You are mei_kovacs_8020 (zip code 28236) and you want to exchange the water bottle and the desk lamp. You want to exchange the water bottle to a bigger one, and the desk lamp to a less bright one (pre",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.005194812,
+      "steps": 16,
+      "messages_count": 34,
+      "raw_tokens_est": 9177,
+      "duration_s": 44.5
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.005650596,
+      "steps": 17,
+      "messages_count": 36,
+      "raw_tokens_est": 9640,
+      "egm": {
+        "evidence_recorded": 8,
+        "tool_calls": 8,
+        "facts_asserted": 1,
+        "facts_rejected": 8,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 355,
+        "context_compression": 0.037
+      },
+      "task_id": "tau:mei_kovacs_8020:7",
+      "duration_s": 52.0
+    }
+  },
+  {
+    "task_index": 8,
+    "task": "You are mei_kovacs_8020 (zip code 28236) and you want to exchange the water bottle and the desk lamp. You want to exchange the water bottle to a bigger one, and the desk lamp to a brighter one (prefer",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.004292148,
+      "steps": 13,
+      "messages_count": 28,
+      "raw_tokens_est": 8121,
+      "duration_s": 40.9
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.004859540000000001,
+      "steps": 15,
+      "messages_count": 32,
+      "raw_tokens_est": 8483,
+      "egm": {
+        "evidence_recorded": 7,
+        "tool_calls": 7,
+        "facts_asserted": 1,
+        "facts_rejected": 7,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 350,
+        "context_compression": 0.041
+      },
+      "task_id": "tau:mei_kovacs_8020:8",
+      "duration_s": 45.7
+    }
+  },
+  {
+    "task_index": 9,
+    "task": "You are mei_kovacs_8020 (zip code 28236) and you want to exchange the water bottle and the desk lamp. You want to exchange the water bottle to a bigger one, and the desk lamp to a brighter one (prefer",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.00448504,
+      "steps": 14,
+      "messages_count": 30,
+      "raw_tokens_est": 8405,
+      "duration_s": 44.2
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0049765239999999995,
+      "steps": 16,
+      "messages_count": 34,
+      "raw_tokens_est": 8924,
+      "egm": {
+        "evidence_recorded": 8,
+        "tool_calls": 8,
+        "facts_asserted": 1,
+        "facts_rejected": 7,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 354,
+        "context_compression": 0.04
+      },
+      "task_id": "tau:mei_kovacs_8020:9",
+      "duration_s": 45.2
+    }
+  },
+  {
+    "task_index": 10,
+    "task": "You are mia_garcia_4516 (mia.garcia2723@example.com). For some reason, you want to return all things ordered. You have two payment methods and two orders, and you want to refund each order to the oppo",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.0019544,
+      "steps": 8,
+      "messages_count": 18,
+      "raw_tokens_est": 4715,
+      "duration_s": 20.6
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0019445159999999999,
+      "steps": 8,
+      "messages_count": 18,
+      "raw_tokens_est": 4944,
+      "egm": {
+        "evidence_recorded": 5,
+        "tool_calls": 5,
+        "facts_asserted": 0,
+        "facts_rejected": 3,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 403,
+        "context_compression": 0.082
+      },
+      "task_id": "tau:mia_garcia_4516:10",
+      "duration_s": 23.9
+    }
+  },
+  {
+    "task_index": 11,
+    "task": "You are mia_garcia_4516 (mia.garcia2723@example.com). For some reason, you want to return all things ordered. You have two payment methods and two orders, and you want to refund each order to the oppo",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.002841244,
+      "steps": 11,
+      "messages_count": 24,
+      "raw_tokens_est": 5779,
+      "duration_s": 26.5
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.00296758,
+      "steps": 11,
+      "messages_count": 24,
+      "raw_tokens_est": 6110,
+      "egm": {
+        "evidence_recorded": 6,
+        "tool_calls": 6,
+        "facts_asserted": 1,
+        "facts_rejected": 4,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 413,
+        "context_compression": 0.068
+      },
+      "task_id": "tau:mia_garcia_4516:11",
+      "duration_s": 33.3
+    }
+  },
+  {
+    "task_index": 12,
+    "task": "You are mia_garcia_4516 (mia.garcia2723@example.com). You just got into gaming and want to cancel or return everything not associated with it. (Everything except a keyboard and a mouse, but do not rev",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.002594984,
+      "steps": 9,
+      "messages_count": 20,
+      "raw_tokens_est": 5623,
+      "duration_s": 30.1
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0025088000000000003,
+      "steps": 9,
+      "messages_count": 20,
+      "raw_tokens_est": 5755,
+      "egm": {
+        "evidence_recorded": 6,
+        "tool_calls": 6,
+        "facts_asserted": 0,
+        "facts_rejected": 3,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 383,
+        "context_compression": 0.067
+      },
+      "task_id": "tau:mia_garcia_4516:12",
+      "duration_s": 30.9
+    }
+  },
+  {
+    "task_index": 13,
+    "task": "You are mia_garcia_4516 (mia.garcia2723@example.com). You just got into gaming and want to cancel or return everything not associated with it. (Everything except a keyboard and a mouse, but do not rev",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.002583644,
+      "steps": 10,
+      "messages_count": 22,
+      "raw_tokens_est": 5581,
+      "duration_s": 26.1
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.00278754,
+      "steps": 10,
+      "messages_count": 22,
+      "raw_tokens_est": 6248,
+      "egm": {
+        "evidence_recorded": 6,
+        "tool_calls": 6,
+        "facts_asserted": 1,
+        "facts_rejected": 3,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 376,
+        "context_compression": 0.06
+      },
+      "task_id": "tau:mia_garcia_4516:13",
+      "duration_s": 27.9
+    }
+  },
+  {
+    "task_index": 14,
+    "task": "You are mia_garcia_4516 (mia.garcia2723@example.com). You just quit gaming and want to cancel or return everything associated with it. (It's just a keyboard and a mouse, but do not reveal it to the ag",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.0028069440000000005,
+      "steps": 10,
+      "messages_count": 22,
+      "raw_tokens_est": 6062,
+      "duration_s": 28.5
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0026233759999999997,
+      "steps": 10,
+      "messages_count": 22,
+      "raw_tokens_est": 5777,
+      "egm": {
+        "evidence_recorded": 6,
+        "tool_calls": 6,
+        "facts_asserted": 1,
+        "facts_rejected": 3,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 357,
+        "context_compression": 0.062
+      },
+      "task_id": "tau:mia_garcia_4516:14",
+      "duration_s": 26.3
+    }
+  },
+  {
+    "task_index": 15,
+    "task": "You are Fatima Johnson in 78712. You want to modify the pending boots to a size 8, and want the material, but do not care about waterproof or not. You are a private person that does not want to reveal",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.0034038479999999997,
+      "steps": 12,
+      "messages_count": 26,
+      "raw_tokens_est": 6723,
+      "duration_s": 32.5
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0031422999999999998,
+      "steps": 11,
+      "messages_count": 24,
+      "raw_tokens_est": 6733,
+      "egm": {
+        "evidence_recorded": 5,
+        "tool_calls": 5,
+        "facts_asserted": 0,
+        "facts_rejected": 6,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']"
+        ],
+        "context_tokens_est": 333,
+        "context_compression": 0.05
+      },
+      "task_id": "tau:fatima_johnson_7581:15",
+      "duration_s": 31.3
+    }
+  },
+  {
+    "task_index": 16,
+    "task": "You are Fatima Johnson in 78712. You want to cancel all pending orders (since they are no longer needed) and return the watch you have received (but nothing else), and you want to know the total amoun",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.0045438399999999995,
+      "steps": 14,
+      "messages_count": 30,
+      "raw_tokens_est": 8594,
+      "duration_s": 39.8
+    },
+    "egm": {
+      "reward": 0.0,
+      "total_cost": 0.0037809520000000006,
+      "steps": 12,
+      "messages_count": 26,
+      "raw_tokens_est": 7002,
+      "egm": {
+        "evidence_recorded": 6,
+        "tool_calls": 6,
+        "facts_asserted": 0,
+        "facts_rejected": 6,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 356,
+        "context_compression": 0.051
+      },
+      "task_id": "tau:fatima_johnson_7581:16",
+      "duration_s": 41.2
+    }
+  },
+  {
+    "task_index": 17,
+    "task": "You are Fatima Johnson in 78712. You want to change #W8665881 to be delivered to Suite 641 instead. You are a private person that does not want to reveal much about yourself.",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.001762712,
+      "steps": 8,
+      "messages_count": 18,
+      "raw_tokens_est": 4180,
+      "duration_s": 17.7
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0017255,
+      "steps": 8,
+      "messages_count": 18,
+      "raw_tokens_est": 4183,
+      "egm": {
+        "evidence_recorded": 3,
+        "tool_calls": 3,
+        "facts_asserted": 0,
+        "facts_rejected": 5,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']"
+        ],
+        "context_tokens_est": 317,
+        "context_compression": 0.076
+      },
+      "task_id": "tau:fatima_johnson_7581:17",
+      "duration_s": 18.4
+    }
+  },
+  {
+    "task_index": 18,
+    "task": "You are Mei Davis in 80217. You want to return the office chair because it came with some broken pieces. But if the agent asks you for confirm, you say you want to rethink for a while, and then change",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 0.0,
+      "total_cost": 0.0036014159999999996,
+      "steps": 13,
+      "messages_count": 28,
+      "raw_tokens_est": 6920,
+      "duration_s": 36.5
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.00375088,
+      "steps": 13,
+      "messages_count": 28,
+      "raw_tokens_est": 7216,
+      "egm": {
+        "evidence_recorded": 5,
+        "tool_calls": 5,
+        "facts_asserted": 1,
+        "facts_rejected": 7,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 352,
+        "context_compression": 0.049
+      },
+      "task_id": "tau:mei_davis_8935:18",
+      "duration_s": 39.8
+    }
+  },
+  {
+    "task_index": 19,
+    "task": "You are Mei Davis in 80217. You want to return the water bottle, and exchange the pet bed and office chair to the cheapest version. Mention the two things together. If you can only do one of the two t",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.007399335999999999,
+      "steps": 18,
+      "messages_count": 38,
+      "raw_tokens_est": 12840,
+      "duration_s": 52.0
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.006305488000000001,
+      "steps": 16,
+      "messages_count": 34,
+      "raw_tokens_est": 11340,
+      "egm": {
+        "evidence_recorded": 10,
+        "tool_calls": 10,
+        "facts_asserted": 2,
+        "facts_rejected": 4,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 375,
+        "context_compression": 0.033
+      },
+      "task_id": "tau:mei_davis_8935:19",
+      "duration_s": 51.6
+    }
+  },
+  {
+    "task_index": 20,
+    "task": "You are Ethan Garcia, and you live in Denver, 80280. You just won a lottery, and you want to upgrade all your items to the most expensive options (but make sure the shoe is still the same size). You w",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.006723079999999999,
+      "steps": 16,
+      "messages_count": 34,
+      "raw_tokens_est": 12396,
+      "duration_s": 45.6
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.011642148000000003,
+      "steps": 24,
+      "messages_count": 50,
+      "raw_tokens_est": 18766,
+      "egm": {
+        "evidence_recorded": 17,
+        "tool_calls": 18,
+        "facts_asserted": 1,
+        "facts_rejected": 5,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 375,
+        "context_compression": 0.02
+      },
+      "task_id": "tau:ethan_garcia_1261:20",
+      "duration_s": 71.2
+    }
+  },
+  {
+    "task_index": 21,
+    "task": "You are Ethan Garcia, and you live in Denver, 80280. You want to exchange your shoes to 4107812777, and use GC to cover possible charges. But if the agent asks for confirmation, you change you mind an",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.004465328,
+      "steps": 14,
+      "messages_count": 30,
+      "raw_tokens_est": 8757,
+      "duration_s": 36.6
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.006188280000000001,
+      "steps": 17,
+      "messages_count": 36,
+      "raw_tokens_est": 10844,
+      "egm": {
+        "evidence_recorded": 11,
+        "tool_calls": 11,
+        "facts_asserted": 3,
+        "facts_rejected": 3,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 431,
+        "context_compression": 0.04
+      },
+      "task_id": "tau:ethan_garcia_1261:21",
+      "duration_s": 47.4
+    }
+  },
+  {
+    "task_index": 22,
+    "task": "You are Ethan Garcia, and you live in Denver, 80280. You want to change your user address and all possible order addresses to be 101 Highway, New York, 10001. Then you regret and want to change the us",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.004193868,
+      "steps": 16,
+      "messages_count": 34,
+      "raw_tokens_est": 6923,
+      "duration_s": 34.1
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0038190599999999996,
+      "steps": 14,
+      "messages_count": 30,
+      "raw_tokens_est": 6696,
+      "egm": {
+        "evidence_recorded": 8,
+        "tool_calls": 8,
+        "facts_asserted": 0,
+        "facts_rejected": 6,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']"
+        ],
+        "context_tokens_est": 363,
+        "context_compression": 0.054
+      },
+      "task_id": "tau:ethan_garcia_1261:22",
+      "duration_s": 31.2
+    }
+  },
+  {
+    "task_index": 23,
+    "task": "You are Sofia Hernandez, and you live in Seattle, WA, 98193. You want to exchange the helmet for a medium sized, red, high ventilation type, and you want to exchange the luggage set (in another order)",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.00871738,
+      "steps": 24,
+      "messages_count": 50,
+      "raw_tokens_est": 12895,
+      "duration_s": 59.6
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.010006388,
+      "steps": 27,
+      "messages_count": 56,
+      "raw_tokens_est": 13889,
+      "egm": {
+        "evidence_recorded": 13,
+        "tool_calls": 13,
+        "facts_asserted": 8,
+        "facts_rejected": 6,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 375,
+        "context_compression": 0.027
+      },
+      "task_id": "tau:sofia_hernandez_5364:23",
+      "duration_s": 71.3
+    }
+  },
+  {
+    "task_index": 24,
+    "task": "You are Sofia Hernandez, and you live in Seattle, WA, 98193. You want to cancel the grill, but if the agent asks you to confirm, you regret and want to keep it. You then want to ask which two t-shirts",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.002679824,
+      "steps": 10,
+      "messages_count": 22,
+      "raw_tokens_est": 5775,
+      "duration_s": 25.8
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0023501240000000003,
+      "steps": 9,
+      "messages_count": 20,
+      "raw_tokens_est": 5362,
+      "egm": {
+        "evidence_recorded": 6,
+        "tool_calls": 6,
+        "facts_asserted": 0,
+        "facts_rejected": 3,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']"
+        ],
+        "context_tokens_est": 366,
+        "context_compression": 0.068
+      },
+      "task_id": "tau:sofia_hernandez_5364:24",
+      "duration_s": 23.3
+    }
+  },
+  {
+    "task_index": 25,
+    "task": "You are Isabella Johansson, and you live in 32286. You have an order sent to Texas by accident, and you want to know the tracking number of the order, and return all items in it except the pet bed. Yo",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.0025578560000000003,
+      "steps": 9,
+      "messages_count": 20,
+      "raw_tokens_est": 6126,
+      "duration_s": 24.3
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.00278782,
+      "steps": 10,
+      "messages_count": 22,
+      "raw_tokens_est": 6148,
+      "egm": {
+        "evidence_recorded": 7,
+        "tool_calls": 7,
+        "facts_asserted": 0,
+        "facts_rejected": 3,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 377,
+        "context_compression": 0.061
+      },
+      "task_id": "tau:isabella_johansson_2152:25",
+      "duration_s": 25.9
+    }
+  },
+  {
+    "task_index": 26,
+    "task": "You are Isabella Johansson, and you live in 32286. You have an order sent to Texas by accident, and you want to know the tracking number of the order, and return all items in it except the pet bed. Yo",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.003141376,
+      "steps": 11,
+      "messages_count": 24,
+      "raw_tokens_est": 6599,
+      "duration_s": 25.0
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0030801959999999995,
+      "steps": 11,
+      "messages_count": 24,
+      "raw_tokens_est": 6528,
+      "egm": {
+        "evidence_recorded": 7,
+        "tool_calls": 7,
+        "facts_asserted": 1,
+        "facts_rejected": 3,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 345,
+        "context_compression": 0.053
+      },
+      "task_id": "tau:isabella_johansson_2152:26",
+      "duration_s": 29.5
+    }
+  },
+  {
+    "task_index": 27,
+    "task": "You are Isabella Johansson, and you live in 32286. You want to return the hose, backpack, and exchange the hiking boots to the exact same item except that it is waterproof. Make sure you mention the t",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.005434856000000001,
+      "steps": 16,
+      "messages_count": 34,
+      "raw_tokens_est": 9849,
+      "duration_s": 43.6
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.005421024,
+      "steps": 15,
+      "messages_count": 32,
+      "raw_tokens_est": 10110,
+      "egm": {
+        "evidence_recorded": 10,
+        "tool_calls": 11,
+        "facts_asserted": 1,
+        "facts_rejected": 3,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 377,
+        "context_compression": 0.037
+      },
+      "task_id": "tau:isabella_johansson_2152:27",
+      "duration_s": 40.8
+    }
+  },
+  {
+    "task_index": 28,
+    "task": "You are Isabella Johansson, and you live in 32286. You want to return the skateboard, garden hose, backpack, keyboard, bed, and also cancel the hose you just ordered (if cancelling one item is not pos",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.005569171999999999,
+      "steps": 17,
+      "messages_count": 36,
+      "raw_tokens_est": 9613,
+      "duration_s": 47.7
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.007148428,
+      "steps": 20,
+      "messages_count": 42,
+      "raw_tokens_est": 11214,
+      "egm": {
+        "evidence_recorded": 11,
+        "tool_calls": 12,
+        "facts_asserted": 3,
+        "facts_rejected": 5,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 384,
+        "context_compression": 0.034
+      },
+      "task_id": "tau:isabella_johansson_2152:28",
+      "duration_s": 56.2
+    }
+  },
+  {
+    "task_index": 29,
+    "task": "You are Isabella Johansson, and you live in 32286. You want to exchange your skateboard for a shorter bamboo material one. If several options are available, you want to know all options and their pric",
+    "model": "deepseek-chat",
+    "baseline": {
+      "reward": 1.0,
+      "total_cost": 0.005803504,
+      "steps": 17,
+      "messages_count": 36,
+      "raw_tokens_est": 10447,
+      "duration_s": 45.8
+    },
+    "egm": {
+      "reward": 1.0,
+      "total_cost": 0.0062515320000000015,
+      "steps": 17,
+      "messages_count": 36,
+      "raw_tokens_est": 11347,
+      "egm": {
+        "evidence_recorded": 11,
+        "tool_calls": 12,
+        "facts_asserted": 1,
+        "facts_rejected": 4,
+        "rejection_reasons": [
+          "observed claim has no evidence_refs; missing required evidence types: ['order_record', 'refund_policy']; gate 'refund_eligibility_requires_policy' requires evidence types ['refund_policy']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']",
+          "missing required evidence types: ['refund_api_response']; gate 'refund_completion_requires_api_response' requires evidence types ['refund_api_response']"
+        ],
+        "context_tokens_est": 405,
+        "context_compression": 0.036
+      },
+      "task_id": "tau:isabella_johansson_2152:29",
+      "duration_s": 47.0
+    }
+  }
+]

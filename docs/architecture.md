@@ -421,7 +421,7 @@ future production hardening task.
 
 ## What Must Not Drift
 
-These invariants come directly from the handoff and should not be weakened:
+These invariants are now tracked in `plan.md` and should not be weakened:
 
 1. `update_task_node_status()` is low-level CRUD, not the gated API.
 2. Production state changes go through `transition_node()`.

@@ -52,6 +52,37 @@ TOOL_EVIDENCE_MAP = {
     "transfer_to_human_agents": "refund_api_response",
 }
 
+# Map agent text intent keywords → EGM claim types.
+# Action verbs (cancel/return/exchange/refund) → refund_completed
+# Inquiry verbs (lookup/search/check) → refund_eligibility
+INTENT_TO_CLAIM_TYPE = {
+    "cancel": "refund_completed",
+    "return": "refund_completed",
+    "exchange": "refund_completed",
+    "refund": "refund_completed",
+    "modify": "refund_eligibility",
+    "lookup": "refund_eligibility",
+    "search": "refund_eligibility",
+    "check": "refund_eligibility",
+    "order": "refund_eligibility",
+    "default": "refund_eligibility",
+}
+
+
+def _classify_intent(text: str) -> str:
+    """Classify agent intent from text content for claim_type selection."""
+    text_lower = text.lower()
+    # Strong action verbs first — unambiguously indicate completion.
+    # Then inquiry verbs. "refund" alone is ambiguous, check it last.
+    for intent in [
+        "cancel", "return", "exchange",
+        "lookup", "search", "check",
+        "modify", "order", "refund",
+    ]:
+        if intent in text_lower:
+            return intent
+    return "default"
+
 
 def _require_api_key() -> None:
     if os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY"):
@@ -214,10 +245,12 @@ class EGMToolCallingAgent:
         if not self.memory:
             return
         content = action.kwargs.get("content", "")
+        intent = _classify_intent(content)
+        claim_type = INTENT_TO_CLAIM_TYPE.get(intent, "refund_eligibility")
         try:
             result = self.memory.assert_fact(
                 f"{self._task_id}: {content[:200]}",
-                claim_type="refund_eligibility",
+                claim_type=claim_type,
                 evidence=self._evidence_refs,
             )
             if result.accepted and result.fact:
@@ -356,33 +389,95 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="tau-bench A/B: baseline vs EGM")
     parser.add_argument("--task", type=int, default=0, help="Task index to run")
     parser.add_argument("--json", action="store_true", help="Output JSON")
+    parser.add_argument("--batch", type=int, nargs=2, metavar=("START", "END"),
+                        help="Batch run tasks from START to END (inclusive)")
+    parser.add_argument("--json-out", type=str, default="", help="Write JSON results to file")
     args = parser.parse_args()
 
     print(f"Model: {MODEL}")
     print(f"API: {BASE_URL}")
     print()
 
-    result = run_ab(task_index=args.task)
+    if args.batch:
+        start, end = args.batch
+        results = []
+        BATCH_DELAY = 4  # seconds between tasks (DeepSeek rate limit)
+        MAX_RETRIES = 2
+        for ti in range(start, end + 1):
+            print(f"\n{'='*60}")
+            print(f"=== TASK {ti} ({(ti - start) + 1}/{end - start + 1}) ===")
+            print(f"{'='*60}")
+            r = None
+            for attempt in range(MAX_RETRIES + 1):
+                try:
+                    r = run_ab(task_index=ti)
+                    results.append(r)
+                    b = r["baseline"]
+                    e = r["egm"]
+                    print(f"  b: r={b['reward']} s={b['steps']} t={b['raw_tokens_est']}")
+                    em = e.get("egm", {})
+                    print(f"  e: r={e['reward']} s={e['steps']} ctx={em.get('context_tokens_est','?')} "
+                          f"ev={em.get('evidence_recorded','?')} f_ok={em.get('facts_asserted','?')} "
+                          f"f_rej={em.get('facts_rejected','?')}")
+                    break
+                except Exception as exc:
+                    msg = str(exc)
+                    if "InternalServerError" in msg or "rate" in msg.lower() or "EOF" in msg:
+                        if attempt < MAX_RETRIES:
+                            wait = BATCH_DELAY * (attempt + 1) * 2
+                            print(f"  Rate limited, retry {attempt+1}/{MAX_RETRIES} after {wait}s...")
+                            time.sleep(wait)
+                            continue
+                    print(f"  FAILED: {exc}")
+                    results.append({"task_index": ti, "error": str(exc)})
+            if ti < end:
+                time.sleep(BATCH_DELAY)
 
-    if args.json:
-        print(json.dumps(result, indent=2, ensure_ascii=False))
-    else:
-        b = result["baseline"]
-        e = result["egm"]
+        if args.json_out:
+            with open(args.json_out, "w", encoding="utf-8") as f:
+                json.dump(results, f, indent=2, ensure_ascii=False, default=str)
+            print(f"\nWrote {len(results)} results to {args.json_out}")
+
+        # Print summary table
         print("\n" + "=" * 60)
-        print("A/B COMPARISON")
+        print("BATCH SUMMARY")
         print("=" * 60)
-        print(f"\n{'Metric':<35} {'Baseline':>10} {'EGM':>10}")
-        print("-" * 55)
-        print(f"{'Reward':<35} {b['reward']:>10} {e['reward']:>10}")
-        print(f"{'Steps':<35} {b['steps']:>10} {e['steps']:>10}")
-        print(f"{'Messages':<35} {b['messages_count']:>10} {e['messages_count']:>10}")
-        print(f"{'Cost ($)':<35} {b['total_cost']:>10.4f} {e['total_cost']:>10.4f}")
-        print(f"{'Duration (s)':<35} {b['duration_s']:>10} {e['duration_s']:>10}")
-        print(f"{'Raw tokens (est)':<35} {b['raw_tokens_est']:>10} {e['raw_tokens_est']:>10}")
-        egm_meta = e.get("egm", {})
-        if egm_meta:
-            print(f"{'EGM context tokens (est)':<35} {'-':>10} {egm_meta.get('context_tokens_est', 0):>10}")
-            print(f"{'Evidence recorded':<35} {'-':>10} {egm_meta.get('evidence_recorded', 0):>10}")
-            print(f"{'Facts asserted':<35} {'-':>10} {egm_meta.get('facts_asserted', 0):>10}")
-            print(f"{'Facts rejected':<35} {'-':>10} {egm_meta.get('facts_rejected', 0):>10}")
+        print(f"{'#':>3} {'B_r':>5} {'E_r':>5} {'Ev':>4} {'f_ok':>5} {'f_rej':>5} {'ctx':>6} {'raw':>6} {'comp':>6}")
+        for r in results:
+            if "error" in r:
+                print(f"{r['task_index']:>3} {'ERR':>5} {r['error'][:50]}")
+            else:
+                b = r["baseline"]
+                e = r["egm"]
+                em = e.get("egm", {})
+                ctx = em.get("context_tokens_est", 0)
+                raw = e.get("raw_tokens_est", b.get("raw_tokens_est", 1))
+                comp = ctx / max(raw, 1)
+                print(f"{r['task_index']:>3} {b['reward']:>5} {e['reward']:>5} "
+                      f"{em.get('evidence_recorded',0):>4} {em.get('facts_asserted',0):>5} "
+                      f"{em.get('facts_rejected',0):>5} {ctx:>6} {raw:>6} {comp:>6.3f}")
+    else:
+        result = run_ab(task_index=args.task)
+
+        if args.json:
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+        else:
+            b = result["baseline"]
+            e = result["egm"]
+            print("\n" + "=" * 60)
+            print("A/B COMPARISON")
+            print("=" * 60)
+            print(f"\n{'Metric':<35} {'Baseline':>10} {'EGM':>10}")
+            print("-" * 55)
+            print(f"{'Reward':<35} {b['reward']:>10} {e['reward']:>10}")
+            print(f"{'Steps':<35} {b['steps']:>10} {e['steps']:>10}")
+            print(f"{'Messages':<35} {b['messages_count']:>10} {e['messages_count']:>10}")
+            print(f"{'Cost ($)':<35} {b['total_cost']:>10.4f} {e['total_cost']:>10.4f}")
+            print(f"{'Duration (s)':<35} {b['duration_s']:>10} {e['duration_s']:>10}")
+            print(f"{'Raw tokens (est)':<35} {b['raw_tokens_est']:>10} {e['raw_tokens_est']:>10}")
+            egm_meta = e.get("egm", {})
+            if egm_meta:
+                print(f"{'EGM context tokens (est)':<35} {'-':>10} {egm_meta.get('context_tokens_est', 0):>10}")
+                print(f"{'Evidence recorded':<35} {'-':>10} {egm_meta.get('evidence_recorded', 0):>10}")
+                print(f"{'Facts asserted':<35} {'-':>10} {egm_meta.get('facts_asserted', 0):>10}")
+                print(f"{'Facts rejected':<35} {'-':>10} {egm_meta.get('facts_rejected', 0):>10}")
