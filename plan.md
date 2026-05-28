@@ -105,6 +105,30 @@ EGM 当前已经不是空壳项目，而是一个已发布到 PyPI 的 alpha Pyt
 
 ---
 
+## README 目标叙事与实际状态账本
+
+README 可以承担“目标形态叙事”：它可以先把 EGM 最终想成为的样子讲清楚，尤其是“三张有向依赖图共用一套 gate 纪律”这个产品主线。
+
+但 `plan.md` 必须承担“真实状态账本”：哪些已经实现、哪些只是设计目标、从现在到目标要走哪几步，都必须在这里写清楚。后续审议以 `plan.md` 为准。
+
+当前真实状态：
+
+| 方向 | README 可以讲的目标形态 | 当前实际状态 | 达到目标的路径 |
+|---|---|---|---|
+| TaskGraph | TaskNode -> TaskNode 的 DAG-style 任务图，状态转换受 gate 约束 | 已有 TaskNode / TaskEdge / Mermaid projection；已拒绝 self-loop 和 cross-task edge；还没有多节点 cycle detection | P1-09 先写 DAG invariant 文档；P3-09 实现 TaskGraph edge cycle detection 和 parent_id cycle detection |
+| Fact lineage | Evidence -> observed fact -> derived fact 的事实依赖图，上游失效会影响下游 | 已有 observed / derived fact、`depends_on`、cascade invalidation；但依赖仍主要存在 JSON 字段里，cycle enforcement 不完整 | P3-02 设计 normalized storage；P3-10 落地 `fact_dependencies` 等表；P3-09 补 depends_on 环检测路径 |
+| Long-term memory provenance | L0 -> CandidateAtom -> L1 -> L2 -> L3，LLM 只提候选，gate 决定晋升 | 已有 L0/L1/L2/L3 manual pyramid；`CandidateAtom` 和 candidate gate 尚未实现 | P2-07 完成 `docs/long-term-candidate-gate.md`；P3-08 实现 CandidateAtom / CandidateGateResult / promote API / audit |
+| Three graphs, one gate discipline | facts、task states、long-term memory promotion 共用 candidate -> gate -> commit/promote -> audit 范式 | facts 和 task state 已有 gate；long-term memory 目前主要是 manual promotion + audit | P2-07 设计长期记忆 candidate gate；P3-08 落地 L1 candidate gate；L2/L3 自动化留到 v1.1+ |
+| Enforced DAG | 三类依赖结构最终都应可验证、可审计、无非法环 | 当前只能称为 DAG-style；不能宣称 full enforced DAG | P1-09 文档约束措辞；P3-09/P3-10 完成关键 enforcement；v1.0 若仍不完整必须写清边界 |
+
+README 允许偏目标化，但有三条底线：
+
+1. 可运行 quickstart、API signature、安装命令必须和当前代码一致。
+2. 当前尚未实现的能力可以作为目标叙事出现，但 `plan.md` 必须有对应落地路径。
+3. 如果 README 写了“DAG / CandidateAtom / candidate gate / enforced lineage”这类目标词，`plan.md` 必须能指出它当前属于 implemented、designed 还是 roadmap。
+
+---
+
 ## 不变量：开发时不能破坏的底线
 
 这些来自早期 handoff 讨论，已经收敛进本文件。后续不再维护单独的 handoff 文档。
@@ -1259,7 +1283,7 @@ v0.9
 4. 不把 benchmark smoke 写成正式结果。
 5. 不把 LLM 输出当成高可信 evidence。
 6. 不为了 demo 改低 gate 严格性。
-7. 每次改 README，必须确认代码真的支持。
+7. 每次改 README，必须区分 runnable truth 和 aspirational narrative：quickstart / API / install 必须被当前代码支持；目标形态叙事可以前置，但必须在 `plan.md` 有真实状态和落地路径。
 8. 不把 DAG-style 文档写成 enforced DAG，除非代码已经强制 cycle rejection。
 9. 不让 LLM 直接 promote fact 或 memory atom；必须先进入 candidate / gate / audit 路径。
 
