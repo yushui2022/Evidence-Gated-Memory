@@ -28,38 +28,21 @@
 
 ---
 
-## TL;DR
+## Core Thesis
 
-**The goal is not to remember more text. The goal is to replace flat summary history with a maintained, evidence-gated task structure.**
+EGM is not another `memory.add()` / `memory.search()` layer. It is a provenance-first memory kernel for hard-anchor enterprise agents: a conclusion becomes usable only when its evidence, freshness, lineage, and task state survive deterministic gates.
 
-EGM is built around one observation: enterprise agents fail not because they forget what was said, but because they turn missing, stale, or untrusted tool results into confident conclusions. A refund agent saying "done" without a `refund_api_response`, a coding agent claiming "tests pass" without a `test_log` — these failures are invisible in a flat chat history, but catastrophic in production.
+Enterprise agents rarely fail because they forget more text. They fail because they turn missing, stale, or untrusted tool results into confident conclusions. A refund agent saying "done" without a `refund_api_response`, or a coding agent claiming "tests pass" without a fresh `test_log`, is not suffering from weak recall. It is using memory without admissibility rules.
 
-Under the hood, the maintained structure is **three directed dependency graphs sharing one gate discipline**. Short-term reasoning, fact storage, and long-term memory are not three separate subsystems. They are three graph canvases under one rule: candidates enter through gates, provenance stays auditable, and upstream revocation must not leave downstream conclusions trusted.
+EGM organizes that discipline around three directed dependency surfaces:
 
-```mermaid
-flowchart LR
-    subgraph TASK["Canvas 1: Task Graph"]
-        T1["TaskNode: receive order"] --> T2["TaskNode: check payment"]
-        T2 --> T3["TaskNode: decide refund"]
-        T3 --> T4["TaskNode: verify completion"]
-    end
+| Surface | Shape | Role |
+|---|---|---|
+| Task graph | `TaskNode -> TaskNode` | Maintains workflow state, blockers, anchors, and gated transitions. |
+| Fact lineage | `evidence -> observed fact -> derived fact` | Grounds facts in raw refs, enforces freshness, and drives cascade invalidation. |
+| Memory provenance | `L0 -> L1 -> L2 -> L3` today; `CandidateAtom` planned | Keeps long-term memory auditable instead of letting LLM summaries directly become memory. |
 
-    subgraph FACT["Canvas 2: Fact Lineage"]
-        E1["Evidence: order_api_response"] --> F1["Observed fact: order is paid"]
-        E2["Evidence: policy_ref"] --> F2["Observed fact: policy allows refund"]
-        F1 --> F3["Derived fact: refund eligible"]
-        F2 --> F3
-    end
-
-    subgraph MEMORY["Canvas 3: Memory Provenance"]
-        L0["L0: raw conversation"] --> C1["CandidateAtom: gated candidate"]
-        C1 --> L1["L1: memory atom"]
-        L1 --> L2["L2: scenario"]
-        L2 --> L3["L3: persona"]
-    end
-```
-
-Today, EGM already implements the TaskGraph, fact lineage, and manual L0/L1/L2/L3 memory pyramid. `CandidateAtom` is the planned gated promotion layer between L0 and L1; it is tracked in [plan.md](plan.md). The graph structures are **DAG-style** today, not yet full enforced DAGs.
+These structures are **DAG-style** today, not full enforced DAGs. `CandidateAtom` and full cycle enforcement are tracked in [plan.md](plan.md); the README describes the target architecture, while the plan keeps the implementation ledger.
 
 Three design decisions make EGM different:
 

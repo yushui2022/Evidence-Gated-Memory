@@ -126,6 +126,7 @@ README 允许偏目标化，但有三条底线：
 1. 可运行 quickstart、API signature、安装命令必须和当前代码一致。
 2. 当前尚未实现的能力可以作为目标叙事出现，但 `plan.md` 必须有对应落地路径。
 3. 如果 README 写了“DAG / CandidateAtom / candidate gate / enforced lineage”这类目标词，`plan.md` 必须能指出它当前属于 implemented、designed 还是 roadmap。
+4. 每次 README 目标态承诺被推进或完成，必须同步更新上表的“当前实际状态”列。
 
 ---
 
@@ -143,10 +144,11 @@ README 允许偏目标化，但有三条底线：
 8. Mermaid 是 projection，不是 source of truth。
 9. Every TaskNode / Task / Edge mutation must write audit.
 10. LLM entity extraction 只能是 low-trust annotation，不能作为 fact grounding。
-11. Direct automatic L0 -> L1 promotion is forbidden. LLM may only produce candidate atoms with source spans, confidence, rationale, and conflict flags. A candidate gate must decide promote / pending review / reject, and every decision must write audit.
-12. 新 FTS 查询路径必须经过安全 sanitize，并保留 fallback。
-13. schema migration 必须显式处理，不能继续只靠 `CREATE TABLE IF NOT EXISTS`。
-14. TaskGraph / fact lineage 可以按 DAG 设计，但在代码强制 cycle rejection 之前，对外只能称为 DAG-style，不得称为 enforced DAG。
+11. 禁止 LLM 直接把 L0 晋升为 L1；LLM 只能生成带 source span、confidence、rationale、conflict flags 的 candidate atom。
+12. 长期记忆 candidate 必须经过 gate 决定 promote / pending review / reject，并且每次决策都写 audit。
+13. 新 FTS 查询路径必须经过安全 sanitize，并保留 fallback。
+14. schema migration 必须显式处理，不能继续只靠 `CREATE TABLE IF NOT EXISTS`。
+15. TaskGraph / fact lineage 可以按 DAG 设计，但在代码强制 cycle rejection 之前，对外只能称为 DAG-style，不得称为 enforced DAG。
 
 ---
 
@@ -236,6 +238,8 @@ Phase 0 完成后，才能进入 v0.5 的 demo 和 README 主攻。
 
 ### P0-06：Benchmark decision protocol
 
+执行顺序：紧跟 P0-02，早于 P0-03。
+
 依赖：P0-02。
 
 交付：
@@ -310,7 +314,7 @@ Phase 0 完成后，才能进入 v0.5 的 demo 和 README 主攻。
 
 ### P0-05：维护 plan.md 单一事实源
 
-依赖：P0-06。
+依赖：P0-02。
 
 交付：
 
@@ -403,6 +407,8 @@ Phase 0 完成后，才能进入 v0.5 的 demo 和 README 主攻。
 
 ### P1-04：README 第一屏重写
 
+状态：部分完成。三张有向依赖图 + DAG-style 边界已经进入当前 README；剩余重点是第一屏顺序重排、20 行以内 quickstart、rejected / accepted 终端输出。
+
 依赖：P1-01、P1-02。
 
 交付：
@@ -413,10 +419,11 @@ Phase 0 完成后，才能进入 v0.5 的 demo 和 README 主攻。
   - rejected 输出
   - accepted 输出
 - 架构图后置。
-- README 必须把 EGM 的核心结构明确表述为“三张有向依赖图共用一套 gate 纪律”（task graph / fact lineage / long-term memory provenance），并保留不变量 #14 的措辞边界：当前只能写 DAG-style，不得写 enforced DAG。
+- README 必须把 EGM 的核心结构明确表述为“三张有向依赖图共用一套 gate 纪律”（task graph / fact lineage / long-term memory provenance），并保留不变量 #15 的措辞边界：当前只能写 DAG-style，不得写 enforced DAG。
 
 验收：
 
+- 三 DAG 目标叙事与 `README 目标叙事与实际状态账本` 保持同步。
 - 用户不看架构图也能理解：
   - EGM 拦什么
   - 缺什么证据
@@ -521,7 +528,12 @@ Phase 0 完成后，才能进入 v0.5 的 demo 和 README 主攻。
 
 验收：
 
-- 至少 1 个外部开发者能在 60-90 分钟内跑通非官方场景。
+- “非官方场景”必须满足：
+  - 使用开发者自己的业务 anchor，例如 `order_id`、`ticket_id`、`case_id`、`pull_request_id`。
+  - 至少写过或改过 1 个 `evidence_type` 或 `claim_type`。
+  - 至少触发过 1 次 actionable rejection，并按 suggested action 补齐证据。
+  - 不是只改变量名后重跑官方 refund demo。
+- 至少 1 个外部开发者能在 60-90 分钟内跑通上述非官方场景。
 - 如果没人能独立跑通，v0.5 不能宣称 “easy to adopt”。
 - 如果 3 个开发者都不愿意接入，暂停 v0.7 adapter，先重审产品形态。
 
@@ -561,7 +573,7 @@ Phase 0 完成后，才能进入 v0.5 的 demo 和 README 主攻。
 解锁：
 
 - P3-09 TaskGraph cycle rejection。
-- P3 normalized fact dependency storage。
+- P3-10 normalized fact dependency storage。
 
 ---
 
@@ -1002,7 +1014,7 @@ v0.8 名称：Production Hygiene。
 
 ### P3-08：L1 candidate gate implementation
 
-依赖：P2-07。
+依赖：P2-07、P3-01。
 
 交付：
 
@@ -1302,7 +1314,13 @@ v0.9
 
 这些信号不是普通 TODO，而是路线需要暂停、重审、甚至 pivot 的信号。
 
-v0.5 发布后 60 天内，如果出现以下情况：
+v0.5 发布后 90 天内，且达到基本曝光门槛后，如果出现以下情况：
+
+基本曝光门槛：
+
+- 至少 200 unique visitors，或
+- 至少 50 unique clones，或
+- 至少 3 个明确目标用户完成试用邀请。
 
 - 3 个真实 hard-anchor agent 开发者都无法或不愿独立接入。
 - 重写 README / quickstart 后仍然没有改善。
