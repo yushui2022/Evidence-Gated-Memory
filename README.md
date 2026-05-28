@@ -34,7 +34,32 @@
 
 EGM is built around one observation: enterprise agents fail not because they forget what was said, but because they turn missing, stale, or untrusted tool results into confident conclusions. A refund agent saying "done" without a `refund_api_response`, a coding agent claiming "tests pass" without a `test_log` — these failures are invisible in a flat chat history, but catastrophic in production.
 
-Under the hood, the maintained structure is **three directed dependency graphs sharing one gate discipline**: a task graph (TaskNode → TaskNode), a fact-lineage graph (evidence → observed fact → derived fact via `depends_on`), and a long-term memory provenance graph (L0 → CandidateAtom → L1 → L2 → L3). Every node enters through a gate, every edge is auditable, and invalidation cascades along the edges. Short-term reasoning, fact storage, and long-term memory are not three separate subsystems — they are three graphs under one rule: **nothing enters without passing a gate; nothing survives once its upstream is revoked.**
+Under the hood, the maintained structure is **three directed dependency graphs sharing one gate discipline**. Short-term reasoning, fact storage, and long-term memory are not three separate subsystems. They are three graph canvases under one rule: candidates enter through gates, provenance stays auditable, and upstream revocation must not leave downstream conclusions trusted.
+
+```mermaid
+flowchart LR
+    subgraph TASK["Canvas 1: Task Graph"]
+        T1["TaskNode: receive order"] --> T2["TaskNode: check payment"]
+        T2 --> T3["TaskNode: decide refund"]
+        T3 --> T4["TaskNode: verify completion"]
+    end
+
+    subgraph FACT["Canvas 2: Fact Lineage"]
+        E1["Evidence: order_api_response"] --> F1["Observed fact: order is paid"]
+        E2["Evidence: policy_ref"] --> F2["Observed fact: policy allows refund"]
+        F1 --> F3["Derived fact: refund eligible"]
+        F2 --> F3
+    end
+
+    subgraph MEMORY["Canvas 3: Memory Provenance"]
+        L0["L0: raw conversation"] --> C1["CandidateAtom: gated candidate"]
+        C1 --> L1["L1: memory atom"]
+        L1 --> L2["L2: scenario"]
+        L2 --> L3["L3: persona"]
+    end
+```
+
+Today, EGM already implements the TaskGraph, fact lineage, and manual L0/L1/L2/L3 memory pyramid. `CandidateAtom` is the planned gated promotion layer between L0 and L1; it is tracked in [plan.md](plan.md). The graph structures are **DAG-style** today, not yet full enforced DAGs.
 
 Three design decisions make EGM different:
 
