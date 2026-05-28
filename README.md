@@ -34,6 +34,8 @@
 
 EGM is built around one observation: enterprise agents fail not because they forget what was said, but because they turn missing, stale, or untrusted tool results into confident conclusions. A refund agent saying "done" without a `refund_api_response`, a coding agent claiming "tests pass" without a `test_log` — these failures are invisible in a flat chat history, but catastrophic in production.
 
+Under the hood, the maintained structure is **three directed dependency graphs sharing one gate discipline**: a task graph (TaskNode → TaskNode), a fact-lineage graph (evidence → observed fact → derived fact via `depends_on`), and a long-term memory provenance graph (L0 → CandidateAtom → L1 → L2 → L3). Every node enters through a gate, every edge is auditable, and invalidation cascades along the edges. Short-term reasoning, fact storage, and long-term memory are not three separate subsystems — they are three graphs under one rule: **nothing enters without passing a gate; nothing survives once its upstream is revoked.**
+
 Three design decisions make EGM different:
 
 **1. Soft-state freshness gates, not binary valid/invalid.**
@@ -147,6 +149,8 @@ flowchart TD
 ### How the pieces fit together
 
 The mermaid above is the full dataflow. What matters: every tool result lands in `refs/*.md` (never summarized away), every fact passes a schema-defined gate before it enters the prompt, and every long-term memory carries a source path back to raw conversation. The task graph is maintained as a structured object — not periodically collapsed into a lossy summary.
+
+The three structures shown above — **TaskGraph**, **Fact lineage** (`Fact.depends_on`), and the **L0 → L3 memory pyramid** — are all directed dependency graphs. Cascade invalidation is not a feature bolted on top; it is what these graphs are *for*. Today TaskGraph enforces rejection of self-loops and cross-task edges; multi-node cycle detection across all three graphs is on the v0.9 roadmap. Until then we describe these structures as **DAG-style**, not enforced DAG — see [plan.md](plan.md) P1-09 / P3-09.
 
 ---
 
@@ -409,6 +413,7 @@ Zep enterprise requires cloud or self-hosted infrastructure. EverMemOS is closer
 | Cascading invalidation | **Observed → derived** | No | No | No | No | No | No |
 | Rejection | **Actionable (what + why + next call)** | Boolean | Boolean | Boolean | Boolean | Boolean | Boolean |
 | Task structure | **Graph + anchors + soft state machine** | Entity graph | Layered pipeline | Episodic buffer | Flat facts | Agent managed | LangGraph state |
+| Graph structure | **3 directed dependency graphs (task / fact lineage / memory provenance) under one gate + cascade discipline** | Single temporal KG | Layered pipeline, not graph-unified | Episodic buffer | Flat | Flat | LangGraph state graph (no fact/memory DAG) |
 | Deployment | **`pip install`** | Cloud / self-host | Heavy platform | Research code | `pip install` | `pip install` | `pip install` |
 | Best fit | **Hard-anchor enterprise workflows** | CRM, compliance, tickets | Regulated long-cycle | Research / long-horizon | Chatbots, personas | Autonomous agents | LangGraph workflows |
 
@@ -419,6 +424,22 @@ EGM is the only system that combines strongest deterministic gating with the lig
 ## Architecture
 
 EGM has three pillars. They are independent layers that compose into one prompt at `build_context()` time.
+
+### 0. The unifying structure: three directed dependency graphs
+
+Before the three pillars, one observation ties them together. EGM is not three unrelated subsystems — it is **three directed dependency graphs that share one gate discipline**:
+
+- **TaskGraph** — `TaskNode → TaskNode` (plus the implicit `parent_id` tree).
+- **Fact lineage** — `evidence → observed fact → derived fact`, via `Fact.depends_on`.
+- **Long-term memory provenance** — `L0 → CandidateAtom → L1 → L2 → L3`.
+
+All three obey the same rules:
+
+- A node enters only by passing a gate (evidence gate / state gate / candidate gate).
+- Every edge writes audit.
+- Upstream revocation cascades along edges to downstream nodes.
+
+This is why short-term task state, fact storage, and long-term memory live in one library: they are not three features, they are one structure used three times. Today TaskGraph enforces self-loop and cross-task rejection; full multi-node cycle enforcement across all three graphs is on the v0.9 roadmap. Until then, we call these structures **DAG-style**, not enforced DAG (see [plan.md](plan.md) invariant #14, P1-09, P3-09).
 
 ### 1. Short-term graph memory — foldable context for the current task
 
