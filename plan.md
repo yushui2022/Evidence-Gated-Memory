@@ -130,6 +130,59 @@ README 允许偏目标化，但有三条底线：
 
 ---
 
+## 成熟度差距总表
+
+当前成熟度判断：
+
+```text
+概念成熟度：高
+核心内核成熟度：中等偏上
+文档叙事成熟度：正在变强
+工程发布成熟度：中等偏低
+生态接入成熟度：低
+真实用户验证：几乎没有
+生产成熟度：还没有
+```
+
+EGM 现在是一个方向清楚、核心链路已跑通的 alpha library，不是成熟项目。下面这张表是判断“离成熟还差什么”的总账。
+
+| Area | Current | Mature target | Gap | Planned phase |
+|---|---|---|---|---|
+| Safety | hardcoded key 已清过一轮，但仍需全仓复核 | 没有 hardcoded credentials；所有 key 只走 env / secret manager | 全仓 secret scan、`.env.example`、README 配置说明 | P0-01 |
+| Benchmark truth | 有 local / tau / tau2 结果，但叙事仍需统一 | 每个结果都有 sample size、metric、limitation，不把 smoke 写成 proof | benchmark decision protocol、snapshot generator、CI gate | P0-02 / P0-06 / P0-03 / P0-04 |
+| Demo | 有 examples，但第一眼还不够短、不够强 | 30 秒 refund / coding demo，可截图、可复制、无 API key | `refund_minimal.py`、`coding_minimal.py`、README 第一屏重排 | P1-01 / P1-02 / P1-04 |
+| README | 已有目标叙事和三类 directed dependency surfaces | 第一屏能说明 EGM 拦什么、缺什么证据、怎么补、为什么可信 | 20 行 quickstart、rejected / accepted 输出、架构后置 | P1-04 |
+| Schema authoring | 内置 refund / coding schema 可用 | 用户能照文档写自己的 `ticket.yaml` / `compliance.yaml` | schema authoring guide、suggested action 写法、entity extraction chain | P1-07 |
+| Adoption | 没有真实外部开发者无辅助接入记录 | 至少 1 个外部开发者能在 60-90 分钟内跑通非官方场景 | unaided adoption test、friction log、README/API 反向修正 | P1-08 |
+| DAG | TaskGraph 已有 directed edges；self-loop / cross-task 已拒绝 | TaskGraph / fact lineage 的关键环检测可执行，文档不夸大 | DAG invariant doc、TaskGraph cycle rejection、fact dependency hardening | P1-09 / P3-09 / P3-10 |
+| Agent integration | 还没有成熟 generic loop / LangChain / LangGraph adapter | 裸 agent loop 可接入，主流框架有最小 adapter 和 examples | generic loop guide、adapter contract、LangChain / LangGraph examples | P2-01 to P2-05 |
+| Long-term memory | L0/L1/L2/L3 manual pyramid 已有；CandidateAtom 未实现 | L1 自动候选经过 candidate gate，再 promote / reject / audit | long-term candidate gate design、CandidateAtom model、CandidateGateResult、audit | P2-07 / P3-08 |
+| Storage / migration | SQLite 可用，但 migration runner 和 normalized dependencies 仍不足 | 长期 workspace 可迁移；关键依赖查询不靠 JSON LIKE | versioned migration runner、normalized storage design、junction table | P3-01 / P3-02 / P3-10 |
+| Inspect / audit | audit log 已有，inspect/export 仍需产品化 | CLI 能看 workspace 状态，audit 可导出、可过滤、可审计 | CLI inspect、audit export、production guide | P3-03 / P3-04 / P3-05 |
+| Production boundary | 目前是 alpha library，不是生产平台 | 明确 SQLite 边界、并发边界、retention、backup、secrets handling | production guide、concurrency tests、retention/archive policy | P3-05 / P3-06 / P3-07 |
+| Release discipline | PyPI 已发布，但 semver / changelog / typed package 不完整 | 专业 Python library：typed、extras、CHANGELOG、release criteria | `py.typed`、packaging extras、CHANGELOG、release criteria | Phase 4 |
+
+---
+
+## 没做到这些，不算成熟
+
+EGM 不能只因为 README 好看、PyPI 能安装、核心 demo 能跑，就宣称成熟。下面这些是硬边界：
+
+1. 没有完成全仓 credential 清理和 benchmark 叙事统一，不算成熟。
+2. 没有 30 秒 refund / coding demo，不算成熟。
+3. 没有 benchmark snapshot 和 limitation，不算成熟。
+4. 没有至少 1 个外部开发者无辅助接入非官方场景，不算成熟。
+5. 没有 generic agent loop 文档和 example，不算成熟。
+6. 没有 versioned migration runner，不算成熟。
+7. 没有 CLI inspect 和 audit export，不算成熟。
+8. 没有 production guide，不算成熟。
+9. 没有 L1 candidate gate，只能说长期记忆仍以 manual promotion 为主。
+10. 没有 TaskGraph cycle rejection，不能说 enforced DAG。
+11. 没有 CHANGELOG / semver / release criteria / typed package，不算专业 Python library。
+12. README 目标叙事如果没有在本文件记录真实状态和落地路径，不算可信。
+
+---
+
 ## 不变量：开发时不能破坏的底线
 
 这些来自早期 handoff 讨论，已经收敛进本文件。后续不再维护单独的 handoff 文档。

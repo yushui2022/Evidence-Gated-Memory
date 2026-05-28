@@ -447,7 +447,7 @@ All three obey the same rules:
 - Every edge writes audit.
 - Upstream revocation cascades along edges to downstream nodes.
 
-This is why short-term task state, fact storage, and long-term memory live in one library: they are not three features, they are one structure used three times. Today TaskGraph enforces self-loop and cross-task rejection; full multi-node cycle enforcement across all three graphs is on the v0.9 roadmap. Until then, we call these structures **DAG-style**, not enforced DAG (see [plan.md](plan.md) invariant #14, P1-09, P3-09).
+This is why short-term task state, fact storage, and long-term memory live in one library: they are not three features, they are one structure used three times. Today TaskGraph enforces self-loop and cross-task rejection; full multi-node cycle enforcement across all three graphs is on the v0.9 roadmap. Until then, we call these structures **DAG-style**, not enforced DAG (see [plan.md](plan.md) invariant #15, P1-09, P3-09).
 
 ### 1. Short-term graph memory — foldable context for the current task
 
