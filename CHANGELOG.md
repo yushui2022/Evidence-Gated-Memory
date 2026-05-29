@@ -17,6 +17,7 @@ called out explicitly.
 - Enabled SQLite WAL mode and a 5000 ms busy timeout for local workspaces.
 - Added a generic agent-loop integration guide and runnable refund-loop demo.
 - Added adapter metadata contract docs and reusable metadata helpers.
+- Added long-term memory candidate-gate design documentation.
 - Added explicit TaskEdge multi-node cycle rejection.
 - Added TaskNode `parent_id` missing-parent and cross-task rejection.
 - Added production-boundary guidance in `docs/production.md`.
