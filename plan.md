@@ -458,6 +458,8 @@ Phase 0 完成后，才能进入 v0.5 的 demo 和 README 主攻。
 
 ### P1-03：Ticket / Compliance demo
 
+状态：已落地第一版。新增 `examples/ticket_minimal.py`，使用内联 ticket schema，展示 3 个 TaskNode、一次 resolution claim rejection、一次 escalation DONE transition rejection、补 `escalation_response` 后转 DONE。已纳入 `tests/test_minimal_demos.py`。
+
 依赖：P1-01 或 P1-02。
 
 交付：

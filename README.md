@@ -6,7 +6,7 @@
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="PyPI" src="https://img.shields.io/pypi/v/evidence-gated-memory?color=0B1220&label=pypi"></a>
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="Python" src="https://img.shields.io/pypi/pyversions/evidence-gated-memory?color=0B1220"></a>
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-0B1220"></a>
-  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-140%20passing-0F9F6E"></a>
+  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-141%20passing-0F9F6E"></a>
   <a href="#benchmarks"><img alt="Status" src="https://img.shields.io/badge/status-alpha-E7B549"></a>
 </p>
 
@@ -74,6 +74,12 @@ python examples/coding_minimal.py
 ```
 
 A file claim requires `file_read`; a done claim requires a fresh `test_log`.
+
+For a third domain with an inline schema:
+
+```bash
+python examples/ticket_minimal.py
+```
 
 ---
 

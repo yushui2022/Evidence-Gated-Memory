@@ -49,3 +49,20 @@ def test_coding_minimal_demo_runs() -> None:
     assert "done_claim.accepted: true" in out
     assert "task_transition.accepted: true" in out
     assert "Evidence-Gated Memory Context" in out
+
+
+def test_ticket_minimal_demo_runs() -> None:
+    result = _run_demo("ticket_minimal.py")
+
+    assert result.returncode == 0, result.stderr
+    out = result.stdout
+    assert "EGM Ticket Demo" in out
+    assert "resolution_claim.accepted: false" in out
+    assert "ticket_record" in out
+    assert "policy_article" in out
+    assert "resolution_claim.accepted: true" in out
+    assert "escalation_transition.accepted: false" in out
+    assert "escalation_response" in out
+    assert "escalation_claim.accepted: true" in out
+    assert "escalation_transition.accepted: true" in out
+    assert "Evidence-Gated Memory Context" in out
