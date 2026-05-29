@@ -22,6 +22,8 @@ called out explicitly.
   validation, promote / pending / reject APIs, schema v2 storage, and audit.
 - Added `egm candidates` for listing long-term memory candidates in text or
   JSON during review.
+- Added normalized fact dependency indexes (`fact_evidence_refs` and
+  `fact_dependencies`) with schema v3 backfill migration.
 - Added explicit TaskEdge multi-node cycle rejection.
 - Added TaskNode `parent_id` missing-parent and cross-task rejection.
 - Added production-boundary guidance in `docs/production.md`.

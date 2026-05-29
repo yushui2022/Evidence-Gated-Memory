@@ -110,6 +110,8 @@ def _cmd_inspect(args: argparse.Namespace) -> int:
             "evidence",
             "claims",
             "facts",
+            "fact_evidence_refs",
+            "fact_dependencies",
             "tasks",
             "task_nodes",
             "task_edges",

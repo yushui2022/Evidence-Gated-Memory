@@ -40,7 +40,7 @@ from evidence_gated_memory.core.models import (
 )
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 SQLITE_BUSY_TIMEOUT_MS = 5000
 
 
@@ -158,6 +158,18 @@ CREATE TABLE IF NOT EXISTS facts (
     node_id TEXT
 );
 
+CREATE TABLE IF NOT EXISTS fact_evidence_refs (
+    fact_id TEXT NOT NULL,
+    evidence_id TEXT NOT NULL,
+    PRIMARY KEY(fact_id, evidence_id)
+);
+
+CREATE TABLE IF NOT EXISTS fact_dependencies (
+    child_fact_id TEXT NOT NULL,
+    parent_fact_id TEXT NOT NULL,
+    PRIMARY KEY(child_fact_id, parent_fact_id)
+);
+
 CREATE TABLE IF NOT EXISTS audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TEXT NOT NULL,
@@ -223,6 +235,9 @@ CREATE TABLE IF NOT EXISTS task_nodes (
 CREATE INDEX IF NOT EXISTS idx_evidence_type ON evidence(evidence_type);
 CREATE INDEX IF NOT EXISTS idx_facts_claim_type ON facts(claim_type);
 CREATE INDEX IF NOT EXISTS idx_facts_invalidated ON facts(invalidated_at);
+CREATE INDEX IF NOT EXISTS idx_fact_evidence_refs_evidence ON fact_evidence_refs(evidence_id);
+CREATE INDEX IF NOT EXISTS idx_fact_dependencies_parent ON fact_dependencies(parent_fact_id);
+CREATE INDEX IF NOT EXISTS idx_fact_dependencies_child ON fact_dependencies(child_fact_id);
 CREATE INDEX IF NOT EXISTS idx_conversation_session ON conversation_messages(session_id);
 CREATE INDEX IF NOT EXISTS idx_memory_atoms_kind ON memory_atoms(kind);
 CREATE INDEX IF NOT EXISTS idx_memory_candidates_status ON memory_atom_candidates(status);
@@ -268,6 +283,18 @@ def _from_iso(s: Optional[str]) -> Optional[datetime]:
 
 def _dumps(obj: Any) -> str:
     return json.dumps(obj, ensure_ascii=False, default=str)
+
+
+def _loads_list(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    try:
+        loaded = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(loaded, list):
+        return []
+    return [item for item in loaded if isinstance(item, str)]
 
 
 class SqliteStore:
@@ -321,6 +348,7 @@ class SqliteStore:
         return (
             (1, self._migrate_to_v1),
             (2, self._migrate_to_v2),
+            (3, self._migrate_to_v3),
         )
 
     def _migrate_to_v1(self) -> None:
@@ -357,6 +385,11 @@ class SqliteStore:
             "ON memory_atom_candidates(kind)"
         )
 
+    def _migrate_to_v3(self) -> None:
+        """Normalize fact -> evidence and fact -> parent-fact dependency indexes."""
+        self._ensure_fact_dependency_tables()
+        self._backfill_fact_dependency_indexes()
+
     def get_schema_version(self) -> int:
         row = self.conn.execute(
             "SELECT value FROM schema_meta WHERE key='schema_version'"
@@ -376,6 +409,59 @@ class SqliteStore:
         }
         if column not in columns:
             self.conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+
+    def _ensure_fact_dependency_tables(self) -> None:
+        self.conn.execute(
+            """CREATE TABLE IF NOT EXISTS fact_evidence_refs (
+                fact_id TEXT NOT NULL,
+                evidence_id TEXT NOT NULL,
+                PRIMARY KEY(fact_id, evidence_id)
+            )"""
+        )
+        self.conn.execute(
+            """CREATE TABLE IF NOT EXISTS fact_dependencies (
+                child_fact_id TEXT NOT NULL,
+                parent_fact_id TEXT NOT NULL,
+                PRIMARY KEY(child_fact_id, parent_fact_id)
+            )"""
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_fact_evidence_refs_evidence "
+            "ON fact_evidence_refs(evidence_id)"
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_fact_dependencies_parent "
+            "ON fact_dependencies(parent_fact_id)"
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_fact_dependencies_child "
+            "ON fact_dependencies(child_fact_id)"
+        )
+
+    def _backfill_fact_dependency_indexes(self) -> None:
+        if not self._table_exists("facts"):
+            return
+        rows = self.conn.execute(
+            "SELECT id, evidence_refs, depends_on FROM facts"
+        ).fetchall()
+        for row in rows:
+            fact_id = row["id"]
+            for evidence_id in _loads_list(row["evidence_refs"]):
+                self.conn.execute(
+                    "INSERT OR IGNORE INTO fact_evidence_refs(fact_id, evidence_id) VALUES (?,?)",
+                    (fact_id, evidence_id),
+                )
+            for parent_id in _loads_list(row["depends_on"]):
+                self.conn.execute(
+                    "INSERT OR IGNORE INTO fact_dependencies(child_fact_id, parent_fact_id) VALUES (?,?)",
+                    (fact_id, parent_id),
+                )
+
+    def _table_exists(self, table: str) -> bool:
+        return self.conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+            (table,),
+        ).fetchone() is not None
 
     # ---------- Events ----------
 
@@ -825,6 +911,7 @@ class SqliteStore:
             "INSERT INTO facts_fts(id, text, claim_type) VALUES (?,?,?)",
             (fact.id, fact.text, fact.claim_type),
         )
+        self._insert_fact_dependency_indexes(fact)
         self.conn.commit()
 
     def get_fact(self, fact_id: str) -> Optional[Fact]:
@@ -838,21 +925,38 @@ class SqliteStore:
         return [_row_to_fact(r) for r in rows]
 
     def list_facts_depending_on(self, fact_id: str) -> list[Fact]:
-        # JSON LIKE match is good enough for v0.1.
-        like = f'%"{fact_id}"%'
         rows = self.conn.execute(
-            "SELECT * FROM facts WHERE invalidated_at IS NULL AND depends_on LIKE ?",
-            (like,),
+            "SELECT facts.* FROM facts "
+            "JOIN fact_dependencies ON facts.id = fact_dependencies.child_fact_id "
+            "WHERE fact_dependencies.parent_fact_id=? "
+            "AND facts.invalidated_at IS NULL "
+            "ORDER BY facts.created_at DESC",
+            (fact_id,),
         ).fetchall()
         return [_row_to_fact(r) for r in rows]
 
     def list_facts_using_evidence(self, evidence_id: str) -> list[Fact]:
-        like = f'%"{evidence_id}"%'
         rows = self.conn.execute(
-            "SELECT * FROM facts WHERE invalidated_at IS NULL AND evidence_refs LIKE ?",
-            (like,),
+            "SELECT facts.* FROM facts "
+            "JOIN fact_evidence_refs ON facts.id = fact_evidence_refs.fact_id "
+            "WHERE fact_evidence_refs.evidence_id=? "
+            "AND facts.invalidated_at IS NULL "
+            "ORDER BY facts.created_at DESC",
+            (evidence_id,),
         ).fetchall()
         return [_row_to_fact(r) for r in rows]
+
+    def _insert_fact_dependency_indexes(self, fact: Fact) -> None:
+        for evidence_id in fact.evidence_refs:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO fact_evidence_refs(fact_id, evidence_id) VALUES (?,?)",
+                (fact.id, evidence_id),
+            )
+        for parent_id in fact.depends_on:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO fact_dependencies(child_fact_id, parent_fact_id) VALUES (?,?)",
+                (fact.id, parent_id),
+            )
 
     def update_fact_node_id(self, fact_id: str, node_id: str) -> None:
         self.conn.execute(

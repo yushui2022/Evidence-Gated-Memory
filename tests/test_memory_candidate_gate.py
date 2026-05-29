@@ -218,7 +218,7 @@ def test_sqlite_migrates_v1_workspace_to_memory_candidates(tmp_path: Path) -> No
             row["name"]
             for row in store.conn.execute("PRAGMA table_info(memory_atom_candidates)").fetchall()
         }
-        assert store.get_schema_version() == 2
+        assert store.get_schema_version() == 3
         assert {
             "id",
             "source_spans",
