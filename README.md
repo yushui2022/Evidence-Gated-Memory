@@ -575,7 +575,14 @@ state_gates:
     suggested_action: "call refund_api and attach a fresh refund_api_response before marking refund completion done"
 ```
 
-Full architecture document: [docs/architecture.md](docs/architecture.md).
+Supporting documents:
+
+- [Architecture](docs/architecture.md)
+- [Security and secret handling](docs/security.md)
+- [Benchmark decision protocol](docs/benchmark-decision-protocol.md)
+- [Benchmark philosophy](docs/benchmark-philosophy.md)
+- [Schema authoring guide](docs/schema-authoring.md)
+- [DAG invariants](docs/dag-invariants.md)
 
 ---
 
