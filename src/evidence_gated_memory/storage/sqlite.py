@@ -39,6 +39,7 @@ from evidence_gated_memory.core.models import (
 
 
 SCHEMA_VERSION = 1
+SQLITE_BUSY_TIMEOUT_MS = 5000
 
 
 SCHEMA = """
@@ -261,12 +262,23 @@ class SqliteStore:
         self.db_path = self.workspace / "egm.db"
         self.conn = sqlite3.connect(self.db_path)
         self.conn.row_factory = sqlite3.Row
+        self._configure_connection()
         self.conn.executescript(SCHEMA)
         self._migrate_schema()
         self.conn.commit()
 
     def close(self) -> None:
         self.conn.close()
+
+    def _configure_connection(self) -> None:
+        """Set conservative local-workspace SQLite pragmas.
+
+        WAL improves the single-writer / many-reader shape EGM targets today.
+        It is not a multi-writer guarantee; callers still need to coordinate
+        writes at the application layer.
+        """
+        self.conn.execute(f"PRAGMA busy_timeout={SQLITE_BUSY_TIMEOUT_MS}")
+        self.conn.execute("PRAGMA journal_mode=WAL")
 
     def _migrate_schema(self) -> None:
         """Run pending schema migrations in version order."""

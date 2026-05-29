@@ -14,6 +14,7 @@ called out explicitly.
   task, claim, fact, and evidence identifiers.
 - Added a versioned SQLite migration runner skeleton with v1 migration coverage
   and future-schema rejection.
+- Enabled SQLite WAL mode and a 5000 ms busy timeout for local workspaces.
 - Added production-boundary guidance in `docs/production.md`.
 - Added release gate guidance in `docs/release-criteria.md`.
 

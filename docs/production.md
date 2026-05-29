@@ -51,9 +51,11 @@ Be careful with:
 - very large refs or offload files;
 - production processes that need zero-downtime schema migration.
 
-WAL mode and busy-timeout policy are not enabled by default yet. They are
-planned under the workspace-concurrency workstream. Until that lands, coordinate
-writes at the application layer.
+EGM enables SQLite WAL mode and a 5000 ms busy timeout on workspace
+connections. This improves the local single-writer / many-reader shape, but it
+is not a multi-writer guarantee. Coordinate writes at the application layer.
+Avoid sharing one writable workspace across unrelated agent processes until the
+concurrency test suite is broader.
 
 ## Backup And Restore
 
