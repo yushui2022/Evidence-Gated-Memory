@@ -1,29 +1,26 @@
 """Verification #1: built wheel must contain the builtin YAML schemas.
 
-This test builds a wheel and inspects its contents — it does NOT install it,
-to avoid polluting the dev environment. The isolated install smoke is in
-scripts/smoke_install.py and run manually in CI.
+This test builds a wheel and inspects its contents. It does not install the
+wheel, and it disables build isolation so local/CI test runs do not need network
+access just to verify package data.
 """
 
-import subprocess
-import sys
 import zipfile
 from pathlib import Path
+
+from setuptools import build_meta
 
 
 REPO = Path(__file__).resolve().parents[1]
 
 
-def test_wheel_contains_builtin_yaml(tmp_path: Path):
+def test_wheel_contains_builtin_yaml(tmp_path: Path, monkeypatch):
     out = tmp_path / "dist"
     out.mkdir()
-    result = subprocess.run(
-        [sys.executable, "-m", "pip", "wheel", str(REPO), "--no-deps", "-w", str(out)],
-        capture_output=True, text=True,
-    )
-    assert result.returncode == 0, result.stderr
+    monkeypatch.chdir(REPO)
+    wheel_name = build_meta.build_wheel(str(out))
 
-    wheels = list(out.glob("evidence_gated_memory-*.whl"))
+    wheels = [out / wheel_name]
     assert wheels, "wheel not produced"
     with zipfile.ZipFile(wheels[0]) as zf:
         names = zf.namelist()

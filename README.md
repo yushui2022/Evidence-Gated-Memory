@@ -6,7 +6,7 @@
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="PyPI" src="https://img.shields.io/pypi/v/evidence-gated-memory?color=0B1220&label=pypi"></a>
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="Python" src="https://img.shields.io/pypi/pyversions/evidence-gated-memory?color=0B1220"></a>
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-0B1220"></a>
-  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-135%20passing-0F9F6E"></a>
+  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-140%20passing-0F9F6E"></a>
   <a href="#benchmarks"><img alt="Status" src="https://img.shields.io/badge/status-alpha-E7B549"></a>
 </p>
 
@@ -17,6 +17,7 @@
 
 <p align="center">
   <a href="#quick-start">Quick start</a> |
+  <a href="#30-second-demo">30-second demo</a> |
   <a href="#architecture-at-a-glance">Architecture map</a> |
   <a href="#why-egm">Why EGM</a> |
   <a href="#architecture">Architecture</a> |
@@ -31,6 +32,52 @@
 ## Core Thesis
 
 EGM is not another `memory.add()` / `memory.search()` layer. It is a provenance-first memory kernel for hard-anchor enterprise agents: a conclusion becomes usable only when its evidence, freshness, lineage, and task state survive deterministic gates.
+
+## 30-Second Demo
+
+Run the refund demo with no API key:
+
+```bash
+python examples/refund_minimal.py
+```
+
+EGM rejects an unsupported completion claim, tells the agent exactly which
+evidence is missing, then accepts the same workflow after the required API
+evidence exists:
+
+```text
+[1. Unsupported completion claim]
+completion_claim.accepted: false
+completion_claim.reason: missing required evidence types: ['refund_api_response']
+completion_claim.action: call refund_api and attach its response as evidence before declaring completion
+
+[3. DONE transition before execution evidence]
+completion_transition.accepted: false
+completion_transition.reason: transition gate 'refund_completion_done_requires_api_response' requires evidence types ['refund_api_response']
+
+[4. Add refund API evidence]
+completion_claim.accepted: true
+completion_transition.accepted: true
+completion_transition.status: done
+
+[5. Final gated context]
+<task_status>done</task_status>
+<current_state>done</current_state>
+[FACT] Refund for ORD-123 has been executed via REF-9001
+  - ref=... type=refund_api_response source=refund_api [fresh]
+```
+
+For coding agents:
+
+```bash
+python examples/coding_minimal.py
+```
+
+A file claim requires `file_read`; a done claim requires a fresh `test_log`.
+
+---
+
+## Why EGM
 
 Enterprise agents rarely fail because they forget more text. They fail because they turn missing, stale, or untrusted tool results into confident conclusions. A refund agent saying "done" without a `refund_api_response`, or a coding agent claiming "tests pass" without a fresh `test_log`, is not suffering from weak recall. It is using memory without admissibility rules.
 
@@ -261,7 +308,7 @@ EGM has been integrated as a memory layer for [tau-bench](https://github.com/sie
 set DEEPSEEK_API_KEY=...                            # any LiteLLM-compatible key
 python benchmarks/tau_bench/run_ab.py --task 0      # A/B on a single task
 python benchmarks/tau_bench/run_ab.py --task 0 --json  # machine-readable
-python benchmarks/tau_bench/run_ab.py --smoke       # deterministic, no API keys
+python benchmarks/run_local.py --tau-smoke          # deterministic, no API keys
 ```
 
 **A/B results** (30 retail tasks, DeepSeek-chat, $0.15 total):

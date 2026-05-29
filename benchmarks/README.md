@@ -32,6 +32,17 @@ python benchmarks/run_local.py
 python benchmarks/run_local.py --json
 ```
 
+Generate release-ready deterministic benchmark artifacts:
+
+```bash
+python scripts/generate_benchmark_snapshot.py
+```
+
+This writes:
+
+- `reports/deterministic_benchmark_snapshot.json`
+- `reports/deterministic_benchmark_snapshot.md`
+
 CI coverage:
 
 ```bash
@@ -58,3 +69,18 @@ These runners compute retrieval-only Recall@K / MRR over official evidence
 fields. They are still not leaderboard submissions because they do not generate
 answers or run the official judge pipeline. See
 `benchmarks/official/README.md` before using the numbers in public material.
+
+## Public Reporting Protocol
+
+Before moving any benchmark number into README, release notes, PyPI text, or a
+social post, apply the rules in `docs/benchmark-decision-protocol.md`.
+
+Short version:
+
+- deterministic local probes are EGM correctness guards, not leaderboard scores;
+- official-data runners in this repo are retrieval-only proxies unless the
+  official judge pipeline is run;
+- tau-bench and tau2-bench are downstream agent A/B evaluations, so every result
+  must include task count, model route, cost/budget, and limitations;
+- failed harness/model routes must be reported as "blocked/no valid score", not
+  as quality results.

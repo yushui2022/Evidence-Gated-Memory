@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Test and deterministic benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Scan for hardcoded secrets
+        run: python scripts/scan_secrets.py
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Run deterministic benchmark suite
+        run: python benchmarks/run_local.py --json
+
+      - name: Generate deterministic benchmark snapshot
+        run: |
+          python scripts/generate_benchmark_snapshot.py \
+            --json-out reports/ci_deterministic_benchmark_snapshot.json \
+            --md-out reports/ci_deterministic_benchmark_snapshot.md

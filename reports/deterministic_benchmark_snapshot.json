@@ -1,0 +1,399 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-05-29T04:35:00.090880+00:00",
+  "benchmark_type": "deterministic-local",
+  "note": "Local deterministic EGM correctness probes. These are not official leaderboard scores and do not call external model APIs.",
+  "environment": {
+    "python": "3.11.1",
+    "platform": "Windows-10-10.0.26200-SP0"
+  },
+  "summary": {
+    "passed": true,
+    "total_suites": 4,
+    "passed_suites": 4,
+    "total_checks": 21,
+    "passed_checks": 21
+  },
+  "suites": [
+    {
+      "suite": "egm-local-benchmarks",
+      "note": "Local deterministic probes, not official leaderboard scores.",
+      "passed": true,
+      "duration_ms": 35412.9,
+      "benchmarks": [
+        {
+          "name": "longmemeval_s_hard_anchor",
+          "description": "Hard-anchor recall and evidence-source coverage, aligned with LongMemEval-S task shape.",
+          "passed": true,
+          "metrics": {
+            "cases": 12,
+            "accepted_fact_rate": 1.0,
+            "anchor_recall": 1.0,
+            "evidence_source_coverage": 1.0,
+            "unsupported_abstention_rate": 1.0
+          },
+          "thresholds": {
+            "accepted_fact_rate": 1.0,
+            "anchor_recall": 1.0,
+            "evidence_source_coverage": 1.0,
+            "unsupported_abstention_rate": 1.0
+          }
+        },
+        {
+          "name": "locomo_style_semantic_pyramid",
+          "description": "Manual long-term memory recall with L0 exclusion, inspired by LoCoMo-style cross-session memory.",
+          "passed": true,
+          "metrics": {
+            "cases": 4,
+            "target_atom_recall": 1.0,
+            "target_scenario_recall": 1.0,
+            "source_id_coverage": 1.0,
+            "raw_l0_exclusion": 1.0
+          },
+          "thresholds": {
+            "target_atom_recall": 1.0,
+            "target_scenario_recall": 1.0,
+            "source_id_coverage": 1.0,
+            "raw_l0_exclusion": 1.0
+          }
+        },
+        {
+          "name": "beam_lite_hard_anchor_pressure",
+          "description": "Synthetic hard-anchor pressure test for bounded context and drill-down links.",
+          "passed": true,
+          "metrics": {
+            "cases": 24,
+            "target_anchor_recall": 1.0,
+            "target_source_coverage": 1.0,
+            "context_fact_bound": 1.0,
+            "task_map_present": 1.0,
+            "target_offload_records": 1
+          },
+          "thresholds": {
+            "target_anchor_recall": 1.0,
+            "target_source_coverage": 1.0,
+            "context_fact_bound": 1.0,
+            "task_map_present": 1.0,
+            "target_offload_records": 1.0
+          }
+        },
+        {
+          "name": "false_done_gate_benchmark",
+          "description": "Unsupported refund completion claims and DONE transitions must be blocked with actionable feedback.",
+          "passed": true,
+          "metrics": {
+            "cases": 6,
+            "claim_false_done_block_rate": 1.0,
+            "transition_false_done_block_rate": 1.0,
+            "actionable_rejection_rate": 1.0,
+            "acceptance_after_evidence_rate": 1.0
+          },
+          "thresholds": {
+            "claim_false_done_block_rate": 1.0,
+            "transition_false_done_block_rate": 1.0,
+            "actionable_rejection_rate": 1.0,
+            "acceptance_after_evidence_rate": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "suite": "egm-adversarial-probes",
+      "note": "Attack-vector tests. Each probe tries to bypass EGM's gates and verifies the gate held.",
+      "passed": true,
+      "blocked": 10,
+      "total": 10,
+      "duration_ms": 11571.54,
+      "probes": [
+        {
+          "name": "1. LLM evidence rejected",
+          "description": "Evidence from source_system='llm' must never ground a fact.",
+          "passed": true,
+          "metrics": {
+            "attack": "llm_sourced_evidence",
+            "attack_blocked": 1,
+            "correct_gate_triggered": 1,
+            "fact_was_written": 0
+          }
+        },
+        {
+          "name": "2. Expired evidence blocked",
+          "description": "Expired required evidence must block fact assertion.",
+          "passed": true,
+          "metrics": {
+            "attack": "expired_required_evidence",
+            "attack_blocked": 1,
+            "expired_gate_triggered": 1,
+            "fact_was_written": 0
+          }
+        },
+        {
+          "name": "3. Source-system allowlist enforced",
+          "description": "Evidence from a non-allowlisted source must be rejected at gate time.",
+          "passed": true,
+          "metrics": {
+            "attack": "untrusted_source_system",
+            "attack_blocked": 1,
+            "correct_gate_triggered": 1,
+            "fact_was_written": 0
+          }
+        },
+        {
+          "name": "4. commit_fact requires GateResult",
+          "description": "commit_fact must reject: no gate, rejected gate, or mismatched gate.",
+          "passed": true,
+          "metrics": {
+            "attack": "bypass_gate_direct_commit",
+            "attack_blocked": 1,
+            "rejected_gate_blocked": 1,
+            "mismatched_gate_blocked": 1,
+            "fact_was_written": 0
+          }
+        },
+        {
+          "name": "5. DONE transition blocked without evidence",
+          "description": "refund_completion→DONE must be blocked, then accepted once evidence is attached.",
+          "passed": true,
+          "metrics": {
+            "attack": "transition_done_without_evidence",
+            "attack_blocked": 1,
+            "actionable_rejection": 1,
+            "accepted_after_evidence": 1
+          }
+        },
+        {
+          "name": "6. Phantom evidence attach rejected",
+          "description": "Attaching a nonexistent evidence ref must raise KeyError immediately.",
+          "passed": true,
+          "metrics": {
+            "attack": "phantom_evidence_ref",
+            "attack_blocked": 1
+          }
+        },
+        {
+          "name": "7. Invalidated fact attach rejected",
+          "description": "Attaching a fact that has been invalidated must raise ValueError.",
+          "passed": true,
+          "metrics": {
+            "attack": "attach_invalidated_fact",
+            "attack_blocked": 1
+          }
+        },
+        {
+          "name": "8. Cascading invalidation on evidence revoke",
+          "description": "Revoking root evidence must invalidate both the observed fact and its derived child.",
+          "passed": true,
+          "metrics": {
+            "attack": "revoke_root_evidence",
+            "attack_blocked": 1,
+            "observed_invalidated": 1,
+            "derived_invalidated": 1,
+            "cascade_depth": 2
+          }
+        },
+        {
+          "name": "9. Unknown evidence_type rejected at API edge",
+          "description": "record_evidence must reject undeclared types before writing to disk.",
+          "passed": true,
+          "metrics": {
+            "attack": "unknown_evidence_type",
+            "attack_blocked": 1,
+            "ref_file_written": 0
+          }
+        },
+        {
+          "name": "10. Unknown claim_type rejected at API edge",
+          "description": "assert_fact must reject undeclared claim_types before storing a claim row.",
+          "passed": true,
+          "metrics": {
+            "attack": "unknown_claim_type",
+            "attack_blocked": 1,
+            "fact_was_written": 0
+          }
+        }
+      ]
+    },
+    {
+      "suite": "egm-scenario-probes",
+      "note": "End-to-end enterprise workflow probes. Each scenario exercises the full EGM loop.",
+      "passed": true,
+      "duration_ms": 47659.55,
+      "scenarios": [
+        {
+          "name": "refund_full_lifecycle",
+          "description": "3 orders through the complete refund workflow: eligibility → rejection → evidence → acceptance → completion → transition → context → revoke cascade.",
+          "passed": true,
+          "metrics": {
+            "orders_processed": 3,
+            "premature_eligibility_rejection_rate": 1.0,
+            "eligibility_acceptance_with_evidence_rate": 1.0,
+            "premature_completion_rejection_rate": 1.0,
+            "completion_acceptance_with_evidence_rate": 1.0,
+            "gated_transition_acceptance_rate": 1.0,
+            "context_fact_recall": 1.0,
+            "context_ref_drilldown": 1.0,
+            "context_task_map_present": 1.0,
+            "cascade_on_revoke": 1.0
+          },
+          "thresholds": {
+            "premature_eligibility_rejection_rate": 1.0,
+            "eligibility_acceptance_with_evidence_rate": 1.0,
+            "premature_completion_rejection_rate": 1.0,
+            "completion_acceptance_with_evidence_rate": 1.0,
+            "gated_transition_acceptance_rate": 1.0,
+            "context_fact_recall": 1.0,
+            "context_ref_drilldown": 1.0,
+            "context_task_map_present": 1.0,
+            "cascade_on_revoke": 1.0
+          }
+        },
+        {
+          "name": "refund_multi_order_concurrency",
+          "description": "20 concurrent refund workflows. Verify the target workflow is recallable without cross-contamination.",
+          "passed": true,
+          "metrics": {
+            "concurrent_workflows": 20,
+            "target_anchor_recall": 1.0,
+            "target_refund_fact_recall": 1.0,
+            "no_cross_contamination": 1.0,
+            "target_workflow_nodes": 1,
+            "total_facts_in_context": 2
+          },
+          "thresholds": {
+            "target_anchor_recall": 1.0,
+            "target_refund_fact_recall": 1.0,
+            "no_cross_contamination": 1.0
+          }
+        },
+        {
+          "name": "refund_partial_evidence_rejection_loop",
+          "description": "The canonical refund agent loop: try → reject with actionable feedback → fetch evidence → retry → accept. Verifies every rejection is actionable.",
+          "passed": true,
+          "metrics": {
+            "total_rounds": 5,
+            "rejection_rounds": 3,
+            "acceptance_rounds": 2,
+            "actionable_rejection_rate": 1.0,
+            "eligibility_accepted": 1.0,
+            "completion_accepted": 1.0,
+            "transition_accepted": 1.0,
+            "context_has_eligibility": 1.0,
+            "context_has_completion": 1.0,
+            "context_has_both_fact_kinds": 1.0
+          },
+          "thresholds": {
+            "total_rounds": 5.0,
+            "rejection_rounds": 3.0,
+            "actionable_rejection_rate": 1.0,
+            "eligibility_accepted": 1.0,
+            "completion_accepted": 1.0,
+            "transition_accepted": 1.0,
+            "context_has_eligibility": 1.0,
+            "context_has_completion": 1.0
+          }
+        },
+        {
+          "name": "coding_file_to_diagnosis",
+          "description": "Full coding agent loop: file_read → file_content → test_log → error_diagnosis → fresh test_log → task_done. 6 rounds, 3 rejections, all actionable.",
+          "passed": true,
+          "metrics": {
+            "total_rounds": 6,
+            "rejection_rounds": 3,
+            "acceptance_rounds": 3,
+            "actionable_rejection_rate": 1.0,
+            "file_content_accepted": 1.0,
+            "error_diagnosis_accepted": 1.0,
+            "task_done_accepted": 1.0,
+            "transition_accepted": 1.0,
+            "context_has_file_content": 1.0,
+            "context_has_diagnosis": 1.0,
+            "context_has_task_map": 1.0
+          },
+          "thresholds": {
+            "total_rounds": 6.0,
+            "rejection_rounds": 3.0,
+            "actionable_rejection_rate": 1.0,
+            "file_content_accepted": 1.0,
+            "error_diagnosis_accepted": 1.0,
+            "task_done_accepted": 1.0,
+            "transition_accepted": 1.0,
+            "context_has_file_content": 1.0,
+            "context_has_diagnosis": 1.0,
+            "context_has_task_map": 1.0
+          }
+        },
+        {
+          "name": "coding_stale_rejection",
+          "description": "Freshness threshold is claim-type-specific: file_content accepts stale, task_done requires fresh. Same evidence, different outcomes — correctly.",
+          "passed": true,
+          "metrics": {
+            "file_content_with_fresh_ok": 1.0,
+            "task_done_with_stale_blocked": 1.0,
+            "freshness_gate_fired": 1.0,
+            "diagnosis_with_stale_ok": 1.0,
+            "task_done_with_fresh_ok": 1.0,
+            "transition_accepted": 1.0,
+            "context_has_parse_config": 1.0,
+            "context_has_task_map": 1.0
+          },
+          "thresholds": {
+            "file_content_with_fresh_ok": 1.0,
+            "task_done_with_stale_blocked": 1.0,
+            "freshness_gate_fired": 1.0,
+            "diagnosis_with_stale_ok": 1.0,
+            "task_done_with_fresh_ok": 1.0,
+            "transition_accepted": 1.0,
+            "context_has_parse_config": 1.0,
+            "context_has_task_map": 1.0
+          }
+        },
+        {
+          "name": "coding_multi_file_workflow",
+          "description": "10 concurrent bug-fix workflows. Verify the target workflow is recallable without cross-contamination — proving EGM scales across domains.",
+          "passed": true,
+          "metrics": {
+            "concurrent_workflows": 10,
+            "target_anchor_recall": 1.0,
+            "target_function_recall": 1.0,
+            "no_cross_contamination": 1.0,
+            "target_workflow_nodes": 1,
+            "total_facts_in_context": 2
+          },
+          "thresholds": {
+            "target_anchor_recall": 1.0,
+            "target_function_recall": 1.0,
+            "no_cross_contamination": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "tau_bench_egm_smoke",
+      "description": "Simulated tau-bench retail refund task through EGM gates. Verifies evidence recording, fact gating, context building, and transition gating all work correctly in the tau-bench integration model.",
+      "passed": true,
+      "metrics": {
+        "eligibility_accepted": 1.0,
+        "premature_completion_blocked": 1.0,
+        "rejection_actionable": 1.0,
+        "completion_accepted": 1.0,
+        "transition_accepted": 1.0,
+        "context_has_order_id": 1.0,
+        "context_has_fact": 1.0,
+        "context_has_task_map": 1.0,
+        "egm_context_tokens_est": 421,
+        "raw_messages_tokens_est": 284,
+        "context_compression_ratio": 1.482
+      },
+      "thresholds": {
+        "eligibility_accepted": 1.0,
+        "premature_completion_blocked": 1.0,
+        "rejection_actionable": 1.0,
+        "completion_accepted": 1.0,
+        "transition_accepted": 1.0,
+        "context_has_order_id": 1.0,
+        "context_has_fact": 1.0,
+        "context_has_task_map": 1.0
+      }
+    }
+  ]
+}

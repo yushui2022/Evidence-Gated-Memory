@@ -11,6 +11,12 @@ EGM is a hard-anchor, evidence-gated memory layer for enterprise agents. It is
 not optimized for open-ended conversational memory. Results below should be read
 with that product boundary in mind.
 
+Public-use rule: interpret every number through
+`docs/benchmark-decision-protocol.md`. Deterministic local probes are EGM
+correctness guards; official-data runners are retrieval-only proxies unless the
+official judge pipeline is run; tau/tau2 results are downstream agent A/B
+measurements and must include sample size, model route, and limitations.
+
 ## Industry-Recognized Benchmarks / Metric Families
 
 These are the three external benchmark directions that best fit EGM's target
