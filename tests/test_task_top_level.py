@@ -135,6 +135,37 @@ def test_add_edge_rejects_self_loop(memory: EvidenceGatedMemory) -> None:
         memory.add_task_edge(a.id, a.id)
 
 
+def test_add_edge_rejects_multi_node_cycle(memory: EvidenceGatedMemory) -> None:
+    a = memory.create_task_node("task_cycle", "step", "A")
+    b = memory.create_task_node("task_cycle", "step", "B")
+    c = memory.create_task_node("task_cycle", "step", "C")
+    memory.add_task_edge(a.id, b.id, kind=TaskEdgeKind.DEPENDS_ON)
+    memory.add_task_edge(b.id, c.id, kind=TaskEdgeKind.DEPENDS_ON)
+
+    with pytest.raises(ValueError, match="cyclic"):
+        memory.add_task_edge(c.id, a.id, kind=TaskEdgeKind.DEPENDS_ON)
+
+    edges = memory.list_task_edges(task_id="task_cycle")
+    assert [(edge.src_node_id, edge.dst_node_id) for edge in edges] == [
+        (a.id, b.id),
+        (b.id, c.id),
+    ]
+
+
+def test_add_edge_allows_diamond_dag(memory: EvidenceGatedMemory) -> None:
+    a = memory.create_task_node("task_diamond", "step", "A")
+    b = memory.create_task_node("task_diamond", "step", "B")
+    c = memory.create_task_node("task_diamond", "step", "C")
+    d = memory.create_task_node("task_diamond", "step", "D")
+
+    memory.add_task_edge(a.id, b.id)
+    memory.add_task_edge(a.id, c.id)
+    memory.add_task_edge(b.id, d.id)
+    memory.add_task_edge(c.id, d.id)
+
+    assert len(memory.list_task_edges(task_id="task_diamond")) == 4
+
+
 def test_add_edge_writes_audit(memory: EvidenceGatedMemory) -> None:
     a = memory.create_task_node("task_au", "step", "A")
     b = memory.create_task_node("task_au", "step", "B")

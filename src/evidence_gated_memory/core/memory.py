@@ -791,7 +791,8 @@ class EvidenceGatedMemory:
 
         Both endpoints must exist (no phantom refs) and must belong to the
         same workflow — cross-task edges would muddy the per-task projection
-        used by render_mermaid / build_context. Self-loops are rejected.
+        used by render_mermaid / build_context. Self-loops and multi-node
+        cycles are rejected.
         """
         src = self.store.get_task_node(src_node_id)
         if src is None:
@@ -805,6 +806,12 @@ class EvidenceGatedMemory:
             )
         if src_node_id == dst_node_id:
             raise ValueError("self-loop edges are not allowed")
+        existing_edges = self.store.list_task_edges(task_id=src.task_id)
+        if _task_edge_would_create_cycle(src_node_id, dst_node_id, existing_edges):
+            raise ValueError(
+                f"cycle edges are not allowed: adding {src_node_id} -> {dst_node_id} "
+                "would make the TaskGraph cyclic"
+            )
 
         edge = TaskEdge(
             task_id=src.task_id,
@@ -1160,3 +1167,26 @@ def _task_node_status_counts(nodes: list[TaskNode]) -> dict[str, int]:
     for node in nodes:
         counts[node.status.value] += 1
     return {status: count for status, count in counts.items() if count}
+
+
+def _task_edge_would_create_cycle(
+    src_node_id: str,
+    dst_node_id: str,
+    existing_edges: list[TaskEdge],
+) -> bool:
+    """Return True if adding src -> dst would create a directed cycle."""
+    adjacency: dict[str, list[str]] = {}
+    for edge in existing_edges:
+        adjacency.setdefault(edge.src_node_id, []).append(edge.dst_node_id)
+
+    stack = [dst_node_id]
+    seen: set[str] = set()
+    while stack:
+        node_id = stack.pop()
+        if node_id == src_node_id:
+            return True
+        if node_id in seen:
+            continue
+        seen.add(node_id)
+        stack.extend(adjacency.get(node_id, []))
+    return False
