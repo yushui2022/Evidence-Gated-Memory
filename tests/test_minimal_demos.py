@@ -66,3 +66,21 @@ def test_ticket_minimal_demo_runs() -> None:
     assert "escalation_claim.accepted: true" in out
     assert "escalation_transition.accepted: true" in out
     assert "Evidence-Gated Memory Context" in out
+
+
+def test_generic_refund_agent_demo_runs() -> None:
+    result = _run_demo("generic_refund_agent.py")
+
+    assert result.returncode == 0, result.stderr
+    out = result.stdout
+    assert "EGM Generic Agent Loop" in out
+    assert "build_context.initial prompt.has_task_map: true" in out
+    assert "early_completion_claim.accepted: false" in out
+    assert "record_evidence: order_api" in out
+    assert "eligibility_claim.accepted: true" in out
+    assert "eligibility_transition.accepted: true" in out
+    assert "completion_transition.accepted: false" in out
+    assert "record_evidence: refund_api" in out
+    assert "completion_claim.accepted: true" in out
+    assert "completion_transition.accepted: true" in out
+    assert "build_context.next prompt.has_task_map: true" in out
