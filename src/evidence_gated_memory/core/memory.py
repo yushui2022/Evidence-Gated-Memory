@@ -543,7 +543,16 @@ class EvidenceGatedMemory:
         status: TaskNodeStatus = TaskNodeStatus.PENDING,
         metadata: Optional[dict[str, Any]] = None,
     ) -> TaskNode:
-        # Materialise the workflow row first so every node has a parent Task.
+        if parent_id is not None:
+            parent = self.store.get_task_node(parent_id)
+            if parent is None:
+                raise KeyError(f"parent task node not found: {parent_id}")
+            if parent.task_id != task_id:
+                raise ValueError(
+                    f"cross-task parent_id is not allowed: {parent.task_id} != {task_id}"
+                )
+        # Materialise the workflow row after validating parent_id so invalid
+        # cross-task children do not create orphan top-level Task rows.
         self._ensure_task(task_id, anchors=anchors)
         node = TaskNode(
             task_id=task_id,

@@ -28,6 +28,11 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from evidence_gated_memory import EvidenceGatedMemory, TaskNodeStatus, TaskStatus  # noqa: E402
+from evidence_gated_memory.adapters import (  # noqa: E402
+    evidence_event_metadata,
+    fact_context_metadata,
+    gate_result_metadata,
+)
 from evidence_gated_memory.schemas.builtin import REFUND  # noqa: E402
 
 
@@ -74,6 +79,7 @@ class RefundLoop:
             claim_type="refund_completed",
         )
         self._print_gate("early_completion_claim", early.accepted, early.rejection_reason, early.suggested_action)
+        self._print_gate_metadata("adapter_gate.early_completion", early.gate)
 
         print("\n[2. Tools return order and policy evidence]")
         order_ref = self._record_tool_result(call_order_api("ORD-777"))
@@ -87,6 +93,16 @@ class RefundLoop:
         self._print_gate("eligibility_claim", eligibility.accepted, eligibility.rejection_reason, eligibility.suggested_action)
         if eligibility.fact:
             self.memory.attach_fact_to_node(self.eligibility.id, eligibility.fact.id)
+            self._print_metadata_keys(
+                "adapter_context.fact",
+                fact_context_metadata(
+                    eligibility.fact,
+                    task_id=self.task_id,
+                    node_id=self.eligibility.id,
+                    freshness="fresh",
+                    blocked=False,
+                ),
+            )
 
         eligibility_done = self.memory.transition_node(
             self.eligibility.id,
@@ -103,6 +119,7 @@ class RefundLoop:
         print("\n[3. State gate blocks DONE before refund API evidence]")
         blocked = self.memory.transition_node(self.completion.id, TaskNodeStatus.DONE)
         self._print_gate("completion_transition", blocked.accepted, blocked.rejection_reason, blocked.suggested_action)
+        self._print_gate_metadata("adapter_gate.completion_transition", blocked.gate)
 
         print("\n[4. Tool returns refund execution evidence]")
         refund_ref = self._record_tool_result(call_refund_api("ORD-777", "REF-777"))
@@ -149,6 +166,14 @@ class RefundLoop:
             metadata=result.metadata,
         )
         print(f"record_evidence: {result.tool_name} -> {ref.id}")
+        self._print_metadata_keys(
+            "adapter_event.evidence",
+            evidence_event_metadata(
+                ref,
+                task_id=self.task_id,
+                tool_name=result.tool_name,
+            ),
+        )
         return ref
 
     def _before_llm(self, label: str) -> None:
@@ -163,6 +188,14 @@ class RefundLoop:
         if not accepted:
             print(f"{label}.reason: {reason}")
             print(f"{label}.action: {action}")
+
+    @staticmethod
+    def _print_gate_metadata(label: str, gate) -> None:
+        RefundLoop._print_metadata_keys(label, gate_result_metadata(gate))
+
+    @staticmethod
+    def _print_metadata_keys(label: str, metadata: dict[str, object]) -> None:
+        print(f"{label}.metadata_keys: {','.join(sorted(metadata))}")
 
 
 def call_order_api(order_id: str) -> ToolResult:

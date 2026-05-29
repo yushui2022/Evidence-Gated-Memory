@@ -87,3 +87,4 @@ Retriever/context metadata should preserve:
 - `blocked`
 
 The runnable example is `examples/generic_refund_agent.py`.
+The stable metadata contract for adapters is `docs/adapter-contract.md`.

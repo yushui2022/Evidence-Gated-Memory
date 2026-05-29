@@ -76,8 +76,11 @@ def test_generic_refund_agent_demo_runs() -> None:
     assert "EGM Generic Agent Loop" in out
     assert "build_context.initial prompt.has_task_map: true" in out
     assert "early_completion_claim.accepted: false" in out
+    assert "adapter_gate.early_completion.metadata_keys:" in out
     assert "record_evidence: order_api" in out
+    assert "adapter_event.evidence.metadata_keys:" in out
     assert "eligibility_claim.accepted: true" in out
+    assert "adapter_context.fact.metadata_keys:" in out
     assert "eligibility_transition.accepted: true" in out
     assert "completion_transition.accepted: false" in out
     assert "record_evidence: refund_api" in out

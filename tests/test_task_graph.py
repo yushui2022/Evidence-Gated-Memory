@@ -42,6 +42,19 @@ def test_list_nodes_by_task_id(memory: EvidenceGatedMemory) -> None:
     assert len(nodes_b) == 1
 
 
+def test_create_node_rejects_missing_parent(memory: EvidenceGatedMemory) -> None:
+    with pytest.raises(KeyError, match="parent task node not found"):
+        memory.create_task_node("task_parent_missing", "step", "child", parent_id="node_missing")
+
+
+def test_create_node_rejects_cross_task_parent(memory: EvidenceGatedMemory) -> None:
+    parent = memory.create_task_node("task_parent_a", "step", "parent")
+
+    with pytest.raises(ValueError, match="cross-task parent_id"):
+        memory.create_task_node("task_parent_b", "step", "child", parent_id=parent.id)
+    assert memory.get_task("task_parent_b") is None
+
+
 def test_list_nodes_by_status(memory: EvidenceGatedMemory) -> None:
     a = memory.create_task_node("task_X", "n1", "n1")
     b = memory.create_task_node("task_X", "n2", "n2")

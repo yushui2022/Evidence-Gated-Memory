@@ -20,6 +20,7 @@ Implemented today:
 - explicit task edges reject self-loops;
 - explicit task edges reject cross-task endpoints;
 - explicit task edges reject multi-node cycles;
+- `parent_id` rejects missing or cross-task parents;
 - Mermaid rendering drops out-of-scope edges;
 - task state is derived from child node status;
 - gated `transition_node()` runs state gates before mutation.
@@ -174,6 +175,7 @@ was not allowed.
 | TaskEdge self-loop rejection | Implemented | Keep covered in tests |
 | TaskEdge cross-task rejection | Implemented | Keep covered in tests |
 | TaskGraph multi-node cycle rejection | Implemented for explicit TaskEdge rows | Keep covered in tests |
+| parent_id missing/cross-task rejection | Implemented | Keep covered in tests |
 | parent_id ancestor-cycle rejection | Missing | P3-09 |
 | Fact depends_on cascade invalidation | Implemented | Harden with normalized storage |
 | Fact dependency cycle rejection | Partial / missing | P3-09 / P3-10 |
