@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
 ]
 dependencies = [
     "pydantic>=2.0",
@@ -40,6 +41,7 @@ egm = "evidence_gated_memory.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
+"evidence_gated_memory" = ["py.typed"]
 "evidence_gated_memory.schemas.builtin" = ["*.yaml"]
 
 [tool.pytest.ini_options]

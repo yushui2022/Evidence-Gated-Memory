@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from evidence_gated_memory import EvidenceGatedMemory
@@ -118,6 +119,20 @@ def test_cli_inspect_includes_graph_offload_and_long_term_counts(tmp_path: Path,
     assert "memory_atoms: 1" in out
     assert "memory_scenarios: 1" in out
     assert "memory_personas: 1" in out
+
+    assert main(["export-audit", str(workspace), "--format", "json", "--task-id", "task_cli_inspect"]) == 0
+    exported = json.loads(capsys.readouterr().out)
+    assert exported
+    assert {row["event_type"] for row in exported} >= {
+        "task_node_created",
+        "task_edge_added",
+        "offload_recorded",
+    }
+
+    assert main(["export-audit", str(workspace), "--format", "md", "--evidence-id", evidence.id]) == 0
+    exported_md = capsys.readouterr().out
+    assert "| id | created_at | event_type | accepted | claim_id | fact_id | detail |" in exported_md
+    assert "offload_recorded" in exported_md
 
 
 def test_cli_sweep(tmp_path: Path, capsys):

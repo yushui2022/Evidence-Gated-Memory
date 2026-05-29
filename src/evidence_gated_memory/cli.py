@@ -41,6 +41,16 @@ def _build_parser() -> argparse.ArgumentParser:
     audit_p.add_argument("--limit", type=int, default=20)
     audit_p.set_defaults(func=_cmd_audit)
 
+    export_audit_p = sub.add_parser("export-audit", help="Export audit log entries as JSON or Markdown.")
+    export_audit_p.add_argument("workspace")
+    export_audit_p.add_argument("--format", choices=("json", "md"), default="json")
+    export_audit_p.add_argument("--limit", type=int, default=100, help="Maximum latest rows to export; 0 means all.")
+    export_audit_p.add_argument("--task-id", default=None)
+    export_audit_p.add_argument("--claim-id", default=None)
+    export_audit_p.add_argument("--fact-id", default=None)
+    export_audit_p.add_argument("--evidence-id", default=None)
+    export_audit_p.set_defaults(func=_cmd_export_audit)
+
     sweep_p = sub.add_parser("sweep", help="Invalidate facts whose required support expired.")
     sweep_p.add_argument("workspace")
     sweep_p.add_argument("--schema", required=True, help="Schema path, 'refund', or 'coding'.")
@@ -130,6 +140,38 @@ def _cmd_audit(args: argparse.Namespace) -> int:
             f"{row['id']:04d} {row['event_type']} accepted={row['accepted']} "
             f"claim={row['claim_id']} fact={row['fact_id']} detail={detail}"
         )
+    return 0
+
+
+def _cmd_export_audit(args: argparse.Namespace) -> int:
+    db_path = Path(args.workspace) / "egm.db"
+    if not db_path.exists():
+        print("database: missing", file=sys.stderr)
+        return 1
+
+    filters = {
+        "task_id": args.task_id,
+        "claim_id": args.claim_id,
+        "fact_id": args.fact_id,
+        "evidence_id": args.evidence_id,
+    }
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = _load_audit_rows(conn, limit=0 if any(filters.values()) else args.limit)
+
+    exported: list[dict[str, object]] = []
+    for row in rows:
+        item = _audit_export_row(row)
+        if _audit_export_matches(item, filters):
+            exported.append(item)
+    if args.limit > 0:
+        exported = exported[: args.limit]
+    exported = list(reversed(exported))
+
+    if args.format == "json":
+        print(json.dumps(exported, ensure_ascii=False, indent=2))
+    else:
+        print(_audit_export_markdown(exported))
     return 0
 
 
@@ -231,6 +273,117 @@ def _compact_json(raw: str, max_len: int = 160) -> str:
     except Exception:
         rendered = raw
     return rendered if len(rendered) <= max_len else rendered[: max_len - 1] + "…"
+
+
+def _load_audit_rows(conn: sqlite3.Connection, limit: int) -> list[sqlite3.Row]:
+    if not _table_exists(conn, "audit_log"):
+        return []
+    if limit > 0:
+        return conn.execute(
+            "SELECT * FROM audit_log ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+    return conn.execute("SELECT * FROM audit_log ORDER BY id DESC").fetchall()
+
+
+def _audit_export_row(row: sqlite3.Row) -> dict[str, object]:
+    try:
+        detail: object = json.loads(row["detail"])
+    except Exception:
+        detail = row["detail"]
+    accepted_raw = row["accepted"]
+    accepted = None if accepted_raw is None else bool(accepted_raw)
+    return {
+        "id": row["id"],
+        "created_at": row["created_at"],
+        "event_type": row["event_type"],
+        "accepted": accepted,
+        "claim_id": row["claim_id"],
+        "fact_id": row["fact_id"],
+        "detail": detail,
+    }
+
+
+def _audit_export_matches(
+    item: dict[str, object],
+    filters: dict[str, Optional[str]],
+) -> bool:
+    detail = item.get("detail")
+    if filters["claim_id"] and item.get("claim_id") != filters["claim_id"]:
+        if not _detail_contains(detail, ("claim_id",), filters["claim_id"]):
+            return False
+    if filters["fact_id"] and item.get("fact_id") != filters["fact_id"]:
+        if not _detail_contains(detail, ("fact_id", "fact_refs", "depends_on"), filters["fact_id"]):
+            return False
+    if filters["task_id"]:
+        if not _detail_contains(detail, ("task_id",), filters["task_id"]):
+            return False
+    if filters["evidence_id"]:
+        if not _detail_contains(
+            detail,
+            ("evidence_id", "evidence_refs", "result_ref", "missing_evidence_refs"),
+            filters["evidence_id"],
+        ):
+            return False
+    return True
+
+
+def _detail_contains(value: object, keys: tuple[str, ...], target: Optional[str]) -> bool:
+    if target is None:
+        return True
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key in keys and _value_matches(child, target):
+                return True
+            if _detail_contains(child, keys, target):
+                return True
+        return False
+    if isinstance(value, list):
+        return any(_detail_contains(child, keys, target) for child in value)
+    return False
+
+
+def _value_matches(value: object, target: str) -> bool:
+    if isinstance(value, str):
+        return value == target
+    if isinstance(value, list):
+        return any(_value_matches(child, target) for child in value)
+    if isinstance(value, dict):
+        return any(_value_matches(child, target) for child in value.values())
+    return False
+
+
+def _audit_export_markdown(rows: list[dict[str, object]]) -> str:
+    if not rows:
+        return "_No audit rows matched._"
+    lines = [
+        "| id | created_at | event_type | accepted | claim_id | fact_id | detail |",
+        "|---:|---|---|---|---|---|---|",
+    ]
+    for row in rows:
+        detail = json.dumps(row["detail"], ensure_ascii=False, separators=(",", ":"))
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    _md_cell(row["id"]),
+                    _md_cell(row["created_at"]),
+                    _md_cell(row["event_type"]),
+                    _md_cell(row["accepted"]),
+                    _md_cell(row["claim_id"]),
+                    _md_cell(row["fact_id"]),
+                    _md_cell(_compact_json(detail, max_len=240)),
+                ]
+            )
+            + " |"
+        )
+    return "\n".join(lines)
+
+
+def _md_cell(value: object) -> str:
+    if value is None:
+        return ""
+    return str(value).replace("|", "\\|").replace("\n", " ")
 
 
 if __name__ == "__main__":

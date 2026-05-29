@@ -1,4 +1,4 @@
-"""Verification #1: built wheel must contain the builtin YAML schemas.
+"""Verification #1: built wheel must contain package data.
 
 This test builds a wheel and inspects its contents. It does not install the
 wheel, and it disables build isolation so local/CI test runs do not need network
@@ -14,7 +14,7 @@ from setuptools import build_meta
 REPO = Path(__file__).resolve().parents[1]
 
 
-def test_wheel_contains_builtin_yaml(tmp_path: Path, monkeypatch):
+def test_wheel_contains_package_data(tmp_path: Path, monkeypatch):
     out = tmp_path / "dist"
     out.mkdir()
     monkeypatch.chdir(REPO)
@@ -25,5 +25,6 @@ def test_wheel_contains_builtin_yaml(tmp_path: Path, monkeypatch):
     with zipfile.ZipFile(wheels[0]) as zf:
         names = zf.namelist()
 
+    assert any(n.endswith("evidence_gated_memory/py.typed") for n in names), names
     assert any(n.endswith("schemas/builtin/refund.yaml") for n in names), names
     assert any(n.endswith("schemas/builtin/coding.yaml") for n in names), names
