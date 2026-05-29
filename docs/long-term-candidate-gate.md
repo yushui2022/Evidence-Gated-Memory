@@ -280,7 +280,8 @@ without a separate policy.
 Current implementation status: the first L1 candidate-gate code path exists.
 It includes `CandidateAtom`, `SourceSpan`, `CandidateGateResult`, schema v2
 storage, source-span SHA-256 validation, promote / pending / reject APIs, and
-audit events. This is not yet a full review workflow or L2/L3 automation.
+audit events. `egm candidates` can list the review queue in text or JSON. This
+is not yet a full review workflow or L2/L3 automation.
 
 For v0.7, this document is enough. It defines the design.
 

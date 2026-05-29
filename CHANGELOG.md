@@ -20,6 +20,8 @@ called out explicitly.
 - Added long-term memory candidate-gate design documentation.
 - Added the first L1 memory candidate gate implementation with source-span
   validation, promote / pending / reject APIs, schema v2 storage, and audit.
+- Added `egm candidates` for listing long-term memory candidates in text or
+  JSON during review.
 - Added explicit TaskEdge multi-node cycle rejection.
 - Added TaskNode `parent_id` missing-parent and cross-task rejection.
 - Added production-boundary guidance in `docs/production.md`.

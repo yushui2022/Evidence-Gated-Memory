@@ -1,4 +1,5 @@
 import json
+import hashlib
 from pathlib import Path
 
 from evidence_gated_memory import EvidenceGatedMemory
@@ -134,6 +135,46 @@ def test_cli_inspect_includes_graph_offload_and_long_term_counts(tmp_path: Path,
     exported_md = capsys.readouterr().out
     assert "| id | created_at | event_type | accepted | claim_id | fact_id | detail |" in exported_md
     assert "offload_recorded" in exported_md
+
+
+def test_cli_candidates_lists_review_queue(tmp_path: Path, capsys):
+    workspace = tmp_path / "egm"
+    memory = EvidenceGatedMemory(workspace, REFUND)
+    try:
+        content = "Refund completion usually needs a second review."
+        message = memory.record_conversation_message("user", content)
+        quoted = "Refund completion usually needs a second review"
+        candidate = memory.create_memory_candidate(
+            "instruction",
+            "Refund completion usually needs a second review.",
+            source_spans=[
+                {
+                    "message_id": message.id,
+                    "start_char": 0,
+                    "end_char": len(quoted),
+                    "quoted_text_hash": hashlib.sha256(quoted.encode("utf-8")).hexdigest(),
+                }
+            ],
+            confidence=0.72,
+            extraction_rationale="The source is plausible but needs review.",
+        )
+        gate = memory.check_memory_candidate_gate(candidate.id)
+        memory.mark_memory_candidate_pending(candidate.id, gate)
+    finally:
+        memory.close()
+
+    assert main(["candidates", str(workspace)]) == 0
+    out = capsys.readouterr().out
+    assert "memory_atom_candidates: 1" in out
+    assert candidate.id in out
+    assert "status=pending_review" in out
+    assert "decision=pending_review" in out
+
+    assert main(["candidates", str(workspace), "--status", "pending_review", "--format", "json"]) == 0
+    exported = json.loads(capsys.readouterr().out)
+    assert exported[0]["id"] == candidate.id
+    assert exported[0]["decision"] == "pending_review"
+    assert exported[0]["source_message_ids"] == [message.id]
 
 
 def test_cli_sweep(tmp_path: Path, capsys):

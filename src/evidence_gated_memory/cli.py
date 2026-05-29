@@ -36,6 +36,13 @@ def _build_parser() -> argparse.ArgumentParser:
     inspect_p.add_argument("--schema", default=None, help="Schema path, 'refund', or 'coding'.")
     inspect_p.set_defaults(func=_cmd_inspect)
 
+    candidates_p = sub.add_parser("candidates", help="List long-term memory candidates for review.")
+    candidates_p.add_argument("workspace")
+    candidates_p.add_argument("--status", choices=("candidate", "promoted", "pending_review", "rejected"), default=None)
+    candidates_p.add_argument("--kind", choices=("persona", "episodic", "instruction"), default=None)
+    candidates_p.add_argument("--format", choices=("text", "json"), default="text")
+    candidates_p.set_defaults(func=_cmd_candidates)
+
     audit_p = sub.add_parser("audit", help="Show recent audit log entries.")
     audit_p.add_argument("workspace")
     audit_p.add_argument("--limit", type=int, default=20)
@@ -121,6 +128,33 @@ def _cmd_inspect(args: argparse.Namespace) -> int:
     print(f"offload_records: {_count_jsonl(workspace / 'offload' / 'offload.jsonl')}")
     refs = list((workspace / "refs").glob("*.md")) if (workspace / "refs").exists() else []
     print(f"refs: {len(refs)}")
+    return 0
+
+
+def _cmd_candidates(args: argparse.Namespace) -> int:
+    db_path = Path(args.workspace) / "egm.db"
+    if not db_path.exists():
+        print("database: missing", file=sys.stderr)
+        return 1
+
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = _load_candidate_rows(conn, status=args.status, kind=args.kind)
+    exported = [_candidate_export_row(row) for row in rows]
+
+    if args.format == "json":
+        print(json.dumps(exported, ensure_ascii=False, indent=2))
+        return 0
+
+    print(f"memory_atom_candidates: {len(exported)}")
+    for item in exported:
+        decision = item["decision"] or "-"
+        promoted = item["promoted_atom_id"] or "-"
+        print(
+            f"- {item['id']} status={item['status']} kind={item['kind']} "
+            f"confidence={item['confidence']:.2f} decision={decision} "
+            f"promoted_atom={promoted} text={_compact_text(item['text'], 96)}"
+        )
     return 0
 
 
@@ -262,6 +296,51 @@ def _schema_version(conn: sqlite3.Connection) -> int:
     return int(row[0])
 
 
+def _load_candidate_rows(
+    conn: sqlite3.Connection,
+    *,
+    status: Optional[str],
+    kind: Optional[str],
+) -> list[sqlite3.Row]:
+    if not _table_exists(conn, "memory_atom_candidates"):
+        return []
+    clauses, args = [], []
+    if status is not None:
+        clauses.append("status = ?")
+        args.append(status)
+    if kind is not None:
+        clauses.append("kind = ?")
+        args.append(kind)
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    return conn.execute(
+        f"SELECT * FROM memory_atom_candidates {where} ORDER BY created_at DESC",
+        args,
+    ).fetchall()
+
+
+def _candidate_export_row(row: sqlite3.Row) -> dict[str, object]:
+    gate_result = json.loads(row["gate_result"]) if row["gate_result"] else None
+    decision = (
+        gate_result.get("decision")
+        if isinstance(gate_result, dict)
+        else None
+    )
+    return {
+        "id": row["id"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+        "status": row["status"],
+        "kind": row["kind"],
+        "confidence": row["confidence"],
+        "decision": decision,
+        "promoted_atom_id": row["promoted_atom_id"],
+        "source_message_ids": json.loads(row["source_message_ids"]),
+        "conflict_flags": json.loads(row["conflict_flags"]),
+        "supersedes_atom_ids": json.loads(row["supersedes_atom_ids"]),
+        "text": row["text"],
+    }
+
+
 def _count_jsonl(path: Path) -> int:
     if not path.exists():
         return 0
@@ -274,6 +353,11 @@ def _compact_json(raw: str, max_len: int = 160) -> str:
     except Exception:
         rendered = raw
     return rendered if len(rendered) <= max_len else rendered[: max_len - 1] + "…"
+
+
+def _compact_text(raw: object, max_len: int = 160) -> str:
+    text = " ".join(str(raw).split())
+    return text if len(text) <= max_len else text[: max_len - 1] + "..."
 
 
 def _load_audit_rows(conn: sqlite3.Connection, limit: int) -> list[sqlite3.Row]:
