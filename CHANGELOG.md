@@ -18,6 +18,8 @@ called out explicitly.
 - Added a generic agent-loop integration guide and runnable refund-loop demo.
 - Added adapter metadata contract docs and reusable metadata helpers.
 - Added long-term memory candidate-gate design documentation.
+- Added the first L1 memory candidate gate implementation with source-span
+  validation, promote / pending / reject APIs, schema v2 storage, and audit.
 - Added explicit TaskEdge multi-node cycle rejection.
 - Added TaskNode `parent_id` missing-parent and cross-task rejection.
 - Added production-boundary guidance in `docs/production.md`.

@@ -11,6 +11,7 @@ Two API surfaces:
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional, Union
@@ -22,6 +23,8 @@ from evidence_gated_memory.core.gates import check_gate, check_state_transition_
 from evidence_gated_memory.core.mermaid import render_mermaid
 from evidence_gated_memory.core.models import (
     AssertResult,
+    CandidateAtom,
+    CandidateGateResult,
     Claim,
     ConversationMessage,
     Evidence,
@@ -30,11 +33,15 @@ from evidence_gated_memory.core.models import (
     FactKind,
     Freshness,
     GateResult,
+    GateViolation,
     MemoryAtom,
+    MemoryCandidateDecision,
+    MemoryCandidateStatus,
     MemoryAtomKind,
     MemoryPersona,
     MemoryScenario,
     OffloadRecord,
+    SourceSpan,
     Task,
     TaskEdge,
     TaskEdgeKind,
@@ -120,6 +127,354 @@ class EvidenceGatedMemory:
 
     def get_conversation_message(self, message_id: str) -> Optional[ConversationMessage]:
         return self.store.get_conversation_message(message_id)
+
+    def create_memory_candidate(
+        self,
+        kind: Union[MemoryAtomKind, str],
+        text: str,
+        *,
+        source_spans: list[Union[SourceSpan, dict[str, Any]]],
+        confidence: float,
+        extraction_rationale: str,
+        conflict_flags: Optional[list[str]] = None,
+        supersedes_atom_ids: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> CandidateAtom:
+        """Store an untrusted L1 memory candidate.
+
+        This is the safe automation boundary for L0 -> L1: extractors may
+        propose CandidateAtom records, but only the candidate gate may promote
+        them into MemoryAtom records that can enter prompt context.
+        """
+        spans = [
+            span if isinstance(span, SourceSpan) else SourceSpan(**span)
+            for span in source_spans
+        ]
+        source_message_ids = _dedupe([span.message_id for span in spans])
+        candidate = CandidateAtom(
+            kind=MemoryAtomKind(kind),
+            text=text,
+            source_message_ids=source_message_ids,
+            source_spans=spans,
+            confidence=confidence,
+            extraction_rationale=extraction_rationale,
+            conflict_flags=conflict_flags or [],
+            supersedes_atom_ids=supersedes_atom_ids or [],
+            metadata=metadata or {},
+        )
+        self.store.insert_memory_candidate(candidate)
+        self.store.append_audit(
+            event_type="memory_candidate_created",
+            accepted=None,
+            detail=_memory_candidate_audit_detail(candidate),
+        )
+        return candidate
+
+    def get_memory_candidate(self, candidate_id: str) -> Optional[CandidateAtom]:
+        return self.store.get_memory_candidate(candidate_id)
+
+    def list_memory_candidates(
+        self,
+        *,
+        status: Optional[Union[MemoryCandidateStatus, str]] = None,
+        kind: Optional[Union[MemoryAtomKind, str]] = None,
+    ) -> list[CandidateAtom]:
+        resolved_status = (
+            MemoryCandidateStatus(status)
+            if status is not None
+            else None
+        )
+        resolved_kind = MemoryAtomKind(kind) if kind is not None else None
+        return self.store.list_memory_candidates(status=resolved_status, kind=resolved_kind)
+
+    def check_memory_candidate_gate(self, candidate_id: str) -> CandidateGateResult:
+        """Run deterministic L1 candidate gate checks without promoting."""
+        candidate = self.store.get_memory_candidate(candidate_id)
+        if candidate is None:
+            raise KeyError(f"memory candidate not found: {candidate_id}")
+
+        violations: list[GateViolation] = []
+        pending_reasons: list[GateViolation] = []
+
+        if not candidate.text.strip():
+            violations.append(GateViolation(
+                gate="memory_candidate.text",
+                reason="candidate text is empty",
+                suggested_action="provide a bounded, specific L1 memory text",
+            ))
+        elif len(candidate.text) > 2000:
+            violations.append(GateViolation(
+                gate="memory_candidate.text",
+                reason="candidate text is too long for an L1 atom",
+                suggested_action="split the candidate into smaller grounded atoms",
+            ))
+
+        if not candidate.source_spans:
+            violations.append(GateViolation(
+                gate="memory_candidate.source_span",
+                reason="candidate requires at least one source span",
+                suggested_action="provide exact L0 message spans and SHA-256 hashes",
+            ))
+        else:
+            violations.extend(self._validate_candidate_source_spans(candidate))
+
+        for atom_id in candidate.supersedes_atom_ids:
+            if atom_id == candidate.id:
+                violations.append(GateViolation(
+                    gate="memory_candidate.supersedes",
+                    reason="candidate cannot supersede itself",
+                    suggested_action="remove the candidate id from supersedes_atom_ids",
+                ))
+            elif self.store.get_memory_atom(atom_id) is None:
+                violations.append(GateViolation(
+                    gate="memory_candidate.supersedes",
+                    reason=f"superseded memory atom not found: {atom_id}",
+                    suggested_action="remove the missing atom id or create the source atom first",
+                ))
+
+        if candidate.confidence < 0.50:
+            violations.append(GateViolation(
+                gate="memory_candidate.confidence",
+                reason="candidate confidence is below the rejection threshold",
+                suggested_action="collect stronger source text before proposing this memory",
+            ))
+            confidence_policy = "reject: confidence < 0.50"
+        elif candidate.confidence < 0.85:
+            pending_reasons.append(GateViolation(
+                gate="memory_candidate.confidence",
+                reason="candidate confidence requires human review",
+                suggested_action="review source span before promotion",
+            ))
+            confidence_policy = "pending_review: 0.50 <= confidence < 0.85"
+        else:
+            confidence_policy = "promote-eligible: confidence >= 0.85"
+
+        if candidate.conflict_flags:
+            pending_reasons.append(GateViolation(
+                gate="memory_candidate.conflict",
+                reason="candidate has conflict flags",
+                suggested_action="resolve conflicts before promotion",
+            ))
+            conflict_policy = "pending_review: conflict flags present"
+        elif candidate.supersedes_atom_ids:
+            pending_reasons.append(GateViolation(
+                gate="memory_candidate.supersedes",
+                reason="candidate supersedes existing memory",
+                suggested_action="review replacement before promotion",
+            ))
+            conflict_policy = "pending_review: supersedes existing atoms"
+        else:
+            conflict_policy = "promote-eligible: no conflicts"
+
+        if candidate.kind == MemoryAtomKind.PERSONA:
+            pending_reasons.append(GateViolation(
+                gate="memory_candidate.kind",
+                reason="persona candidates default to human review",
+                suggested_action="review long-lived behavioral memory before promotion",
+            ))
+
+        if violations:
+            decision = MemoryCandidateDecision.REJECT
+            accepted = False
+            result_violations = violations
+        elif pending_reasons:
+            decision = MemoryCandidateDecision.PENDING_REVIEW
+            accepted = False
+            result_violations = pending_reasons
+        else:
+            decision = MemoryCandidateDecision.PROMOTE
+            accepted = True
+            result_violations = []
+
+        suggested_action = " | ".join(
+            violation.suggested_action
+            for violation in result_violations
+            if violation.suggested_action
+        )
+        result = CandidateGateResult(
+            accepted=accepted,
+            candidate_id=candidate.id,
+            decision=decision,
+            violations=result_violations,
+            confidence_policy=confidence_policy,
+            conflict_policy=conflict_policy,
+            suggested_action=suggested_action,
+        )
+        audit_id = self.store.append_audit(
+            event_type="memory_candidate_gate_check",
+            accepted=result.accepted,
+            detail={
+                **_memory_candidate_audit_detail(candidate),
+                "decision": result.decision.value,
+                "violations": [v.model_dump() for v in result.violations],
+                "confidence_policy": result.confidence_policy,
+                "conflict_policy": result.conflict_policy,
+                "suggested_action": result.suggested_action,
+            },
+        )
+        result.audit_id = audit_id
+        return result
+
+    def promote_memory_candidate(
+        self,
+        candidate_id: str,
+        gate_result: Optional[CandidateGateResult] = None,
+    ) -> MemoryAtom:
+        """Promote an accepted CandidateAtom into prompt-eligible L1 memory."""
+        candidate = self.store.get_memory_candidate(candidate_id)
+        if candidate is None:
+            raise KeyError(f"memory candidate not found: {candidate_id}")
+        if candidate.status == MemoryCandidateStatus.PROMOTED:
+            if candidate.promoted_atom_id is None:
+                raise ValueError("promoted candidate is missing promoted_atom_id")
+            atom = self.store.get_memory_atom(candidate.promoted_atom_id)
+            if atom is None:
+                raise KeyError(f"promoted memory atom not found: {candidate.promoted_atom_id}")
+            return atom
+        if candidate.status != MemoryCandidateStatus.CANDIDATE:
+            raise ValueError(f"cannot promote candidate in status {candidate.status.value}")
+
+        gate = gate_result or self.check_memory_candidate_gate(candidate_id)
+        self._ensure_candidate_gate_result(candidate, gate)
+        if not gate.accepted or gate.decision != MemoryCandidateDecision.PROMOTE:
+            raise ValueError(f"cannot promote candidate: {gate.rejection_reason}")
+
+        atom = MemoryAtom(
+            kind=candidate.kind,
+            text=candidate.text,
+            source_message_ids=list(candidate.source_message_ids),
+            confidence=candidate.confidence,
+            metadata={**candidate.metadata, "candidate_id": candidate.id},
+        )
+        self.store.insert_memory_atom(atom)
+        candidate.status = MemoryCandidateStatus.PROMOTED
+        candidate.promoted_atom_id = atom.id
+        candidate.gate_result = gate.model_dump(mode="json")
+        candidate.updated_at = datetime.now(timezone.utc)
+        self.store.update_memory_candidate(candidate)
+        self.store.append_audit(
+            event_type="memory_candidate_promoted",
+            accepted=True,
+            detail={
+                **_memory_candidate_audit_detail(candidate),
+                "decision": gate.decision.value,
+                "atom_id": atom.id,
+                "violations": [v.model_dump() for v in gate.violations],
+            },
+        )
+        return atom
+
+    def mark_memory_candidate_pending(
+        self,
+        candidate_id: str,
+        gate_result: Optional[CandidateGateResult] = None,
+    ) -> CandidateAtom:
+        candidate = self.store.get_memory_candidate(candidate_id)
+        if candidate is None:
+            raise KeyError(f"memory candidate not found: {candidate_id}")
+        if candidate.status == MemoryCandidateStatus.PENDING_REVIEW:
+            return candidate
+        if candidate.status != MemoryCandidateStatus.CANDIDATE:
+            raise ValueError(f"cannot mark candidate pending from status {candidate.status.value}")
+        gate = gate_result or self.check_memory_candidate_gate(candidate_id)
+        self._ensure_candidate_gate_result(candidate, gate)
+        if gate.decision != MemoryCandidateDecision.PENDING_REVIEW:
+            raise ValueError(f"candidate gate decision is {gate.decision.value}, not pending_review")
+        candidate.status = MemoryCandidateStatus.PENDING_REVIEW
+        candidate.gate_result = gate.model_dump(mode="json")
+        candidate.updated_at = datetime.now(timezone.utc)
+        self.store.update_memory_candidate(candidate)
+        self.store.append_audit(
+            event_type="memory_candidate_pending_review",
+            accepted=False,
+            detail={
+                **_memory_candidate_audit_detail(candidate),
+                "decision": gate.decision.value,
+                "violations": [v.model_dump() for v in gate.violations],
+                "suggested_action": gate.suggested_action,
+            },
+        )
+        return candidate
+
+    def reject_memory_candidate(
+        self,
+        candidate_id: str,
+        gate_result: Optional[CandidateGateResult] = None,
+    ) -> CandidateAtom:
+        candidate = self.store.get_memory_candidate(candidate_id)
+        if candidate is None:
+            raise KeyError(f"memory candidate not found: {candidate_id}")
+        if candidate.status == MemoryCandidateStatus.REJECTED:
+            return candidate
+        if candidate.status != MemoryCandidateStatus.CANDIDATE:
+            raise ValueError(f"cannot reject candidate from status {candidate.status.value}")
+        gate = gate_result or self.check_memory_candidate_gate(candidate_id)
+        self._ensure_candidate_gate_result(candidate, gate)
+        if gate.decision != MemoryCandidateDecision.REJECT:
+            raise ValueError(f"candidate gate decision is {gate.decision.value}, not reject")
+        candidate.status = MemoryCandidateStatus.REJECTED
+        candidate.gate_result = gate.model_dump(mode="json")
+        candidate.updated_at = datetime.now(timezone.utc)
+        self.store.update_memory_candidate(candidate)
+        self.store.append_audit(
+            event_type="memory_candidate_rejected",
+            accepted=False,
+            detail={
+                **_memory_candidate_audit_detail(candidate),
+                "decision": gate.decision.value,
+                "violations": [v.model_dump() for v in gate.violations],
+                "suggested_action": gate.suggested_action,
+            },
+        )
+        return candidate
+
+    def _validate_candidate_source_spans(
+        self,
+        candidate: CandidateAtom,
+    ) -> list[GateViolation]:
+        violations: list[GateViolation] = []
+        for span in candidate.source_spans:
+            message = self.store.get_conversation_message(span.message_id)
+            if message is None:
+                violations.append(GateViolation(
+                    gate="memory_candidate.source_span",
+                    reason=f"source message not found: {span.message_id}",
+                    suggested_action="record the source L0 message before proposing memory",
+                ))
+                continue
+
+            if span.start_char >= span.end_char:
+                violations.append(GateViolation(
+                    gate="memory_candidate.source_span",
+                    reason="source span start_char must be smaller than end_char",
+                    suggested_action="fix the source span offsets",
+                ))
+                continue
+            if span.end_char > len(message.content):
+                violations.append(GateViolation(
+                    gate="memory_candidate.source_span",
+                    reason="source span end_char is outside the message content",
+                    suggested_action="fix the source span offsets",
+                ))
+                continue
+
+            quoted = message.content[span.start_char:span.end_char]
+            actual_hash = _sha256_text(quoted)
+            if _normalize_hash(span.quoted_text_hash) != actual_hash:
+                violations.append(GateViolation(
+                    gate="memory_candidate.source_span",
+                    reason="source span quoted_text_hash does not match message content",
+                    suggested_action="recompute the SHA-256 hash over the exact source substring",
+                ))
+        return violations
+
+    def _ensure_candidate_gate_result(
+        self,
+        candidate: CandidateAtom,
+        gate: CandidateGateResult,
+    ) -> None:
+        if gate.candidate_id != candidate.id:
+            raise ValueError("CandidateGateResult does not belong to this candidate")
 
     def record_memory_atom(
         self,
@@ -1169,6 +1524,29 @@ def _dedupe(values: list[str]) -> list[str]:
         seen.add(value)
         out.append(value)
     return out
+
+
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _normalize_hash(value: str) -> str:
+    lowered = value.lower()
+    return lowered.removeprefix("sha256:")
+
+
+def _memory_candidate_audit_detail(candidate: CandidateAtom) -> dict[str, Any]:
+    return {
+        "candidate_id": candidate.id,
+        "kind": candidate.kind.value,
+        "status": candidate.status.value,
+        "source_message_ids": list(candidate.source_message_ids),
+        "source_spans": [span.model_dump() for span in candidate.source_spans],
+        "confidence": candidate.confidence,
+        "conflict_flags": list(candidate.conflict_flags),
+        "supersedes_atom_ids": list(candidate.supersedes_atom_ids),
+        "promoted_atom_id": candidate.promoted_atom_id,
+    }
 
 
 def _task_node_status_counts(nodes: list[TaskNode]) -> dict[str, int]:

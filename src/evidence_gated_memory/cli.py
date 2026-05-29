@@ -107,6 +107,7 @@ def _cmd_inspect(args: argparse.Namespace) -> int:
             "task_nodes",
             "task_edges",
             "conversation_messages",
+            "memory_atom_candidates",
             "memory_atoms",
             "memory_scenarios",
             "memory_personas",

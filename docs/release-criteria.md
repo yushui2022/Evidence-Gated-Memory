@@ -14,8 +14,8 @@ plainly in the release notes.
   limitation.
 - README does not claim full enforced DAGs until multi-node cycle rejection is
   implemented.
-- README does not claim automatic long-term memory promotion until the
-  CandidateAtom gate exists.
+- README does not claim mature automatic long-term memory promotion beyond the
+  implemented L1 CandidateAtom gate boundary.
 - `CHANGELOG.md` has an entry for the release.
 
 ## v0.5 Credible Alpha
@@ -83,8 +83,8 @@ Required:
 - Normalized storage design is implemented for the first critical dependency
   paths or explicitly scoped.
 - L1 CandidateAtom design is complete.
-- L1 candidate gate implementation exists.
-- Candidate promotion writes audit.
+- L1 candidate gate implementation exists, including source-span validation.
+- Candidate promotion / pending / rejection writes audit.
 - TaskGraph cycle rejection is implemented.
 - Fact lineage cycle enforcement has either landed or is clearly documented as
   remaining work.

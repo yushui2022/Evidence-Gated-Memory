@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Iterable, Optional
 
 from evidence_gated_memory.core.models import (
+    CandidateAtom,
     Claim,
     ConversationMessage,
     Evidence,
@@ -24,6 +25,7 @@ from evidence_gated_memory.core.models import (
     FactKind,
     GateResult,
     MemoryAtom,
+    MemoryCandidateStatus,
     MemoryAtomKind,
     MemoryPersona,
     MemoryScenario,
@@ -38,7 +40,7 @@ from evidence_gated_memory.core.models import (
 )
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 SQLITE_BUSY_TIMEOUT_MS = 5000
 
 
@@ -72,6 +74,24 @@ CREATE TABLE IF NOT EXISTS memory_atoms (
     text TEXT NOT NULL,
     source_message_ids TEXT NOT NULL,
     confidence REAL NOT NULL,
+    metadata TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS memory_atom_candidates (
+    id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    text TEXT NOT NULL,
+    source_message_ids TEXT NOT NULL,
+    source_spans TEXT NOT NULL,
+    confidence REAL NOT NULL,
+    extraction_rationale TEXT NOT NULL,
+    conflict_flags TEXT NOT NULL,
+    supersedes_atom_ids TEXT NOT NULL,
+    status TEXT NOT NULL,
+    gate_result TEXT,
+    promoted_atom_id TEXT,
     metadata TEXT NOT NULL
 );
 
@@ -205,6 +225,8 @@ CREATE INDEX IF NOT EXISTS idx_facts_claim_type ON facts(claim_type);
 CREATE INDEX IF NOT EXISTS idx_facts_invalidated ON facts(invalidated_at);
 CREATE INDEX IF NOT EXISTS idx_conversation_session ON conversation_messages(session_id);
 CREATE INDEX IF NOT EXISTS idx_memory_atoms_kind ON memory_atoms(kind);
+CREATE INDEX IF NOT EXISTS idx_memory_candidates_status ON memory_atom_candidates(status);
+CREATE INDEX IF NOT EXISTS idx_memory_candidates_kind ON memory_atom_candidates(kind);
 CREATE INDEX IF NOT EXISTS idx_task_nodes_task_id ON task_nodes(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_nodes_status ON task_nodes(status);
 
@@ -298,11 +320,42 @@ class SqliteStore:
     def _migration_plan(self):
         return (
             (1, self._migrate_to_v1),
+            (2, self._migrate_to_v2),
         )
 
     def _migrate_to_v1(self) -> None:
         """Add derived task state for workspaces created before Task.current_state."""
         self._ensure_column("tasks", "current_state", "TEXT NOT NULL DEFAULT 'open'")
+
+    def _migrate_to_v2(self) -> None:
+        """Add gated L1 memory candidates."""
+        self.conn.execute(
+            """CREATE TABLE IF NOT EXISTS memory_atom_candidates (
+                id TEXT PRIMARY KEY,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                text TEXT NOT NULL,
+                source_message_ids TEXT NOT NULL,
+                source_spans TEXT NOT NULL,
+                confidence REAL NOT NULL,
+                extraction_rationale TEXT NOT NULL,
+                conflict_flags TEXT NOT NULL,
+                supersedes_atom_ids TEXT NOT NULL,
+                status TEXT NOT NULL,
+                gate_result TEXT,
+                promoted_atom_id TEXT,
+                metadata TEXT NOT NULL
+            )"""
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_memory_candidates_status "
+            "ON memory_atom_candidates(status)"
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_memory_candidates_kind "
+            "ON memory_atom_candidates(kind)"
+        )
 
     def get_schema_version(self) -> int:
         row = self.conn.execute(
@@ -378,6 +431,87 @@ class SqliteStore:
                 (session_id,),
             ).fetchall()
         return [_row_to_conversation_message(r) for r in rows]
+
+    def insert_memory_candidate(self, candidate: CandidateAtom) -> None:
+        self.conn.execute(
+            """INSERT INTO memory_atom_candidates(
+                id, created_at, updated_at, kind, text, source_message_ids,
+                source_spans, confidence, extraction_rationale, conflict_flags,
+                supersedes_atom_ids, status, gate_result, promoted_atom_id, metadata
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                candidate.id,
+                _iso(candidate.created_at),
+                _iso(candidate.updated_at),
+                candidate.kind.value,
+                candidate.text,
+                _dumps(candidate.source_message_ids),
+                _dumps([span.model_dump() for span in candidate.source_spans]),
+                candidate.confidence,
+                candidate.extraction_rationale,
+                _dumps(candidate.conflict_flags),
+                _dumps(candidate.supersedes_atom_ids),
+                candidate.status.value,
+                _dumps(candidate.gate_result) if candidate.gate_result is not None else None,
+                candidate.promoted_atom_id,
+                _dumps(candidate.metadata),
+            ),
+        )
+        self.conn.commit()
+
+    def get_memory_candidate(self, candidate_id: str) -> Optional[CandidateAtom]:
+        row = self.conn.execute(
+            "SELECT * FROM memory_atom_candidates WHERE id=?",
+            (candidate_id,),
+        ).fetchone()
+        return _row_to_memory_candidate(row) if row else None
+
+    def list_memory_candidates(
+        self,
+        *,
+        status: Optional[MemoryCandidateStatus] = None,
+        kind: Optional[MemoryAtomKind] = None,
+    ) -> list[CandidateAtom]:
+        clauses, args = [], []
+        if status is not None:
+            clauses.append("status = ?")
+            args.append(status.value)
+        if kind is not None:
+            clauses.append("kind = ?")
+            args.append(kind.value)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        rows = self.conn.execute(
+            f"SELECT * FROM memory_atom_candidates {where} ORDER BY created_at DESC",
+            args,
+        ).fetchall()
+        return [_row_to_memory_candidate(r) for r in rows]
+
+    def update_memory_candidate(self, candidate: CandidateAtom) -> None:
+        self.conn.execute(
+            """UPDATE memory_atom_candidates SET
+                updated_at=?, kind=?, text=?, source_message_ids=?, source_spans=?,
+                confidence=?, extraction_rationale=?, conflict_flags=?,
+                supersedes_atom_ids=?, status=?, gate_result=?, promoted_atom_id=?,
+                metadata=?
+               WHERE id=?""",
+            (
+                _iso(candidate.updated_at),
+                candidate.kind.value,
+                candidate.text,
+                _dumps(candidate.source_message_ids),
+                _dumps([span.model_dump() for span in candidate.source_spans]),
+                candidate.confidence,
+                candidate.extraction_rationale,
+                _dumps(candidate.conflict_flags),
+                _dumps(candidate.supersedes_atom_ids),
+                candidate.status.value,
+                _dumps(candidate.gate_result) if candidate.gate_result is not None else None,
+                candidate.promoted_atom_id,
+                _dumps(candidate.metadata),
+                candidate.id,
+            ),
+        )
+        self.conn.commit()
 
     def insert_memory_atom(self, atom: MemoryAtom) -> None:
         self.conn.execute(
@@ -910,10 +1044,10 @@ class SqliteStore:
         fact_id: Optional[str] = None,
         accepted: Optional[bool] = None,
         at: Optional[datetime] = None,
-    ) -> None:
+    ) -> int:
         from datetime import timezone
         at = at or datetime.now(timezone.utc)
-        self.conn.execute(
+        cursor = self.conn.execute(
             "INSERT INTO audit_log(created_at, event_type, claim_id, fact_id, accepted, detail) "
             "VALUES (?,?,?,?,?,?)",
             (_iso(at), event_type, claim_id, fact_id,
@@ -921,6 +1055,7 @@ class SqliteStore:
              _dumps(detail)),
         )
         self.conn.commit()
+        return int(cursor.lastrowid)
 
     def list_audit(self, limit: int = 100) -> list[dict[str, Any]]:
         rows = self.conn.execute(
@@ -969,6 +1104,26 @@ def _row_to_memory_atom(row: sqlite3.Row) -> MemoryAtom:
         text=row["text"],
         source_message_ids=json.loads(row["source_message_ids"]),
         confidence=row["confidence"],
+        metadata=json.loads(row["metadata"]),
+    )
+
+
+def _row_to_memory_candidate(row: sqlite3.Row) -> CandidateAtom:
+    return CandidateAtom(
+        id=row["id"],
+        created_at=_from_iso(row["created_at"]),
+        updated_at=_from_iso(row["updated_at"]),
+        kind=MemoryAtomKind(row["kind"]),
+        text=row["text"],
+        source_message_ids=json.loads(row["source_message_ids"]),
+        source_spans=json.loads(row["source_spans"]),
+        confidence=row["confidence"],
+        extraction_rationale=row["extraction_rationale"],
+        conflict_flags=json.loads(row["conflict_flags"]),
+        supersedes_atom_ids=json.loads(row["supersedes_atom_ids"]),
+        status=MemoryCandidateStatus(row["status"]),
+        gate_result=json.loads(row["gate_result"]) if row["gate_result"] else None,
+        promoted_atom_id=row["promoted_atom_id"],
         metadata=json.loads(row["metadata"]),
     )
 

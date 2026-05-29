@@ -277,6 +277,11 @@ without a separate policy.
 
 ## Release Boundary
 
+Current implementation status: the first L1 candidate-gate code path exists.
+It includes `CandidateAtom`, `SourceSpan`, `CandidateGateResult`, schema v2
+storage, source-span SHA-256 validation, promote / pending / reject APIs, and
+audit events. This is not yet a full review workflow or L2/L3 automation.
+
 For v0.7, this document is enough. It defines the design.
 
 For v0.9, implementation must include:

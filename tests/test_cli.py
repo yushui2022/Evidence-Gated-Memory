@@ -45,7 +45,7 @@ def test_cli_inspect_context_audit_and_ref(tmp_path: Path, capsys):
 
     assert main(["inspect", str(workspace), "--schema", "refund"]) == 0
     inspect_out = capsys.readouterr().out
-    assert "schema_version: 1" in inspect_out
+    assert "schema_version: 2" in inspect_out
     assert "facts_active: 1" in inspect_out
     assert "evidence: 2" in inspect_out
 
@@ -116,6 +116,7 @@ def test_cli_inspect_includes_graph_offload_and_long_term_counts(tmp_path: Path,
     assert "task_edges: 1" in out
     assert "offload_records: 1" in out
     assert "conversation_messages: 1" in out
+    assert "memory_atom_candidates: 0" in out
     assert "memory_atoms: 1" in out
     assert "memory_scenarios: 1" in out
     assert "memory_personas: 1" in out
