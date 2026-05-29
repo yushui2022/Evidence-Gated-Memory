@@ -269,9 +269,28 @@ class SqliteStore:
         self.conn.close()
 
     def _migrate_schema(self) -> None:
-        """Add columns introduced after the initial CREATE TABLE layout."""
+        """Run pending schema migrations in version order."""
+        current_version = self.get_schema_version()
+        if current_version > SCHEMA_VERSION:
+            raise RuntimeError(
+                f"workspace schema_version {current_version} is newer than "
+                f"this package supports ({SCHEMA_VERSION})"
+            )
+        for version, migration in self._migration_plan():
+            if current_version >= version:
+                continue
+            migration()
+            self._set_schema_version(version)
+            current_version = version
+
+    def _migration_plan(self):
+        return (
+            (1, self._migrate_to_v1),
+        )
+
+    def _migrate_to_v1(self) -> None:
+        """Add derived task state for workspaces created before Task.current_state."""
         self._ensure_column("tasks", "current_state", "TEXT NOT NULL DEFAULT 'open'")
-        self._set_schema_version(SCHEMA_VERSION)
 
     def get_schema_version(self) -> int:
         row = self.conn.execute(

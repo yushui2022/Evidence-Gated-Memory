@@ -12,6 +12,8 @@ called out explicitly.
 - Added PEP 561 package marker support with `py.typed`.
 - Added `egm export-audit` for JSON and Markdown audit exports with filters for
   task, claim, fact, and evidence identifiers.
+- Added a versioned SQLite migration runner skeleton with v1 migration coverage
+  and future-schema rejection.
 - Added production-boundary guidance in `docs/production.md`.
 - Added release gate guidance in `docs/release-criteria.md`.
 

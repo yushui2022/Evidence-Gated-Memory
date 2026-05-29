@@ -77,11 +77,13 @@ Recommended minimum backup process:
 
 ## Migration Policy
 
-The current code still uses lightweight schema creation plus a small column
-backfill helper. A versioned migration runner is planned before production
-claims.
+The current code has a versioned migration runner skeleton and a v1 migration
+for workspaces created before `Task.current_state`. This is better than a loose
+collection of ad hoc column checks, but it is not a mature migration system yet.
+Future schema changes still need old-workspace fixtures, rollback notes, and
+release-specific migration documentation.
 
-Until the migration runner lands:
+Until that fuller migration discipline lands:
 
 - keep backups before upgrading EGM;
 - test upgrades against a copy of the workspace;

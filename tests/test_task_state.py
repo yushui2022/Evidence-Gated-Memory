@@ -7,6 +7,8 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pytest
+
 from evidence_gated_memory import EvidenceGatedMemory, TaskNodeStatus, TaskState
 from evidence_gated_memory.storage.sqlite import SqliteStore
 
@@ -137,3 +139,19 @@ def test_sqlite_migrates_old_tasks_table_current_state(tmp_path: Path) -> None:
         assert store.get_schema_version() == 1
     finally:
         store.close()
+
+
+def test_sqlite_rejects_future_schema_version(tmp_path: Path) -> None:
+    workspace = tmp_path / "egm"
+    workspace.mkdir()
+    db_path = workspace / "egm.db"
+
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("CREATE TABLE schema_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+        conn.execute(
+            "INSERT INTO schema_meta(key, value) VALUES ('schema_version', '999')"
+        )
+        conn.commit()
+
+    with pytest.raises(RuntimeError, match="newer than this package supports"):
+        SqliteStore(workspace)
