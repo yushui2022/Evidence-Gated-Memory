@@ -6,7 +6,7 @@
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="PyPI" src="https://img.shields.io/pypi/v/evidence-gated-memory?color=0B1220&label=pypi"></a>
   <a href="https://pypi.org/project/evidence-gated-memory/"><img alt="Python" src="https://img.shields.io/pypi/pyversions/evidence-gated-memory?color=0B1220"></a>
   <a href="#license"><img alt="License" src="https://img.shields.io/badge/license-MIT-0B1220"></a>
-  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-141%20passing-0F9F6E"></a>
+  <a href="#benchmarks"><img alt="Tests" src="https://img.shields.io/badge/tests-166%20passing-0F9F6E"></a>
   <a href="#benchmarks"><img alt="Status" src="https://img.shields.io/badge/status-alpha-E7B549"></a>
 </p>
 
@@ -93,9 +93,9 @@ EGM organizes that discipline around three directed dependency surfaces:
 |---|---|---|
 | Task graph | `TaskNode -> TaskNode` | Maintains workflow state, blockers, anchors, and gated transitions. |
 | Fact lineage | `evidence -> observed fact -> derived fact` | Grounds facts in raw refs, enforces freshness, and drives cascade invalidation. |
-| Memory provenance | `L0 -> L1 -> L2 -> L3` today; `CandidateAtom` planned | Keeps long-term memory auditable instead of letting LLM summaries directly become memory. |
+| Memory provenance | `L0 -> CandidateAtom -> L1 -> L2 -> L3` for L1; L2/L3 remain manual | Keeps long-term memory auditable instead of letting LLM summaries directly become memory. |
 
-These structures are **DAG-style** today, not full enforced DAGs. `CandidateAtom` and full cycle enforcement are tracked in [plan.md](plan.md); the README describes the target architecture, while the plan keeps the implementation ledger.
+These structures are **DAG-style** today, not full enforced DAGs. The first `CandidateAtom` gate exists; remaining cycle enforcement gaps are tracked in [plan.md](plan.md). The README describes the target architecture, while the plan keeps the implementation ledger.
 
 Three design decisions make EGM different:
 
@@ -113,7 +113,7 @@ Every gate check is a deterministic function: required evidence types present �
 
 **Long-term memory is an auditable promotion pyramid (L0→L3), not a vector dump.**
 
-Raw L0 conversations stay out of the prompt by default. Only manually promoted L1 atoms, L2 scenarios, and L3 personas enter `build_context()` — each carrying source provenance back to the original L0 message. Automatic LLM distillation is intentionally deferred: curated memory is auditable; auto-summarized memory is not.
+Raw L0 conversations stay out of the prompt by default. L1 automation goes through `CandidateAtom` records with source spans, confidence, and a deterministic gate before promotion. L2 scenarios and L3 personas remain manually promoted. Curated memory is auditable; direct auto-summarized memory is not.
 
 **Where EGM excels.**
 
@@ -519,7 +519,7 @@ tool result  →  refs/*.md (raw)  →  offload JSONL (summary index)  →  Task
 L0 Conversation  →  L1 Atom  →  L2 Scenario  →  L3 Persona
 ```
 
-A manually-promoted, auditable pyramid. Every L1 atom can point back to L0 source messages; every L2 scenario is grounded in real L1 ids; every L3 persona is grounded in real L2 ids. `build_context()` injects L1–L3 summaries with source ids; L0 raw messages stay out of the prompt by default. **Automatic LLM distillation is intentionally deferred** until it has its own design.
+An auditable promotion pyramid. L1 automation now starts with `CandidateAtom` records that must carry source spans and pass a deterministic gate before becoming prompt-eligible `MemoryAtom` records. Every L1 atom can point back to L0 source messages; every L2 scenario is grounded in real L1 ids; every L3 persona is grounded in real L2 ids. `build_context()` injects L1–L3 summaries with source ids; L0 raw messages stay out of the prompt by default. L2/L3 automatic distillation remains deferred until it has its own gate and review design.
 
 ### 3. Evidence-gated quality layer — what makes the graph trustworthy
 
